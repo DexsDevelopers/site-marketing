@@ -4207,44 +4207,23 @@ app.post('/sync-members', auth, async (req, res) => {
           // Coletar números válidos de telefone
           const validPhoneNumbers = [];
 
-          // Log do primeiro participante para debug (apenas uma vez por grupo)
-          if (metadata.participants.length > 0) {
-            log.info(`[MARKETING] Debug - Estrutura do participante: ${JSON.stringify(metadata.participants[0])}`);
-          }
-
           for (const participant of metadata.participants) {
-            const id = participant.id;
             let phoneNumber = null;
 
-            // Método 1: Atributo phone_number direto no participant
-            if (participant.phone_number) {
-              phoneNumber = participant.phone_number.replace(/\D/g, '').replace('@s.whatsapp.net', '');
+            // Método 1: Campo jid contém o número real (descoberto via debug)
+            if (participant.jid && participant.jid.endsWith('@s.whatsapp.net')) {
+              phoneNumber = participant.jid.split('@')[0];
             }
-            // Método 2: Atributo phoneNumber
-            else if (participant.phoneNumber) {
-              phoneNumber = participant.phoneNumber.replace(/\D/g, '');
+            // Método 2: Atributo phone_number direto
+            else if (participant.phone_number) {
+              phoneNumber = participant.phone_number.replace(/\D/g, '');
             }
-            // Método 3: JID normal com número de telefone (@s.whatsapp.net)
-            else if (id.endsWith('@s.whatsapp.net')) {
-              phoneNumber = id.split('@')[0];
-            }
-            // Método 4: LID - tentar resolver via store de contatos
-            else if (id.endsWith('@lid') && store && store.contacts) {
-              const contact = store.contacts[id];
-              if (contact && contact.phoneNumber) {
-                phoneNumber = contact.phoneNumber.replace(/\D/g, '');
-              } else {
-                // Tentar buscar pelo LID no mapeamento inverso
-                for (const [contactJid, contactData] of Object.entries(store.contacts)) {
-                  if (contactData && contactData.lid === id && contactJid.endsWith('@s.whatsapp.net')) {
-                    phoneNumber = contactJid.split('@')[0];
-                    break;
-                  }
-                }
-              }
+            // Método 3: Campo id se for JID normal (@s.whatsapp.net)
+            else if (participant.id && participant.id.endsWith('@s.whatsapp.net')) {
+              phoneNumber = participant.id.split('@')[0];
             }
 
-            // Validar e adicionar número
+            // Validar e adicionar número (10-15 dígitos)
             if (phoneNumber && /^\d{10,15}$/.test(phoneNumber)) {
               validPhoneNumbers.push(phoneNumber);
             }
