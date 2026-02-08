@@ -49,15 +49,17 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
     <div class="dashboard-container">
         <?php include 'includes/sidebar.php'; ?>
         <main class="main-content">
-            <header class="header">
+            <header class="header animate-fade-in">
                 <div>
-                    <h1>Gerenciamento de Leads</h1>
-                    <p style="color: var(--text-dim);">Acompanhe o progresso dos seus contatos no funil.</p>
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Gerenciamento de Leads</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Acompanhe o progresso dos seus contatos no
+                        funil em tempo real.</p>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-modern"
-                        style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);"
-                        onclick="clearAllLeads()">
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn-modern accent" onclick="triggerDisparos()" id="btn-trigger">
+                        <i class="fas fa-paper-plane"></i> Iniciar Agora
+                    </button>
+                    <button class="btn-modern secondary" style="color: #ef4444;" onclick="clearAllLeads()">
                         <i class="fas fa-trash-alt"></i> Limpar Tudo
                     </button>
                 </div>
@@ -66,27 +68,23 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
             <div class="stats-grid animate-fade-in">
                 <div class="stat-card">
                     <div class="stat-label">Total de Leads</div>
-                    <div class="stat-value">
-                        <?= $stats['total']?>
-                    </div>
+                    <div class="stat-value"><?= $stats['total'] ?></div>
+                    <div style="color: #4facfe; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-users"></i> Base total</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Na Fila</div>
-                    <div class="stat-value" style="color: #3b82f6;">
-                        <?= $stats['novos']?>
-                    </div>
+                    <div class="stat-value" style="color: #3b82f6;"><?= $stats['novos'] ?></div>
+                    <div style="color: #3b82f6; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-clock"></i> Aguardando</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Em Progresso</div>
-                    <div class="stat-value" style="color: #f59e0b;">
-                        <?= $stats['progresso']?>
-                    </div>
+                    <div class="stat-value" style="color: #f59e0b;"><?= $stats['progresso'] ?></div>
+                    <div style="color: #f59e0b; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-spinner fa-spin"></i> No fluxo</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Concluídos</div>
-                    <div class="stat-value" style="color: #10b981;">
-                        <?= $stats['concluido']?>
-                    </div>
+                    <div class="stat-value" style="color: #10b981;"><?= $stats['concluido'] ?></div>
+                    <div style="color: #10b981; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Finalizados</div>
                 </div>
             </div>
 
@@ -100,12 +98,12 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
                             <select name="status" class="form-control" style="width: 150px; padding: 0.5rem 1rem;"
                                 onchange="this.form.submit()">
                                 <option value="">Todos Status</option>
-                                <option value="novo" <?=$status=='novo' ? 'selected' : ''?>>Novo</option>
-                                <option value="em_progresso" <?=$status=='em_progresso' ? 'selected' : ''?>>Em
+                                <option value="novo" <?= $status == 'novo' ? 'selected' : '' ?>>Novo</option>
+                                <option value="em_progresso" <?= $status == 'em_progresso' ? 'selected' : '' ?>>Em
                                     Progresso</option>
-                                <option value="concluido" <?=$status=='concluido' ? 'selected' : ''?>>Concluído
+                                <option value="concluido" <?= $status == 'concluido' ? 'selected' : '' ?>>Concluído
                                 </option>
-                                <option value="bloqueado" <?=$status=='bloqueado' ? 'selected' : ''?>>Bloqueado
+                                <option value="bloqueado" <?= $status == 'bloqueado' ? 'selected' : '' ?>>Bloqueado
                                 </option>
                             </select>
                             <button type="submit" class="btn-modern" style="padding: 0.5rem 1rem;"><i
@@ -175,6 +173,36 @@ endforeach; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        async function triggerDisparos() {
+            const btn = document.getElementById('btn-trigger');
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...';
+
+                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Iniciado!',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        background: '#111114',
+                        color: '#f8f9fa',
+                        customClass: { popup: 'premium-swal' }
+                    });
+                }
+            } catch (e) { }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
         async function clearAllLeads() {
             const res = await Swal.fire({
                 title: 'Tem certeza?',

@@ -41,15 +41,20 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
     <div class="dashboard-container">
         <?php include 'includes/sidebar.php'; ?>
         <main class="main-content">
-            <header class="header">
+            <header class="header animate-fade-in">
                 <div>
-                    <h1>Funil de Vendas</h1>
-                    <p style="color: var(--text-dim);">Configure a sequência de mensagens automática para seus leads.
-                    </p>
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Funil de Vendas</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Configure a sequência de mensagens automática
+                        para seus leads.</p>
                 </div>
-                <button class="btn-modern" onclick="addNewStep()">
-                    <i class="fas fa-plus"></i> Novo Passo
-                </button>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn-modern accent" onclick="triggerDisparos()" id="btn-trigger">
+                        <i class="fas fa-paper-plane"></i> Iniciar Agora
+                    </button>
+                    <button class="btn-modern" onclick="addNewStep()">
+                        <i class="fas fa-plus"></i> Novo Passo
+                    </button>
+                </div>
             </header>
 
             <div class="funnel-sequence" id="funnel-container">
@@ -107,18 +112,66 @@ endforeach; ?>
     <script>
         const API_URL = 'api_marketing_ajax.php';
 
+        async function triggerDisparos() {
+            const btn = document.getElementById('btn-trigger');
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+
+                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Disparos Iniciados!',
+                        text: 'O robô começou a processar a fila agora.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                        background: '#111114',
+                        color: '#f8f9fa',
+                        customClass: { popup: 'premium-swal' }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: data.message,
+                        customClass: { popup: 'premium-swal' }
+                    });
+                }
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Falha na conexão',
+                    customClass: { popup: 'premium-swal' }
+                });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
         async function addNewStep() {
             const { value: formValues } = await Swal.fire({
                 title: 'Novo Passo do Funil',
                 html:
-                    '<label style="color: #888; display: block; margin-bottom: 5px; text-align: left;">Mensagem</label>' +
-                    '<textarea id="swal-content" class="swal2-textarea" placeholder="Digite sua mensagem..."></textarea>' +
-                    '<label style="color: #888; display: block; margin-bottom: 5px; text-align: left;">Delay (minutos após anterior)</label>' +
+                    '<label style="color: #94a3b8; display: block; margin-bottom: 8px; text-align: left; font-size: 0.9rem;">Mensagem do WhatsApp</label>' +
+                    '<textarea id="swal-content" class="swal2-textarea" style="height: 150px;" placeholder="Digite aqui o que o Bot deve dizer..."></textarea>' +
+                    '<label style="color: #94a3b8; display: block; margin-top: 15px; margin-bottom: 8px; text-align: left; font-size: 0.9rem;">Delay (minutos após anterior)</label>' +
                     '<input id="swal-delay" type="number" class="swal2-input" value="0" min="0">',
                 focusConfirm: false,
-                background: '#151518',
-                color: '#e0e0e0',
+                background: '#111114',
+                color: '#f8f9fa',
                 confirmButtonColor: '#ff3b3b',
+                confirmButtonText: '<i class="fas fa-save"></i> Criar Passo',
+                customClass: { popup: 'premium-swal' },
                 preConfirm: () => {
                     return {
                         conteudo: document.getElementById('swal-content').value,

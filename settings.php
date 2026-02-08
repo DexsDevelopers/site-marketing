@@ -28,10 +28,19 @@ if (!$campanha) {
     <div class="dashboard-container">
         <?php include 'includes/sidebar.php'; ?>
         <main class="main-content">
-            <header class="header">
+            <header class="header animate-fade-in">
                 <div>
-                    <h1>Configurações do Marketing</h1>
-                    <p style="color: var(--text-dim);">Ajuste os parâmetros de envio e segurança do robô.</p>
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Configurações do Marketing</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Ajuste os parâmetros de envio e segurança do
+                        robô de forma granular.</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn-modern accent" onclick="triggerDisparos()" id="btn-trigger">
+                        <i class="fas fa-paper-plane"></i> Iniciar Agora
+                    </button>
+                    <button class="btn-modern secondary" onclick="restartBot()">
+                        <i class="fas fa-sync"></i> Reiniciar Bot
+                    </button>
                 </div>
             </header>
 
@@ -103,6 +112,56 @@ if (!$campanha) {
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        async function triggerDisparos() {
+            const btn = document.getElementById('btn-trigger');
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...';
+
+                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Iniciado!',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        background: '#111114',
+                        color: '#f8f9fa',
+                        customClass: { popup: 'premium-swal' }
+                    });
+                }
+            } catch (e) { }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        async function restartBot() {
+            const res = await Swal.fire({
+                title: 'Reiniciar Robô?',
+                text: "Isso forçará a reconexão do robô com o WhatsApp.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff3b3b',
+                background: '#111114',
+                color: '#f8f9fa',
+                customClass: { popup: 'premium-swal' }
+            });
+
+            if (res.isConfirmed) {
+                // Comando de reset
+                await fetch('api_dashboard.php?action=restart_bot');
+                Swal.fire('Comando Enviado!', 'O robô está reiniciando...', 'success');
+            }
+        }
+
         async function saveSettings(e) {
             e.preventDefault();
             const form = e.target;

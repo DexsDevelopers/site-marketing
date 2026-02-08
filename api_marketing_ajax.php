@@ -325,6 +325,21 @@ try {
             $response = ['success' => true, 'message' => 'Configurações salvas!'];
             break;
 
+        case 'trigger_disparos':
+            // Esta ação força o processamento da fila imediatamente
+            $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']) . "/api_marketing_trigger.php";
+
+            // Usar curl para disparar o script de trigger de forma assíncrona ou rápida
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            $output = curl_exec($ch);
+            curl_close($ch);
+
+            $response = ['success' => true, 'message' => 'Processamento de disparos iniciado!', 'debug' => $output];
+            break;
+
         default:
             $response = ['success' => false, 'message' => 'Ação não reconhecida: ' . $action];
     }
