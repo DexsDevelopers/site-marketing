@@ -68,6 +68,33 @@ app.get('/', (req, res) => {
   res.send('🤖 Bot Marketing Ativo e Operante!');
 });
 
+// Endpoint para retornar logs recentes (em memória)
+app.get('/logs', (req, res) => {
+  const token = req.headers['x-api-token'] || req.query.token;
+  if (token !== API_TOKEN) {
+    return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+  }
+
+  const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+  const level = req.query.level; // Filtro opcional por nível (INFO, ERROR, etc)
+
+  let logs = typeof logBuffer !== 'undefined' ? [...logBuffer] : [];
+
+  // Filtrar por nível se especificado
+  if (level) {
+    logs = logs.filter(l => l.level === level.toUpperCase());
+  }
+
+  // Retornar os últimos N logs (mais recentes primeiro)
+  logs = logs.slice(-limit).reverse();
+
+  res.json({
+    success: true,
+    count: logs.length,
+    logs: logs
+  });
+});
+
 // Endpoint para resetar a conexão (apagar pasta auth e reiniciar)
 app.post('/reset', async (req, res) => {
   const token = req.headers['x-api-token'];
@@ -1027,13 +1054,29 @@ async function processIAChat(remoteJid, text, senderNumber) {
   }
 }
 
-// ===== LOGS COLORIDOS =====
+// ===== LOGS COLORIDOS + BUFFER EM MEMÓRIA =====
+const logBuffer = [];
+const MAX_LOG_ENTRIES = 500; // Manter últimos 500 logs
+
+function addToLogBuffer(level, msg) {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    level: level,
+    message: msg
+  };
+  logBuffer.push(entry);
+  // Manter apenas os últimos N logs
+  if (logBuffer.length > MAX_LOG_ENTRIES) {
+    logBuffer.shift();
+  }
+}
+
 const log = {
-  info: (msg) => console.log(`\x1b[36m[INFO]\x1b[0m ${new Date().toISOString()} - ${msg}`),
-  success: (msg) => console.log(`\x1b[32m[OK]\x1b[0m ${new Date().toISOString()} - ${msg}`),
-  warn: (msg) => console.log(`\x1b[33m[WARN]\x1b[0m ${new Date().toISOString()} - ${msg}`),
-  error: (msg) => console.log(`\x1b[31m[ERROR]\x1b[0m ${new Date().toISOString()} - ${msg}`),
-  heartbeat: (msg) => console.log(`\x1b[35m[💓]\x1b[0m ${new Date().toISOString()} - ${msg}`)
+  info: (msg) => { addToLogBuffer('INFO', msg); console.log(`\x1b[36m[INFO]\x1b[0m ${new Date().toISOString()} - ${msg}`); },
+  success: (msg) => { addToLogBuffer('SUCCESS', msg); console.log(`\x1b[32m[OK]\x1b[0m ${new Date().toISOString()} - ${msg}`); },
+  warn: (msg) => { addToLogBuffer('WARN', msg); console.log(`\x1b[33m[WARN]\x1b[0m ${new Date().toISOString()} - ${msg}`); },
+  error: (msg) => { addToLogBuffer('ERROR', msg); console.log(`\x1b[31m[ERROR]\x1b[0m ${new Date().toISOString()} - ${msg}`); },
+  heartbeat: (msg) => { addToLogBuffer('HEARTBEAT', msg); console.log(`\x1b[35m[💓]\x1b[0m ${new Date().toISOString()} - ${msg}`); }
 };
 
 // ===== HEARTBEAT SYSTEM =====

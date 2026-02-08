@@ -26,6 +26,34 @@ $response = ['success' => false, 'message' => 'Ação não reconhecida'];
 
 try {
     switch ($action) {
+        case 'get_bot_logs':
+            $botUrl = getDynamicConfig('WHATSAPP_API_URL', 'http://localhost:3002');
+            $botUrl = rtrim($botUrl, '/');
+            $token = getDynamicConfig('WHATSAPP_API_TOKEN', 'lucastav8012');
+            $level = $_GET['level'] ?? '';
+            $limit = $_GET['limit'] ?? 100;
+
+            $url = "$botUrl/logs?token=$token&limit=$limit" . ($level ? "&level=$level" : "");
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode === 200 && $result) {
+                $data = json_decode($result, true);
+                $response = $data ?: ['success' => false, 'message' => 'Resposta inválida do bot'];
+            }
+            else {
+                $response = ['success' => false, 'message' => 'Falha ao conectar com o bot. HTTP: ' . $httpCode];
+            }
+            break;
+
         case 'import_leads':
             $numbersRaw = $_POST['numbers'] ?? '';
             if (empty($numbersRaw)) {

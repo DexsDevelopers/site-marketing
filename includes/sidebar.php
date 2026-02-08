@@ -30,8 +30,13 @@
                 </a>
             </li>
             <li>
-                <a href="reset.php"
-                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'reset.php' ? 'active' : ''?>"
+                <a href="logs.php" class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : ''?>"
+                    style="color: #60a5fa;">
+                    <i class="fas fa-terminal"></i> Logs do Bot
+                </a>
+            </li>
+            <li>
+                <a href="reset.php" class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'reset.php' ? 'active' : ''?>"
                     style="color: #ff3b3b;">
                     <i class="fas fa-power-off"></i> Resetar Conexão
                 </a>
