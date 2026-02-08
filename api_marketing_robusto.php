@@ -57,11 +57,17 @@ try {
         $added = 0;
 
         foreach ($members as $phone) {
-            // Se não for JID (contém @), limpar caracteres não numéricos
-            if (strpos($phone, '@') === false) {
-                $phone = preg_replace('/\D/', '', $phone);
-                if (strlen($phone) < 10)
-                    continue; // Ignorar números inválidos
+            // Extrair número do JID (ex: 5511999999999@s.whatsapp.net -> 5511999999999)
+            if (strpos($phone, '@') !== false) {
+                $phone = explode('@', $phone)[0]; // Pega a parte antes do @
+            }
+
+            // Limpar caracteres não numéricos
+            $phone = preg_replace('/\D/', '', $phone);
+
+            // Validar tamanho do número
+            if (strlen($phone) < 10 || strlen($phone) > 15) {
+                continue; // Ignorar números inválidos
             }
 
             try {
