@@ -56,6 +56,10 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
                         funil em tempo real.</p>
                 </div>
                 <div style="display: flex; gap: 1rem;">
+                    <button class="btn-modern" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);"
+                        onclick="syncAllGroups()" id="btn-sync">
+                        <i class="fas fa-sync-alt"></i> Sincronizar Grupos
+                    </button>
                     <button class="btn-modern accent" onclick="triggerDisparos()" id="btn-trigger">
                         <i class="fas fa-paper-plane"></i> Iniciar Agora
                     </button>
@@ -257,6 +261,66 @@ endforeach; ?>
                 btn.innerHTML = originalContent;
             }
         }
+
+        async function syncAllGroups() {
+            const btn = document.getElementById('btn-sync');
+            const originalContent = btn.innerHTML;
+
+            const confirm = await Swal.fire({
+                title: 'Sincronizar Grupos?',
+                text: 'Isso vai buscar todos os membros de todos os grupos do WhatsApp e adicionar à lista de leads.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, sincronizar!',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3b82f6',
+                background: '#151518',
+                color: '#e0e0e0'
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+
+                const response = await fetch('api_marketing_ajax.php?action=sync_whatsapp_groups');
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sincronização Iniciada!',
+                        text: data.message,
+                        background: '#151518',
+                        color: '#e0e0e0'
+                    });
+
+                    // Aguardar um pouco e recarregar para mostrar os novos leads
+                    setTimeout(() => location.reload(), 10000);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: data.message,
+                        background: '#151518',
+                        color: '#e0e0e0'
+                    });
+                }
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro de Conexão',
+                    text: 'Não foi possível conectar ao servidor.',
+                    background: '#151518',
+                    color: '#e0e0e0'
+                });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
         // File input handler
         document.getElementById('import-file').addEventListener('change', function (e) {
             const file = e.target.files[0];

@@ -78,6 +78,34 @@ try {
             ];
             break;
 
+        case 'sync_whatsapp_groups':
+            // Chamar endpoint do bot para sincronizar membros de todos os grupos
+            $botUrl = getDynamicConfig('WHATSAPP_API_URL', 'http://localhost:3002');
+            $botUrl = rtrim($botUrl, '/');
+            $token = getDynamicConfig('WHATSAPP_API_TOKEN', 'lucastav8012');
+
+            $ch = curl_init("$botUrl/sync-members");
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['background' => true]));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                "x-api-token: $token"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode === 200) {
+                $response = ['success' => true, 'message' => 'Sincronização iniciada! Os membros serão adicionados em segundo plano. A página será recarregada em 10 segundos.'];
+            }
+            else {
+                $response = ['success' => false, 'message' => 'Falha ao conectar com o bot. Verifique se ele está online.'];
+            }
+            break;
+
         case 'sync_funnel':
             // 1. Reordenar mensagens (1, 2, 3...)
             $msgs = fetchData($pdo, "SELECT id FROM marketing_mensagens ORDER BY ordem ASC, id ASC");

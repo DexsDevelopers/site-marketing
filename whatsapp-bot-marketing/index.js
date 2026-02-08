@@ -4162,7 +4162,7 @@ app.post('/sync-members', auth, async (req, res) => {
           const participants = metadata.participants.map(p => p.id); // Guardar o JID completo para evitar problemas de 9º dígito
 
           // Enviar para API PHP salvar
-          await axios.post(`${RASTREAMENTO_API_URL}/api_marketing.php?action=save_members`, {
+          await axios.post(`${RASTREAMENTO_API_URL}/api_marketing_robusto.php?action=save_members`, {
             group_jid: jid,
             members: participants
           }, {
