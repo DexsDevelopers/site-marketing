@@ -92,17 +92,22 @@ try {
                 "x-api-token: $token"
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
             $result = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
 
             if ($httpCode === 200) {
                 $response = ['success' => true, 'message' => 'Sincronização iniciada! Os membros serão adicionados em segundo plano. A página será recarregada em 10 segundos.'];
             }
             else {
-                $response = ['success' => false, 'message' => 'Falha ao conectar com o bot. Verifique se ele está online.'];
+                $debugInfo = "URL: $botUrl/sync-members | HTTP: $httpCode | Curl: $curlError";
+                $response = ['success' => false, 'message' => "Falha ao conectar com o bot. $debugInfo"];
             }
             break;
 
