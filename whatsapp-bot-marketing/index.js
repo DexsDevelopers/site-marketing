@@ -4207,38 +4207,46 @@ app.post('/sync-members', auth, async (req, res) => {
           // Coletar números válidos de telefone
           const validPhoneNumbers = [];
 
+          // Log do primeiro participante para debug (apenas uma vez por grupo)
+          if (metadata.participants.length > 0) {
+            log.info(`[MARKETING] Debug - Estrutura do participante: ${JSON.stringify(metadata.participants[0])}`);
+          }
+
           for (const participant of metadata.participants) {
             const id = participant.id;
+            let phoneNumber = null;
 
-            // Caso 1: JID normal com número de telefone (@s.whatsapp.net)
-            if (id.endsWith('@s.whatsapp.net')) {
-              const phoneNumber = id.split('@')[0];
-              // Validar se é um número válido (10-15 dígitos)
-              if (/^\d{10,15}$/.test(phoneNumber)) {
-                validPhoneNumbers.push(phoneNumber);
-                continue;
-              }
+            // Método 1: Atributo phone_number direto no participant
+            if (participant.phone_number) {
+              phoneNumber = participant.phone_number.replace(/\D/g, '').replace('@s.whatsapp.net', '');
             }
-
-            // Caso 2: LID - tentar resolver via store de contatos
-            if (id.endsWith('@lid') && store && store.contacts) {
-              // Buscar no store por um contato que tenha este LID mapeado
+            // Método 2: Atributo phoneNumber
+            else if (participant.phoneNumber) {
+              phoneNumber = participant.phoneNumber.replace(/\D/g, '');
+            }
+            // Método 3: JID normal com número de telefone (@s.whatsapp.net)
+            else if (id.endsWith('@s.whatsapp.net')) {
+              phoneNumber = id.split('@')[0];
+            }
+            // Método 4: LID - tentar resolver via store de contatos
+            else if (id.endsWith('@lid') && store && store.contacts) {
               const contact = store.contacts[id];
               if (contact && contact.phoneNumber) {
-                validPhoneNumbers.push(contact.phoneNumber.replace(/\D/g, ''));
-                continue;
-              }
-
-              // Tentar buscar pelo LID no mapeamento inverso
-              for (const [contactJid, contactData] of Object.entries(store.contacts)) {
-                if (contactData && contactData.lid === id && contactJid.endsWith('@s.whatsapp.net')) {
-                  const phoneNumber = contactJid.split('@')[0];
-                  if (/^\d{10,15}$/.test(phoneNumber)) {
-                    validPhoneNumbers.push(phoneNumber);
+                phoneNumber = contact.phoneNumber.replace(/\D/g, '');
+              } else {
+                // Tentar buscar pelo LID no mapeamento inverso
+                for (const [contactJid, contactData] of Object.entries(store.contacts)) {
+                  if (contactData && contactData.lid === id && contactJid.endsWith('@s.whatsapp.net')) {
+                    phoneNumber = contactJid.split('@')[0];
                     break;
                   }
                 }
               }
+            }
+
+            // Validar e adicionar número
+            if (phoneNumber && /^\d{10,15}$/.test(phoneNumber)) {
+              validPhoneNumbers.push(phoneNumber);
             }
           }
 
