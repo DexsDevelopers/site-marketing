@@ -2906,7 +2906,7 @@ async function start() {
     const { version, isLatest } = await fetchLatestBaileysVersion();
     log.info(`WhatsApp Web version: ${version?.join('.')} (latest=${isLatest})`);
 
-    const { state, saveCreds } = await useMultiFileAuthState('./auth');
+    const { state, saveCreds } = await useMultiFileAuthState('./auth_info_baileys');
 
     // Logger personalizado que silencia TUDO do Baileys
     const silentLogger = pino({
