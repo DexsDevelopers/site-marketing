@@ -4204,28 +4204,46 @@ app.post('/sync-members', auth, async (req, res) => {
         try {
           const metadata = await sock.groupMetadata(jid);
 
-          // Filtrar apenas JIDs válidos (números de telefone reais)
-          // Ignorar LIDs (@lid) que são IDs aleatórios de privacidade
-          const validParticipants = metadata.participants
-            .map(p => p.id)
-            .filter(id => {
-              // Deve terminar com @s.whatsapp.net (JID de telefone válido)
-              if (!id.endsWith('@s.whatsapp.net')) {
-                return false;
-              }
-              // Extrair o número antes do @
-              const phoneNumber = id.split('@')[0];
-              // Deve ter apenas dígitos e tamanho razoável (10-15 dígitos)
-              if (!/^\d{10,15}$/.test(phoneNumber)) {
-                return false;
-              }
-              // Números brasileiros começam com 55
-              // Aceitar qualquer número válido, mas dar preferência aos que começam com código de país
-              return true;
-            });
+          // Coletar números válidos de telefone
+          const validPhoneNumbers = [];
 
-          if (validParticipants.length === 0) {
-            log.warn(`[MARKETING] ⚠️ Grupo ${metadata.subject}: nenhum membro válido (todos são LIDs)`);
+          for (const participant of metadata.participants) {
+            const id = participant.id;
+
+            // Caso 1: JID normal com número de telefone (@s.whatsapp.net)
+            if (id.endsWith('@s.whatsapp.net')) {
+              const phoneNumber = id.split('@')[0];
+              // Validar se é um número válido (10-15 dígitos)
+              if (/^\d{10,15}$/.test(phoneNumber)) {
+                validPhoneNumbers.push(phoneNumber);
+                continue;
+              }
+            }
+
+            // Caso 2: LID - tentar resolver via store de contatos
+            if (id.endsWith('@lid') && store && store.contacts) {
+              // Buscar no store por um contato que tenha este LID mapeado
+              const contact = store.contacts[id];
+              if (contact && contact.phoneNumber) {
+                validPhoneNumbers.push(contact.phoneNumber.replace(/\D/g, ''));
+                continue;
+              }
+
+              // Tentar buscar pelo LID no mapeamento inverso
+              for (const [contactJid, contactData] of Object.entries(store.contacts)) {
+                if (contactData && contactData.lid === id && contactJid.endsWith('@s.whatsapp.net')) {
+                  const phoneNumber = contactJid.split('@')[0];
+                  if (/^\d{10,15}$/.test(phoneNumber)) {
+                    validPhoneNumbers.push(phoneNumber);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+
+          if (validPhoneNumbers.length === 0) {
+            log.warn(`[MARKETING] ⚠️ Grupo ${metadata.subject}: nenhum número resolvido (${metadata.participants.length} membros são LIDs)`);
             continue;
           }
 
@@ -4233,11 +4251,11 @@ app.post('/sync-members', auth, async (req, res) => {
           try {
             await axios.post(`${RASTREAMENTO_API_URL}/api_marketing_robusto.php?action=save_members`, {
               group_jid: jid,
-              members: validParticipants
+              members: validPhoneNumbers
             }, {
               headers: { 'x-api-token': RASTREAMENTO_TOKEN }
             });
-            log.info(`[MARKETING] ✅ Salvos ${validParticipants.length} membros válidos do grupo: ${metadata.subject} (${metadata.participants.length - validParticipants.length} LIDs ignorados)`);
+            log.info(`[MARKETING] ✅ Salvos ${validPhoneNumbers.length} membros do grupo: ${metadata.subject} (${metadata.participants.length - validPhoneNumbers.length} LIDs não resolvidos)`);
           } catch (apiErr) {
             log.error(`[MARKETING] ❌ Erro na API PHP para grupo ${metadata.subject}: ${apiErr.message}`);
             if (apiErr.response) log.error(`Dados erro: ${JSON.stringify(apiErr.response.data)}`);
