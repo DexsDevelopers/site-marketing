@@ -95,6 +95,40 @@ app.get('/logs', (req, res) => {
   });
 });
 
+// Endpoint para testar conexão com API PHP
+app.get('/test-api', async (req, res) => {
+  const url = `${RASTREAMENTO_API_URL}/api_marketing_robusto.php?action=save_members`;
+  console.log(`[DEBUG] Testando conexão com: ${url} (Token: ${RASTREAMENTO_TOKEN})`);
+
+  try {
+    const apiRes = await axios.post(url, {
+      group_jid: 'debug-api-test',
+      members: ['551199999999']
+    }, {
+      headers: { 'x-api-token': RASTREAMENTO_TOKEN },
+      timeout: 10000
+    });
+
+    res.json({
+      success: true,
+      url: url,
+      response_status: apiRes.status,
+      response_data: apiRes.data
+    });
+  } catch (err) {
+    console.error(`[DEBUG] Erro ao testar API: ${err.message}`);
+    if (err.response) console.error(`[DEBUG] Resposta erro:`, err.response.data);
+
+    res.status(500).json({
+      success: false,
+      url: url,
+      error: err.message,
+      response_status: err.response?.status,
+      response_data: err.response?.data
+    });
+  }
+});
+
 // Endpoint para resetar a conexão (apagar pasta auth e reiniciar)
 app.post('/reset', async (req, res) => {
   const token = req.headers['x-api-token'];
