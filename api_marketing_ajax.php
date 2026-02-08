@@ -326,18 +326,53 @@ try {
             break;
 
         case 'trigger_disparos':
-            // Esta ação força o processamento da fila imediatamente
-            $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']) . "/api_marketing_trigger.php";
+            try {
+                // 1. Verificar se há campanha ativa
+                $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE id = 1 AND ativo = 1");
+                if (!$campanha) {
+                    $response = ['success' => false, 'message' => 'Nenhuma campanha ativa. Ative primeiro nas Configurações.'];
+                    break;
+                }
 
-            // Usar curl para disparar o script de trigger de forma assíncrona ou rápida
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            $output = curl_exec($ch);
-            curl_close($ch);
+                // 2. Colocar leads em 'em_progresso' que estavam como 'novo', respeitando o limite diário
+                $limiteDiario = intval($campanha['membros_por_dia_grupo'] ?? 100);
+                $hojeStats = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE (status = 'em_progresso' OR status = 'concluido') AND DATE(data_entrada_fluxo) = CURDATE()");
+                $hojeCount = intval($hojeStats['c'] ?? 0);
 
-            $response = ['success' => true, 'message' => 'Processamento de disparos iniciado!', 'debug' => $output];
+                $vagas = $limiteDiario - $hojeCount;
+                $novosAtivados = 0;
+                if ($vagas > 0) {
+                    $novos = fetchData($pdo, "SELECT id FROM marketing_membros WHERE status = 'novo' ORDER BY id ASC LIMIT $vagas");
+                    foreach ($novos as $n) {
+                        executeQuery($pdo, "UPDATE marketing_membros SET status = 'em_progresso', data_proximo_envio = NOW(), ultimo_passo_id = 0, data_entrada_fluxo = CURDATE() WHERE id = ?", [$n['id']]);
+                        $novosAtivados++;
+                    }
+                }
+
+                // 3. Forçar 'data_proximo_envio' para agora em quem já está em progresso
+                executeQuery($pdo, "UPDATE marketing_membros SET data_proximo_envio = NOW() WHERE status = 'em_progresso' AND (data_proximo_envio > NOW() OR data_proximo_envio IS NULL)");
+
+                // 4. Buscar tarefas pendentes para exibir contagem
+                $sqlTasks = "
+                    SELECT COUNT(*) as total
+                    FROM marketing_membros m
+                    JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem
+                    WHERE m.status = 'em_progresso' 
+                    AND m.data_proximo_envio <= NOW()
+                ";
+                $taskCount = fetchOne($pdo, $sqlTasks);
+                $pendentes = intval($taskCount['total'] ?? 0);
+
+                $response = [
+                    'success' => true,
+                    'message' => "Disparos iniciados! $novosAtivados novos leads ativados. $pendentes mensagens na fila para envio.",
+                    'novos_ativados' => $novosAtivados,
+                    'pendentes' => $pendentes
+                ];
+            }
+            catch (Exception $e) {
+                $response = ['success' => false, 'message' => 'Erro ao processar: ' . $e->getMessage()];
+            }
             break;
 
         default:
