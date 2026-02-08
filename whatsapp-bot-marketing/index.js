@@ -4203,17 +4203,41 @@ app.post('/sync-members', auth, async (req, res) => {
       for (const jid of groupJids) {
         try {
           const metadata = await sock.groupMetadata(jid);
-          const participants = metadata.participants.map(p => p.id); // Guardar o JID completo para evitar problemas de 9º dígito
+
+          // Filtrar apenas JIDs válidos (números de telefone reais)
+          // Ignorar LIDs (@lid) que são IDs aleatórios de privacidade
+          const validParticipants = metadata.participants
+            .map(p => p.id)
+            .filter(id => {
+              // Deve terminar com @s.whatsapp.net (JID de telefone válido)
+              if (!id.endsWith('@s.whatsapp.net')) {
+                return false;
+              }
+              // Extrair o número antes do @
+              const phoneNumber = id.split('@')[0];
+              // Deve ter apenas dígitos e tamanho razoável (10-15 dígitos)
+              if (!/^\d{10,15}$/.test(phoneNumber)) {
+                return false;
+              }
+              // Números brasileiros começam com 55
+              // Aceitar qualquer número válido, mas dar preferência aos que começam com código de país
+              return true;
+            });
+
+          if (validParticipants.length === 0) {
+            log.warn(`[MARKETING] ⚠️ Grupo ${metadata.subject}: nenhum membro válido (todos são LIDs)`);
+            continue;
+          }
 
           // Enviar para API PHP salvar
           try {
             await axios.post(`${RASTREAMENTO_API_URL}/api_marketing_robusto.php?action=save_members`, {
               group_jid: jid,
-              members: participants
+              members: validParticipants
             }, {
               headers: { 'x-api-token': RASTREAMENTO_TOKEN }
             });
-            log.info(`[MARKETING] ✅ Salvos ${participants.length} membros do grupo: ${metadata.subject}`);
+            log.info(`[MARKETING] ✅ Salvos ${validParticipants.length} membros válidos do grupo: ${metadata.subject} (${metadata.participants.length - validParticipants.length} LIDs ignorados)`);
           } catch (apiErr) {
             log.error(`[MARKETING] ❌ Erro na API PHP para grupo ${metadata.subject}: ${apiErr.message}`);
             if (apiErr.response) log.error(`Dados erro: ${JSON.stringify(apiErr.response.data)}`);
