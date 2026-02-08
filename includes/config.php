@@ -12,8 +12,8 @@ define('LOGIN_LOCKOUT_TIME', 900); // 15 minutos
 
 // Configurações do banco de dados
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'u853242961_rastreio');
-define('DB_USER', 'u853242961_johan71');
+define('DB_NAME', 'u853242961_marketings');
+define('DB_USER', 'u853242961_lucas');
 define('DB_PASS', 'Lucastav8012@');
 define('DB_CHARSET', 'utf8mb4');
 

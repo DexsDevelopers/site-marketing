@@ -48,6 +48,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Rota raiz para verificação rápida
+app.get('/', (req, res) => {
+  res.send('🤖 Bot Marketing Ativo e Operante!');
+});
+
 // Configurações específicas para este projeto
 const PORT = Number(process.env.API_PORT || 3002);
 // Limpar token completamente - remover espaços e caracteres invisíveis

@@ -5,6 +5,7 @@ requireLogin();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,26 +13,11 @@ requireLogin();
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo">
-                <i class="fab fa-whatsapp"></i>
-                MARKETING HUB
-            </div>
-            <nav>
-                <ul class="nav-links">
-                    <li><a href="#" class="nav-item active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="#" class="nav-item"><i class="fas fa-layer-group"></i> Funil de Vendas</a></li>
-                    <li><a href="#" class="nav-item"><i class="fas fa-users"></i> Leads</a></li>
-                    <li><a href="#" class="nav-item"><i class="fas fa-cog"></i> Configurações</a></li>
-                </ul>
-            </nav>
-            <div style="margin-top: auto;">
-                <a href="logout.php" class="nav-item" style="color: var(--primary);"><i class="fas fa-sign-out-alt"></i> Sair</a>
-            </div>
-        </aside>
+        <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main -->
         <main class="main-content">
@@ -81,7 +67,8 @@ requireLogin();
                         <div id="funnel-container">
                             <p style="color: var(--text-dim);">Carregando mensagens...</p>
                         </div>
-                        <button class="btn-modern" style="margin-top: 1rem;"><i class="fas fa-plus"></i> Nova Etapa</button>
+                        <button class="btn-modern" style="margin-top: 1rem;"><i class="fas fa-plus"></i> Nova
+                            Etapa</button>
                     </div>
                 </section>
 
@@ -90,7 +77,8 @@ requireLogin();
                     <div class="panel">
                         <div class="panel-title"><i class="fas fa-qrcode"></i> Conexão WhatsApp</div>
                         <div id="qr-container" class="qr-placeholder">
-                            <span style="font-size: 0.8rem; text-align: center; color: var(--text-dim);">Aguardando bot...</span>
+                            <span style="font-size: 0.8rem; text-align: center; color: var(--text-dim);">Aguardando
+                                bot...</span>
                         </div>
                         <div id="bot-info" style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-dim);">
                             <!-- Info do Bot via JS -->
@@ -100,7 +88,8 @@ requireLogin();
                     <div class="panel">
                         <div class="panel-title"><i class="fas fa-history"></i> Atividade Recente</div>
                         <ul style="list-style: none; padding: 0; font-size: 0.85rem;" id="recent-activity">
-                            <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">Carregando atividades...</li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">Carregando
+                                atividades...</li>
                         </ul>
                     </div>
                 </aside>
@@ -114,7 +103,7 @@ requireLogin();
             try {
                 const response = await fetch('api_dashboard.php?action=get_bot_status');
                 const result = await response.json();
-                
+
                 const dot = document.getElementById('status-dot');
                 const text = document.getElementById('status-text');
                 const qrContainer = document.getElementById('qr-container');
@@ -123,7 +112,7 @@ requireLogin();
                 if (result.success && result.data.online) {
                     dot.classList.add('online');
                     text.innerText = result.data.ready ? 'Bot Online & Pronto' : 'Bot Conectado (Aguardando QR)';
-                    
+
                     botInfo.innerHTML = `
                         <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
                             <span>Uptime:</span>
@@ -168,7 +157,7 @@ requireLogin();
                     document.getElementById('stat-leads-concluido').innerText = result.data.leads_concluido;
                     document.getElementById('stat-envios-hoje').innerText = result.data.envios_hoje;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
 
         // Funil mock (para visual)
@@ -218,7 +207,7 @@ requireLogin();
                 } else {
                     list.innerHTML = '<li style="color:var(--text-dim);">Nenhuma atividade recente.</li>';
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
 
         // Init
@@ -231,4 +220,5 @@ requireLogin();
         setInterval(updateActivity, 15000);
     </script>
 </body>
+
 </html>
