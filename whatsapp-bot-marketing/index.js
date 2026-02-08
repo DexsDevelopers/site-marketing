@@ -53,6 +53,43 @@ app.get('/', (req, res) => {
   res.send('🤖 Bot Marketing Ativo e Operante!');
 });
 
+// Endpoint para resetar a conexão (apagar pasta auth e reiniciar)
+app.post('/reset', async (req, res) => {
+  const token = req.headers['x-api-token'];
+  if (token !== API_TOKEN) {
+    return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+  }
+
+  try {
+    console.log('🔄 Recebido comando de reset. Apagando pasta de autenticação...');
+
+    // Fechar conexão se existir
+    if (sock) {
+      sock.end(undefined);
+    }
+
+    // Apagar pasta auth_info_baileys
+    if (fs.existsSync('auth_info_baileys')) {
+      fs.rmSync('auth_info_baileys', { recursive: true, force: true });
+      console.log('✅ Pasta auth_info_baileys apagada com sucesso.');
+    } else {
+      console.log('ℹ️ Pasta auth_info_baileys não existia.');
+    }
+
+    res.json({ status: 'success', message: 'Conexão resetada. O bot irá reiniciar em 5 segundos para gerar novo QR Code.' });
+
+    // Reiniciar processo (PM2 vai subir de volta)
+    setTimeout(() => {
+      console.log('☠️ Encerrando processo para reinício...');
+      process.exit(0);
+    }, 5000);
+
+  } catch (error) {
+    console.error('❌ Erro ao resetar:', error);
+    res.status(500).json({ status: 'error', message: 'Erro interno ao resetar' });
+  }
+});
+
 // Configurações específicas para este projeto
 const PORT = Number(process.env.API_PORT || 3002);
 // Limpar token completamente - remover espaços e caracteres invisíveis
