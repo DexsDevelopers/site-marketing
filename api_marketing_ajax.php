@@ -265,6 +265,66 @@ try {
             ];
             break;
 
+        case 'save_step':
+            $id = (int)($_POST['id'] ?? 0);
+            $conteudo = $_POST['conteudo'] ?? '';
+            $delay = (int)($_POST['delay'] ?? 0);
+            $tipo = $_POST['tipo'] ?? 'texto';
+            $ordem = (int)($_POST['ordem'] ?? 0);
+
+            if (empty($conteudo)) {
+                $response = ['success' => false, 'message' => 'O conteúdo não pode estar vazio'];
+                break;
+            }
+
+            if ($id > 0) {
+                // Update
+                executeQuery($pdo, "UPDATE marketing_mensagens SET conteudo = ?, delay_apos_anterior_minutos = ?, tipo = ?, ordem = ? WHERE id = ?", [$conteudo, $delay, $tipo, $ordem, $id]);
+            }
+            else {
+                // Insert
+                if ($ordem === 0) {
+                    $maxOrdem = fetchOne($pdo, "SELECT MAX(ordem) as m FROM marketing_mensagens")['m'] ?? 0;
+                    $ordem = $maxOrdem + 1;
+                }
+                executeQuery($pdo, "INSERT INTO marketing_mensagens (campanha_id, ordem, tipo, conteudo, delay_apos_anterior_minutos) VALUES (1, ?, ?, ?, ?)", [$ordem, $tipo, $conteudo, $delay]);
+                $id = $pdo->lastInsertId();
+            }
+
+            $response = ['success' => true, 'message' => 'Passo salvo com sucesso!', 'id' => $id];
+            break;
+
+        case 'delete_step':
+            $id = (int)$_POST['id'];
+            if (!$id) {
+                $response = ['success' => false, 'message' => 'ID inválido'];
+                break;
+            }
+
+            executeQuery($pdo, "DELETE FROM marketing_mensagens WHERE id = ?", [$id]);
+
+            // Reordenar após exclusão
+            $msgs = fetchData($pdo, "SELECT id FROM marketing_mensagens ORDER BY ordem ASC");
+            $i = 1;
+            foreach ($msgs as $msg) {
+                executeQuery($pdo, "UPDATE marketing_mensagens SET ordem = ? WHERE id = ?", [$i, $msg['id']]);
+                $i++;
+            }
+
+            $response = ['success' => true, 'message' => 'Passo excluído com sucesso!'];
+            break;
+
+        case 'save_campaign_settings':
+            $ativo = (int)($_POST['ativo'] ?? 0);
+            $membrosDia = (int)($_POST['membros_por_dia'] ?? 5);
+            $minInterval = (int)($_POST['min_interval'] ?? 30);
+            $maxInterval = (int)($_POST['max_interval'] ?? 120);
+
+            executeQuery($pdo, "UPDATE marketing_campanhas SET ativo = ?, membros_por_dia_grupo = ?, intervalo_min_minutos = ?, intervalo_max_minutos = ? WHERE id = 1", [$ativo, $membrosDia, $minInterval, $maxInterval]);
+
+            $response = ['success' => true, 'message' => 'Configurações salvas!'];
+            break;
+
         default:
             $response = ['success' => false, 'message' => 'Ação não reconhecida: ' . $action];
     }
