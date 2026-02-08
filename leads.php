@@ -68,23 +68,77 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
             <div class="stats-grid animate-fade-in">
                 <div class="stat-card">
                     <div class="stat-label">Total de Leads</div>
-                    <div class="stat-value"><?= $stats['total'] ?></div>
-                    <div style="color: #4facfe; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-users"></i> Base total</div>
+                    <div class="stat-value">
+                        <?= $stats['total']?>
+                    </div>
+                    <div style="color: #4facfe; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-users"></i> Base
+                        total</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Na Fila</div>
-                    <div class="stat-value" style="color: #3b82f6;"><?= $stats['novos'] ?></div>
-                    <div style="color: #3b82f6; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-clock"></i> Aguardando</div>
+                    <div class="stat-value" style="color: #3b82f6;">
+                        <?= $stats['novos']?>
+                    </div>
+                    <div style="color: #3b82f6; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-clock"></i>
+                        Aguardando</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Em Progresso</div>
-                    <div class="stat-value" style="color: #f59e0b;"><?= $stats['progresso'] ?></div>
-                    <div style="color: #f59e0b; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-spinner fa-spin"></i> No fluxo</div>
+                    <div class="stat-value" style="color: #f59e0b;">
+                        <?= $stats['progresso']?>
+                    </div>
+                    <div style="color: #f59e0b; font-size: 0.8rem; font-weight: 600;"><i
+                            class="fas fa-spinner fa-spin"></i> No fluxo</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Concluídos</div>
-                    <div class="stat-value" style="color: #10b981;"><?= $stats['concluido'] ?></div>
-                    <div style="color: #10b981; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Finalizados</div>
+                    <div class="stat-value" style="color: #10b981;">
+                        <?= $stats['concluido']?>
+                    </div>
+                    <div style="color: #10b981; font-size: 0.8rem; font-weight: 600;"><i
+                            class="fas fa-check-circle"></i> Finalizados</div>
+                </div>
+            </div>
+
+            <!-- PAINEL DE IMPORTAÇÃO -->
+            <div class="panel animate-fade-in" style="animation-delay: 0.05s;">
+                <div class="panel-title">
+                    <span><i class="fas fa-file-import"></i> Importar Leads</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Opção 1: Colar números -->
+                    <div>
+                        <label
+                            style="color: var(--text-dim); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">
+                            <i class="fas fa-paste"></i> Cole os números (um por linha)
+                        </label>
+                        <textarea id="import-textarea" class="form-control"
+                            style="width: 100%; height: 150px; resize: vertical; font-family: monospace;"
+                            placeholder="5511999999999&#10;5511888888888&#10;5521777777777"></textarea>
+                    </div>
+                    <!-- Opção 2: Upload CSV -->
+                    <div>
+                        <label
+                            style="color: var(--text-dim); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">
+                            <i class="fas fa-file-csv"></i> Ou faça upload de arquivo CSV/TXT
+                        </label>
+                        <div
+                            style="border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 2rem; text-align: center; background: rgba(255,255,255,0.02);">
+                            <input type="file" id="import-file" accept=".csv,.txt" style="display: none;">
+                            <button class="btn-modern secondary"
+                                onclick="document.getElementById('import-file').click()">
+                                <i class="fas fa-upload"></i> Selecionar Arquivo
+                            </button>
+                            <p id="file-name" style="color: var(--text-dim); margin-top: 1rem; font-size: 0.85rem;">
+                                Nenhum arquivo selecionado</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+                    <button class="btn-modern accent" id="btn-import" onclick="importLeads()">
+                        <i class="fas fa-plus-circle"></i> Importar Leads
+                    </button>
+                    <span id="import-status" style="color: var(--text-dim); font-size: 0.9rem;"></span>
                 </div>
             </div>
 
@@ -203,6 +257,74 @@ endforeach; ?>
                 btn.innerHTML = originalContent;
             }
         }
+        // File input handler
+        document.getElementById('import-file').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('file-name').textContent = file.name;
+                // Read file content and put in textarea
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    document.getElementById('import-textarea').value = ev.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        async function importLeads() {
+            const textarea = document.getElementById('import-textarea');
+            const btn = document.getElementById('btn-import');
+            const status = document.getElementById('import-status');
+            const numbers = textarea.value.trim();
+
+            if (!numbers) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Nenhum número',
+                    text: 'Cole os números no campo ou faça upload de um arquivo.',
+                    background: '#151518',
+                    color: '#e0e0e0'
+                });
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+            status.textContent = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'import_leads');
+                formData.append('numbers', numbers);
+
+                const response = await fetch('api_marketing_ajax.php', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Leads Importados!',
+                        text: data.message,
+                        background: '#151518',
+                        color: '#e0e0e0'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: data.message,
+                        background: '#151518',
+                        color: '#e0e0e0'
+                    });
+                }
+            } catch (e) {
+                status.textContent = 'Erro de conexão';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus-circle"></i> Importar Leads';
+            }
+        }
+
         async function clearAllLeads() {
             const res = await Swal.fire({
                 title: 'Tem certeza?',

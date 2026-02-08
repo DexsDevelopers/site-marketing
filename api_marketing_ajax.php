@@ -26,6 +26,58 @@ $response = ['success' => false, 'message' => 'Ação não reconhecida'];
 
 try {
     switch ($action) {
+        case 'import_leads':
+            $numbersRaw = $_POST['numbers'] ?? '';
+            if (empty($numbersRaw)) {
+                $response = ['success' => false, 'message' => 'Nenhum número fornecido.'];
+                break;
+            }
+
+            // Split by newlines, commas, semicolons, or spaces
+            $lines = preg_split('/[\r\n,;\s]+/', $numbersRaw);
+            $added = 0;
+            $duplicates = 0;
+            $invalid = 0;
+
+            $stmt = $pdo->prepare("INSERT IGNORE INTO marketing_membros (telefone, grupo_origem_jid, status) VALUES (?, 'importacao_manual', 'novo')");
+
+            foreach ($lines as $line) {
+                $phone = preg_replace('/\D/', '', trim($line)); // Keep only digits
+
+                if (strlen($phone) < 10 || strlen($phone) > 15) {
+                    if (!empty($phone))
+                        $invalid++;
+                    continue;
+                }
+
+                // Add 55 if not present (Brazilian numbers)
+                if (strlen($phone) <= 11 && !str_starts_with($phone, '55')) {
+                    $phone = '55' . $phone;
+                }
+
+                try {
+                    $stmt->execute([$phone]);
+                    if ($stmt->rowCount() > 0) {
+                        $added++;
+                    }
+                    else {
+                        $duplicates++;
+                    }
+                }
+                catch (Exception $e) {
+                    $duplicates++;
+                }
+            }
+
+            $response = [
+                'success' => true,
+                'message' => "$added leads importados! ($duplicates duplicados ignorados" . ($invalid > 0 ? ", $invalid inválidos" : "") . ")",
+                'added' => $added,
+                'duplicates' => $duplicates,
+                'invalid' => $invalid
+            ];
+            break;
+
         case 'sync_funnel':
             // 1. Reordenar mensagens (1, 2, 3...)
             $msgs = fetchData($pdo, "SELECT id FROM marketing_mensagens ORDER BY ordem ASC, id ASC");
