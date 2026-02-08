@@ -134,7 +134,7 @@ const AUTO_REPLY = String(process.env.AUTO_REPLY || 'false').toLowerCase() === '
 const AUTO_REPLY_WINDOW_MS = Number(process.env.AUTO_REPLY_WINDOW_MS || 3600000); // 1h
 
 // URLs das APIs - DOIS PROJETOS
-const RASTREAMENTO_API_URL = process.env.RASTREAMENTO_API_URL || 'https://cornflowerblue-fly-883408.hostingersite.com';
+const RASTREAMENTO_API_URL = process.env.RASTREAMENTO_API_URL || 'https://khaki-gull-213146.hostingersite.com';
 const FINANCEIRO_API_URL = process.env.FINANCEIRO_API_URL || 'https://gold-quail-250128.hostingersite.com/seu_projeto';
 
 // Tokens por projeto
@@ -4155,6 +4155,7 @@ app.post('/sync-members', auth, async (req, res) => {
       const groupJids = Object.keys(groups);
 
       log.info(`[MARKETING] Encontrados ${groupJids.length} grupos.`);
+      log.info(`[MARKETING] Enviando para API: ${RASTREAMENTO_API_URL}/api_marketing_robusto.php`);
 
       for (const jid of groupJids) {
         try {
@@ -4162,19 +4163,23 @@ app.post('/sync-members', auth, async (req, res) => {
           const participants = metadata.participants.map(p => p.id); // Guardar o JID completo para evitar problemas de 9º dígito
 
           // Enviar para API PHP salvar
-          await axios.post(`${RASTREAMENTO_API_URL}/api_marketing_robusto.php?action=save_members`, {
-            group_jid: jid,
-            members: participants
-          }, {
-            headers: { 'x-api-token': RASTREAMENTO_TOKEN }
-          });
-
-          log.info(`[MARKETING] Salvos ${participants.length} membros do grupo ${metadata.subject}`);
+          try {
+            await axios.post(`${RASTREAMENTO_API_URL}/api_marketing_robusto.php?action=save_members`, {
+              group_jid: jid,
+              members: participants
+            }, {
+              headers: { 'x-api-token': RASTREAMENTO_TOKEN }
+            });
+            log.info(`[MARKETING] ✅ Salvos ${participants.length} membros do grupo: ${metadata.subject}`);
+          } catch (apiErr) {
+            log.error(`[MARKETING] ❌ Erro na API PHP para grupo ${metadata.subject}: ${apiErr.message}`);
+            if (apiErr.response) log.error(`Dados erro: ${JSON.stringify(apiErr.response.data)}`);
+          }
 
           // Delay para não sobrecarregar
           await new Promise(r => setTimeout(r, 2000));
         } catch (err) {
-          log.error(`[MARKETING] Erro ao processar grupo ${jid}: ${err.message}`);
+          log.error(`[MARKETING] Erro ao ler metadata do grupo ${jid}: ${err.message}`);
         }
       }
 
