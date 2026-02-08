@@ -16,6 +16,8 @@ import { decryptPollVote } from '@whiskeysockets/baileys/lib/Utils/process-messa
 import { jidNormalizedUser } from '@whiskeysockets/baileys/lib/WABinary/jid-utils.js';
 import crypto from 'crypto';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import qrcode from 'qrcode-terminal';
 import QRCodeImg from 'qrcode';
 import express from 'express';
@@ -25,6 +27,19 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import FormData from 'form-data';
 dotenv.config();
+
+// Pasta de autenticação FORA do diretório Git para não ser sobrescrita pelo deploy
+// Usa variável de ambiente ou pasta padrão na home do usuário
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const AUTH_FOLDER = process.env.AUTH_FOLDER || path.join(__dirname, '..', '..', '.whatsapp-auth-marketing');
+
+// Criar pasta de auth se não existir
+if (!fs.existsSync(AUTH_FOLDER)) {
+  fs.mkdirSync(AUTH_FOLDER, { recursive: true });
+  console.log(`📁 Pasta de autenticação criada: ${AUTH_FOLDER}`);
+}
+console.log(`🔐 Usando pasta de autenticação: ${AUTH_FOLDER}`);
 
 // Formata número brasileiro para WhatsApp
 function formatBrazilNumber(raw) {
@@ -2906,7 +2921,7 @@ async function start() {
     const { version, isLatest } = await fetchLatestBaileysVersion();
     log.info(`WhatsApp Web version: ${version?.join('.')} (latest=${isLatest})`);
 
-    const { state, saveCreds } = await useMultiFileAuthState('./auth_info_baileys');
+    const { state, saveCreds } = await useMultiFileAuthState(AUTH_FOLDER);
 
     // Logger personalizado que silencia TUDO do Baileys
     const silentLogger = pino({
