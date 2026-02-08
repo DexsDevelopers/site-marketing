@@ -195,11 +195,11 @@ const AUTO_REPLY = String(process.env.AUTO_REPLY || 'false').toLowerCase() === '
 const AUTO_REPLY_WINDOW_MS = Number(process.env.AUTO_REPLY_WINDOW_MS || 3600000); // 1h
 
 // URLs das APIs - DOIS PROJETOS
-const RASTREAMENTO_API_URL = process.env.RASTREAMENTO_API_URL || 'https://khaki-gull-213146.hostingersite.com';
+const RASTREAMENTO_API_URL = 'https://khaki-gull-213146.hostingersite.com';
 const FINANCEIRO_API_URL = process.env.FINANCEIRO_API_URL || 'https://gold-quail-250128.hostingersite.com/seu_projeto';
 
 // Tokens por projeto
-const RASTREAMENTO_TOKEN = process.env.RASTREAMENTO_TOKEN || process.env.API_TOKEN || 'lucastav8012';
+const RASTREAMENTO_TOKEN = 'lucastav8012';
 const FINANCEIRO_TOKEN = process.env.FINANCEIRO_TOKEN || 'site-financeiro-token-2024';
 
 const ADMIN_API_URL = RASTREAMENTO_API_URL; // Compatibilidade
