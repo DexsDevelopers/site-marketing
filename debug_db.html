@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Banco de Dados</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #4fc3f7;
+        }
+
+        h2 {
+            color: #81c784;
+            margin-top: 30px;
+        }
+
+        pre {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #4fc3f7;
+        }
+
+        .error {
+            color: #e57373;
+        }
+
+        .success {
+            color: #81c784;
+        }
+
+        .warning {
+            color: #ffb74d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            background: #333;
+            color: #4fc3f7;
+        }
+
+        button {
+            background: #4fc3f7;
+            color: #1e1e1e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #3ba3d4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Debug - Banco de Dados do Marketing</h1>
+        <button onclick="runDebug()">▶️ Executar Debug</button>
+        <button onclick="clearOutput()">🗑️ Limpar</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        async function runDebug() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<h2>Executando diagnóstico...</h2>';
+
+            try {
+                // 1. Verificar estrutura da tabela
+                output.innerHTML += '<h2>1. Estrutura da Tabela bot_automation_logs</h2>';
+                const resp1 = await fetch('debug_db.php');
+                const text1 = await resp1.text();
+                output.innerHTML += `<pre>${text1}</pre>`;
+
+            } catch (error) {
+                output.innerHTML += `<p class="error">Erro: ${error.message}</p>`;
+            }
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+    </script>
+</body>
+
+</html>
