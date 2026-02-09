@@ -243,6 +243,45 @@ requireLogin();
             } catch (e) { }
         }
 
+        async function triggerDisparos() {
+            const btn = document.getElementById('btn-trigger');
+            if (!btn) {
+                console.error('Botão não encontrado!');
+                return;
+            }
+
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+                console.log('🚀 Iniciando disparos...');
+
+                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
+                console.log('📡 Resposta recebida:', response.status);
+
+                const data = await response.json();
+                console.log('📦 Dados:', data);
+
+                if (data.success) {
+                    console.log('✅ Sucesso!');
+                    alert(`✅ ${data.message}\n\nNovos ativados: ${data.novos_ativados}\nPendentes: ${data.pendentes}`);
+                    // Atualizar stats após disparar
+                    updateStats();
+                } else {
+                    console.log('❌ Erro:', data.message);
+                    alert(`❌ Erro: ${data.message}`);
+                }
+            } catch (e) {
+                console.error('💥 Exceção:', e);
+                alert(`❌ Erro: ${e.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                console.log('🔄 Botão restaurado');
+            }
+        }
+
         // Init
         updateBotStatus();
         updateStats();
