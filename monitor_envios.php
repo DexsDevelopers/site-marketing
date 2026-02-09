@@ -283,14 +283,14 @@ requireLogin();
 
                 console.log('Stats response:', stats);
 
-                if (stats.success && stats.data) {
-                    document.getElementById('total-leads').textContent = stats.data.leads_total || 0;
-                    document.getElementById('novos').textContent = stats.data.leads_novo || 0;
-                    document.getElementById('em-progresso').textContent = stats.data.leads_ativo || 0;
-                    document.getElementById('concluidos').textContent = stats.data.leads_concluido || 0;
-                    document.getElementById('bloqueados').textContent = stats.data.leads_bloqueado || 0;
+                if (stats.success && stats.stats) {
+                    document.getElementById('total-leads').textContent = stats.stats.total_leads || 0;
+                    document.getElementById('novos').textContent = stats.stats.fila_espera || 0;
+                    document.getElementById('em-progresso').textContent = stats.stats.hoje_andamento || 0;
+                    document.getElementById('concluidos').textContent = stats.stats.hoje_concluidos || 0;
+                    document.getElementById('bloqueados').textContent = 0;
 
-                    const proximoEnvio = stats.data.proximo_envio || 'Nenhum';
+                    const proximoEnvio = stats.stats.proximo_envio || 'Nenhum';
                     if (proximoEnvio !== 'Nenhum' && proximoEnvio !== 'Nenhum agendado') {
                         const date = new Date(proximoEnvio);
                         const now = new Date();
