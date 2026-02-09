@@ -26,7 +26,11 @@ try {
             $totalLeads = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros")['c'] ?? 0;
             $emProgresso = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE status = 'em_progresso'")['c'] ?? 0;
             $concluidos = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE status = 'concluido'")['c'] ?? 0;
-            $enviosHoje = fetchOne($pdo, "SELECT COUNT(*) as c FROM bot_automation_logs WHERE tipo_automacao = 'marketing' AND DATE(criado_em) = CURDATE()")['c'] ?? 0;
+
+            // Buscar disparos de marketing pelo automation_id
+            $autoMarketing = fetchOne($pdo, "SELECT id FROM bot_automations WHERE nome = 'Campanha Marketing' LIMIT 1");
+            $autoMarketingId = $autoMarketing ? $autoMarketing['id'] : 0;
+            $enviosHoje = fetchOne($pdo, "SELECT COUNT(*) as c FROM bot_automation_logs WHERE automation_id = ? AND DATE(created_at) = CURDATE()", [$autoMarketingId])['c'] ?? 0;
 
             // Próximo envio
             $proxEnvio = fetchOne($pdo, "SELECT data_proximo_envio FROM marketing_membros WHERE status = 'em_progresso' AND data_proximo_envio IS NOT NULL ORDER BY data_proximo_envio ASC LIMIT 1");
@@ -98,7 +102,10 @@ try {
             break;
 
         case 'get_recent_activity':
-            $logs = fetchData($pdo, "SELECT criado_em, numero_origem, resposta_enviada FROM bot_automation_logs WHERE tipo_automacao = 'marketing' ORDER BY criado_em DESC LIMIT 10");
+            // Buscar atividades de marketing pelo automation_id
+            $autoMarketing = fetchOne($pdo, "SELECT id FROM bot_automations WHERE nome = 'Campanha Marketing' LIMIT 1");
+            $autoMarketingId = $autoMarketing ? $autoMarketing['id'] : 0;
+            $logs = fetchData($pdo, "SELECT created_at as criado_em, numero_origem, resposta_enviada FROM bot_automation_logs WHERE automation_id = ? ORDER BY created_at DESC LIMIT 10", [$autoMarketingId]);
             $response = ['success' => true, 'data' => $logs];
             break;
     }
