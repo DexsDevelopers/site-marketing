@@ -180,7 +180,7 @@ try {
             // Disparos Reais Hoje - Buscar pelo automation_id da campanha de marketing
             $autoMarketing = fetchOne($pdo, "SELECT id FROM bot_automations WHERE nome = 'Campanha Marketing' LIMIT 1");
             $autoMarketingId = $autoMarketing ? $autoMarketing['id'] : 0;
-            $disparosHoje = fetchOne($pdo, "SELECT COUNT(*) as c FROM bot_automation_logs WHERE automation_id = ? AND DATE(created_at) = CURDATE()", [$autoMarketingId])['c'] ?? 0;
+            $disparosHoje = fetchOne($pdo, "SELECT COUNT(*) as c FROM bot_automation_logs WHERE automation_id = ? AND DATE(criado_em) = CURDATE()", [$autoMarketingId])['c'] ?? 0;
 
             // Próximo envio agendado
             $proxEnvio = fetchOne($pdo, "SELECT data_proximo_envio FROM marketing_membros WHERE status = 'em_progresso' AND data_proximo_envio IS NOT NULL ORDER BY data_proximo_envio ASC LIMIT 1");
