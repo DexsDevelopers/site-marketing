@@ -459,13 +459,13 @@ try {
                 if ($vagas > 0) {
                     $novos = fetchData($pdo, "SELECT id FROM marketing_membros WHERE status = 'novo' ORDER BY id ASC LIMIT $vagas");
                     foreach ($novos as $n) {
-                        executeQuery($pdo, "UPDATE marketing_membros SET status = 'em_progresso', data_proximo_envio = NOW(), ultimo_passo_id = 0, data_entrada_fluxo = CURDATE() WHERE id = ?", [$n['id']]);
+                        executeQuery($pdo, "UPDATE marketing_membros SET status = 'em_progresso', data_proximo_envio = DATE_SUB(NOW(), INTERVAL 5 MINUTE), ultimo_passo_id = 0, data_entrada_fluxo = CURDATE() WHERE id = ?", [$n['id']]);
                         $novosAtivados++;
                     }
                 }
 
-                // 3. Forçar 'data_proximo_envio' para agora em quem já está em progresso
-                executeQuery($pdo, "UPDATE marketing_membros SET data_proximo_envio = NOW() WHERE status = 'em_progresso' AND (data_proximo_envio > NOW() OR data_proximo_envio IS NULL)");
+                // 3. Forçar 'data_proximo_envio' para 5 minutos atrás (garante processamento imediato)
+                executeQuery($pdo, "UPDATE marketing_membros SET data_proximo_envio = DATE_SUB(NOW(), INTERVAL 5 MINUTE) WHERE status = 'em_progresso' AND (data_proximo_envio > NOW() OR data_proximo_envio IS NULL)");
 
                 // 4. Buscar tarefas pendentes para exibir contagem
                 $sqlTasks = "
