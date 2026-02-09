@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Botão Disparar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: #ff3b3b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            background: #e63333;
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Teste do Botão Disparar Agora</h1>
+
+    <button onclick="testarDisparoSimples()">🚀 Teste 1: Disparar Simples</button>
+    <button onclick="testarDisparoCompleto()">⚡ Teste 2: Disparar Completo</button>
+    <button onclick="verificarAPI()">🔍 Teste 3: Verificar API</button>
+
+    <div id="output"></div>
+
+    <script>
+        function log(msg) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += `[${timestamp}] ${msg}\n`;
+            console.log(msg);
+        }
+
+        async function testarDisparoSimples() {
+            log('=== TESTE 1: Disparar Simples ===');
+            try {
+                log('Fazendo requisição GET...');
+                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
+                log(`Status: ${response.status} ${response.statusText}`);
+
+                const text = await response.text();
+                log(`Resposta (primeiros 500 chars): ${text.substring(0, 500)}`);
+
+                try {
+                    const data = JSON.parse(text);
+                    log(`JSON parseado: ${JSON.stringify(data, null, 2)}`);
+                } catch (e) {
+                    log(`ERRO ao fazer parse do JSON: ${e.message}`);
+                }
+            } catch (error) {
+                log(`ERRO: ${error.message}`);
+            }
+        }
+
+        async function testarDisparoCompleto() {
+            log('=== TESTE 2: Disparar Completo (com fetch options) ===');
+            try {
+                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                log(`Status: ${response.status}`);
+                log(`Content-Type: ${response.headers.get('content-type')}`);
+
+                if (response.redirected) {
+                    log(`⚠️ REDIRECIONADO para: ${response.url}`);
+                    return;
+                }
+
+                const data = await response.json();
+                log(`Resposta: ${JSON.stringify(data, null, 2)}`);
+
+                if (data.success) {
+                    log(`✅ SUCESSO: ${data.message}`);
+                    log(`   Novos ativados: ${data.novos_ativados}`);
+                    log(`   Pendentes: ${data.pendentes}`);
+                } else {
+                    log(`❌ ERRO: ${data.message}`);
+                }
+            } catch (error) {
+                log(`ERRO: ${error.message}`);
+            }
+        }
+
+        async function verificarAPI() {
+            log('=== TESTE 3: Verificar se API está respondendo ===');
+            try {
+                // Testar endpoint de stats primeiro
+                log('Testando get_marketing_stats...');
+                const response = await fetch('api_marketing_ajax.php?action=get_marketing_stats');
+                log(`Status: ${response.status}`);
+
+                const data = await response.json();
+                log(`Stats: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                log(`ERRO: ${error.message}`);
+            }
+        }
+
+        log('Página carregada. Clique em um botão para testar.');
+    </script>
+</body>
+
+</html>
