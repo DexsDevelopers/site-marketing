@@ -94,8 +94,8 @@ try {
         $limiteDiario = intval($campanha['membros_por_dia_grupo'] ?? 100);
 
         // A. Seleção Diária (Novos -> Em Progresso)
-        // Verificar quantos já estão em progresso hoje
-        $hojeStats = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE (status = 'em_progresso' OR status = 'concluido') AND DATE(data_proximo_envio) = CURDATE()");
+        // Verificar quantos já estão em progresso hoje (usar data_entrada_fluxo, não data_proximo_envio)
+        $hojeStats = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE (status = 'em_progresso' OR status = 'concluido') AND DATE(data_entrada_fluxo) = CURDATE()");
         $hojeCount = intval($hojeStats['c']);
 
         if ($hojeCount < $limiteDiario) {
