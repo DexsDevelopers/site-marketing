@@ -281,7 +281,9 @@ requireLogin();
                 const statsRes = await fetch('api_marketing_ajax.php?action=get_marketing_stats');
                 const stats = await statsRes.json();
 
-                if (stats.success) {
+                console.log('Stats response:', stats);
+
+                if (stats.success && stats.data) {
                     document.getElementById('total-leads').textContent = stats.data.leads_total || 0;
                     document.getElementById('novos').textContent = stats.data.leads_novo || 0;
                     document.getElementById('em-progresso').textContent = stats.data.leads_ativo || 0;
@@ -304,11 +306,15 @@ requireLogin();
                     } else {
                         document.getElementById('proximo-envio').textContent = proximoEnvio;
                     }
+                } else {
+                    console.error('Stats API error:', stats);
                 }
 
                 // Carregar leads em progresso
                 const leadsRes = await fetch('api_monitor.php?action=get_active_leads');
                 const leadsData = await leadsRes.json();
+
+                console.log('Leads response:', leadsData);
 
                 if (leadsData.success && leadsData.leads) {
                     const tbody = document.getElementById('leads-table');
