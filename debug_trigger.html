@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Trigger Disparos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        #output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .log-info {
+            color: #4fc3f7;
+        }
+
+        .log-success {
+            color: #81c784;
+        }
+
+        .log-error {
+            color: #e57373;
+        }
+
+        .log-warning {
+            color: #ffb74d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Debug - Sistema de Disparos</h1>
+        <p class="subtitle">Ferramenta de diagnóstico para testar o endpoint de trigger</p>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="testTrigger()" id="btn-test">
+                <span>🚀</span>
+                <span>Testar Trigger</span>
+            </button>
+
+            <button class="btn-success" onclick="testAuth()" id="btn-auth">
+                <span>🔐</span>
+                <span>Verificar Autenticação</span>
+            </button>
+
+            <button class="btn-danger" onclick="testDirect()" id="btn-direct">
+                <span>⚡</span>
+                <span>Chamada Direta (sem AJAX)</span>
+            </button>
+
+            <button class="btn-secondary" onclick="clearOutput()">
+                <span>🗑️</span>
+                <span>Limpar</span>
+            </button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            const className = `log-${type}`;
+
+            const line = document.createElement('div');
+            line.className = className;
+            line.textContent = `[${timestamp}] ${message}`;
+
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+            log('Console limpo', 'info');
+        }
+
+        async function testAuth() {
+            const btn = document.getElementById('btn-auth');
+            const originalHTML = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span><span>Verificando...</span>';
+
+                log('Verificando autenticação...', 'info');
+
+                const response = await fetch('api_marketing_ajax.php?action=get_marketing_stats', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                log(`Status HTTP: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (response.redirected) {
+                    log(`⚠️ REDIRECIONADO PARA: ${response.url}`, 'warning');
+                    log('Isso indica que você não está autenticado!', 'error');
+                    return;
+                }
+
+                const text = await response.text();
+
+                try {
+                    const data = JSON.parse(text);
+                    log('✅ Autenticação OK - JSON válido recebido', 'success');
+                    log(`Dados: ${JSON.stringify(data, null, 2)}`, 'info');
+                } catch (e) {
+                    log('❌ Resposta não é JSON válido', 'error');
+                    log(`Primeiros 200 chars: ${text.substring(0, 200)}`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        async function testTrigger() {
+            const btn = document.getElementById('btn-test');
+            const originalHTML = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span><span>Processando...</span>';
+
+                log('═══════════════════════════════════', 'info');
+                log('Iniciando teste de trigger...', 'info');
+                log('URL: api_marketing_ajax.php?action=trigger_disparos', 'info');
+
+                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                log(`Status HTTP: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                log(`Content-Type: ${response.headers.get('content-type')}`, 'info');
+
+                if (response.redirected) {
+                    log(`⚠️ REDIRECIONADO PARA: ${response.url}`, 'warning');
+                    log('Possível problema de autenticação!', 'error');
+                    return;
+                }
+
+                const text = await response.text();
+                log(`Tamanho da resposta: ${text.length} bytes`, 'info');
+
+                try {
+                    const data = JSON.parse(text);
+                    log('✅ JSON parseado com sucesso!', 'success');
+                    log('═══════════════════════════════════', 'info');
+                    log('RESPOSTA DO SERVIDOR:', 'info');
+                    log(JSON.stringify(data, null, 2), data.success ? 'success' : 'error');
+                    log('═══════════════════════════════════', 'info');
+
+                    if (data.success) {
+                        log(`✅ SUCESSO: ${data.message}`, 'success');
+                        if (data.novos_ativados !== undefined) {
+                            log(`   📊 Novos ativados: ${data.novos_ativados}`, 'info');
+                        }
+                        if (data.pendentes !== undefined) {
+                            log(`   📊 Pendentes: ${data.pendentes}`, 'info');
+                        }
+                    } else {
+                        log(`❌ ERRO: ${data.message}`, 'error');
+                    }
+                } catch (parseError) {
+                    log(`❌ Erro ao fazer parse do JSON: ${parseError.message}`, 'error');
+                    log('Resposta bruta (primeiros 500 chars):', 'error');
+                    log(text.substring(0, 500), 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Exceção capturada: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                log('Teste finalizado.', 'info');
+            }
+        }
+
+        function testDirect() {
+            log('Abrindo endpoint em nova aba...', 'info');
+            window.open('api_marketing_ajax.php?action=trigger_disparos', '_blank');
+        }
+
+        // Auto-executar ao carregar
+        window.addEventListener('load', () => {
+            log('═══════════════════════════════════', 'info');
+            log('🔍 Debug Tool carregado', 'success');
+            log('Clique em um botão para começar os testes', 'info');
+            log('═══════════════════════════════════', 'info');
+        });
+    </script>
+</body>
+
+</html>

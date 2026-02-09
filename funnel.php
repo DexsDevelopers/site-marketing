@@ -113,17 +113,24 @@ endforeach; ?>
         const API_URL = 'api_marketing_ajax.php';
 
         async function triggerDisparos() {
+            console.log('🚀 triggerDisparos() chamado');
             const btn = document.getElementById('btn-trigger');
+            console.log('📍 Botão encontrado:', btn);
             const originalContent = btn.innerHTML;
 
             try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+                console.log('⏳ Fazendo requisição para api_marketing_ajax.php?action=trigger_disparos');
 
                 const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
+                console.log('📡 Resposta recebida:', response.status, response.statusText);
+                
                 const data = await response.json();
+                console.log('📦 Dados JSON:', data);
 
                 if (data.success) {
+                    console.log('✅ Sucesso! Mostrando alerta...');
                     Swal.fire({
                         icon: 'success',
                         title: 'Disparos Iniciados!',
@@ -138,6 +145,7 @@ endforeach; ?>
                         customClass: { popup: 'premium-swal' }
                     });
                 } else {
+                    console.log('❌ Erro retornado:', data.message);
                     Swal.fire({
                         icon: 'error',
                         title: 'Erro',
@@ -146,15 +154,17 @@ endforeach; ?>
                     });
                 }
             } catch (e) {
+                console.error('💥 Exceção capturada:', e);
                 Swal.fire({
                     icon: 'error',
                     title: 'Erro',
-                    text: 'Falha na conexão',
+                    text: 'Falha na conexão: ' + e.message,
                     customClass: { popup: 'premium-swal' }
                 });
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
+                console.log('🔄 Botão restaurado');
             }
         }
 
