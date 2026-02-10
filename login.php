@@ -16,22 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    // Carregar variáveis de ambiente
-    $envFile = __DIR__ . '/.env';
-    if (file_exists($envFile)) {
-        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            if (strpos(trim($line), '#') === 0)
-                continue;
-            list($name, $value) = explode('=', $line, 2);
-            putenv(sprintf('%s=%s', trim($name), trim($value)));
-        }
-    }
-
-    $adminUser = getenv('ADMIN_USER') ?: 'admin';
-    $adminPass = getenv('ADMIN_PASS') ?: 'Lucastav8012@';
-
-    if ($username === $adminUser && $password === $adminPass) {
+    // Login hardcoded simples (RESTORED FOR STABILITY)
+    $username_correto = 'admin';
+    $senha_correta = 'Lucastav8012@';
+    
+    if ($username === $username_correto && $password === $senha_correta) {
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['admin_username'] = $username;
         $_SESSION['login_time'] = time();

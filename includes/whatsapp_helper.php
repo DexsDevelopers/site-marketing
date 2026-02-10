@@ -49,17 +49,13 @@ function normalizePhoneToDigits(?string $input): ?string
 
 function whatsappApiConfig(): array
 {
-    // URL do Bot via Ngrok ou Hostinger (Fallback explicito)
-    $baseUrl = rtrim((string)getDynamicConfig('WHATSAPP_API_URL', 'https://cyan-spoonbill-539092.hostingersite.com'), '/');
-
-    // Remover hacks de localhost/IP, usar URL direta
-    // $baseUrl = str_replace(['localhost', '127.0.0.1'], '192.168.2.111', $baseUrl);
-
-    $token = trim((string)getDynamicConfig('WHATSAPP_API_TOKEN', 'lucastav8012')); // Limpar espaços do token (Fallback explicito)
-    $enabled = filter_var(getDynamicConfig('WHATSAPP_API_ENABLED', true), FILTER_VALIDATE_BOOLEAN);
+    // Usar valores fixos diretamente para evitar erro 500 de leitura de arquivo no servidor
+    $baseUrl = 'https://cyan-spoonbill-539092.hostingersite.com';
+    $token = 'lucastav8012';
+    $enabled = true;
 
     return [
-        'enabled' => $enabled && $baseUrl !== '' && $token !== '',
+        'enabled' => $enabled,
         'base_url' => $baseUrl,
         'token' => $token
     ];
