@@ -170,47 +170,47 @@ async function connectToWhatsApp() {
 let marketingTimer = null;
 let isProcessingMarketing = false;
 
+async function processMarketingTasks() {
+  if (isProcessingMarketing || !isReady || !sock) return;
+  isProcessingMarketing = true;
+
+  try {
+    addLog('INFO', 'Consultando tarefas pendentes no funil...');
+    const response = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`);
+    const data = response.data;
+
+    if (data && data.success) {
+      if (data.tasks && data.tasks.length > 0) {
+        addLog('INFO', `Encontradas ${data.tasks.length} tarefas. Iniciando disparos...`);
+        for (const task of data.tasks) {
+          const result = await sendMarketingMessage(task);
+          await axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=update_task`, {
+            member_id: task.member_id,
+            step_order: task.step_order,
+            success: result.success,
+            reason: result.reason
+          });
+          // Delay entre envios (10-30s)
+          const delay = Math.floor(Math.random() * 20000) + 10000;
+          await new Promise(r => setTimeout(r, delay));
+        }
+      } else {
+        addLog('INFO', 'Nenhuma mensagem pendente no momento.');
+      }
+    } else {
+      addLog('WARN', `Erro na resposta da API: ${data?.message || 'Erro desconhecido'}`);
+    }
+  } catch (e) {
+    addLog('ERROR', `Falha ao conectar com o site para buscar tarefas: ${e.message}`);
+  } finally {
+    isProcessingMarketing = false;
+  }
+}
+
 function startMarketingLoop() {
   if (marketingTimer) clearInterval(marketingTimer);
   addLog('INFO', 'Iniciando Loop de Marketing (60s)');
-
-  marketingTimer = setInterval(async () => {
-    if (isProcessingMarketing || !isReady || !sock) return;
-    isProcessingMarketing = true;
-
-    try {
-      addLog('INFO', 'Consultando tarefas pendentes no funil...');
-      const response = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`);
-      const data = response.data;
-
-      if (data && data.success) {
-        if (data.tasks && data.tasks.length > 0) {
-          addLog('INFO', `Encontradas ${data.tasks.length} tarefas. Iniciando disparos...`);
-          for (const task of data.tasks) {
-            const result = await sendMarketingMessage(task);
-            await axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=update_task`, {
-              member_id: task.member_id,
-              step_order: task.step_order,
-              success: result.success,
-              reason: result.reason
-            });
-            // Delay entre envios
-            const delay = Math.floor(Math.random() * 20000) + 10000; // 10-30s
-            await new Promise(r => setTimeout(r, delay));
-          }
-        } else {
-          // Log opcional para saber que a consulta foi feita mas não há nada
-          addLog('INFO', 'Nenhuma mensagem pendente no momento.');
-        }
-      } else {
-        addLog('WARN', `Erro na resposta da API: ${data?.message || 'Erro desconhecido'}`);
-      }
-    } catch (e) {
-      addLog('ERROR', `Falha ao conectar com o site para buscar tarefas: ${e.message}`);
-    } finally {
-      isProcessingMarketing = false;
-    }
-  }, 60000);
+  marketingTimer = setInterval(processMarketingTasks, 60000);
 }
 
 async function sendMarketingMessage(task) {
@@ -252,6 +252,12 @@ app.get('/', (req, res) => {
 
 app.get('/status', (req, res) => {
   res.json({ status: isReady ? 'CONNECTED' : (lastQR ? 'QR_CODE' : 'CONNECTING'), timestamp: Date.now() });
+});
+
+app.get('/trigger', async (req, res) => {
+  res.json({ success: true, message: 'Disparo manual iniciado' });
+  // Executa o processamento imediatamente sem esperar o timer do setInterval
+  processMarketingTasks();
 });
 
 app.get('/ping', async (req, res) => {
