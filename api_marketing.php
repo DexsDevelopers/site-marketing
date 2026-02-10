@@ -106,8 +106,7 @@ try {
 
                 foreach ($candidatos as $c) {
                     $delay = rand(1, 5); // Delay pequeno inicial
-                    $sendTime = date('Y-m-d H:i:s', strtotime("+$delay minutes"));
-                    executeQuery($pdo, "UPDATE marketing_membros SET status = 'em_progresso', data_proximo_envio = ?, ultimo_passo_id = 0, data_entrada_fluxo = CURDATE() WHERE id = ?", [$sendTime, $c['id']]);
+                    executeQuery($pdo, "UPDATE marketing_membros SET status = 'em_progresso', data_proximo_envio = DATE_ADD(NOW(), INTERVAL ? MINUTE), ultimo_passo_id = 0, data_entrada_fluxo = CURDATE() WHERE id = ?", [$delay, $c['id']]);
                     $vagas--;
                 }
             }
@@ -170,9 +169,8 @@ try {
             $nextMsg = fetchOne($pdo, "SELECT delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = 1 AND ordem > ? ORDER BY ordem ASC LIMIT 1", [$stepOrder]);
 
             if ($nextMsg) {
-                $delay = $nextMsg['delay_apos_anterior_minutos'];
-                $nextTime = date('Y-m-d H:i:s', strtotime("+$delay minutes"));
-                executeQuery($pdo, "UPDATE marketing_membros SET ultimo_passo_id = ?, data_proximo_envio = ?, status = 'em_progresso' WHERE id = ?", [$stepOrder, $nextTime, $memberId]);
+                $delay = (int)$nextMsg['delay_apos_anterior_minutos'];
+                executeQuery($pdo, "UPDATE marketing_membros SET ultimo_passo_id = ?, data_proximo_envio = DATE_ADD(NOW(), INTERVAL ? MINUTE), status = 'em_progresso' WHERE id = ?", [$stepOrder, $delay, $memberId]);
             }
             else {
                 executeQuery($pdo, "UPDATE marketing_membros SET ultimo_passo_id = ?, status = 'concluido' WHERE id = ?", [$stepOrder, $memberId]);

@@ -274,8 +274,7 @@ try {
                         $candidates = fetchData($pdo, "SELECT id FROM marketing_membros WHERE grupo_origem_jid = ? AND status = 'novo' ORDER BY id ASC LIMIT ?", [$g['grupo_origem_jid'], $remainingSlots]);
 
                         foreach ($candidates as $c) {
-                            $sendTime = date('Y-m-d H:i:s'); // Imediato
-                            executeQuery($pdo, "UPDATE marketing_membros SET status = 'em_progresso', data_proximo_envio = ?, ultimo_passo_id = 0, data_entrada_fluxo = CURDATE() WHERE id = ?", [$sendTime, $c['id']]);
+                            executeQuery($pdo, "UPDATE marketing_membros SET status = 'em_progresso', data_proximo_envio = NOW(), ultimo_passo_id = 0, data_entrada_fluxo = CURDATE() WHERE id = ?", [$c['id']]);
                             $remainingSlots--;
                         }
                     }
@@ -289,7 +288,7 @@ try {
             // Pegamos todos que estão 'em_progresso' e com data <= NOW
             // Prioridade para os de HOJE ou os que o cron travou
             $tasksSql = "
-                SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem
+                SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem, msg.midia_url, msg.tipo_midia
                 FROM marketing_membros m
                 JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem
                 WHERE m.status = 'em_progresso' 
@@ -316,7 +315,8 @@ try {
                     'phone' => $phone,
                     'message' => $t['conteudo'] . "\n\n_" . $randomId . "_",
                     'step_order' => $t['ordem'],
-                    'type' => $t['tipo']
+                    'message_type' => $t['tipo_midia'] ?? 'texto',
+                    'media_url' => $t['midia_url'] ?? null
                 ];
             }
 
