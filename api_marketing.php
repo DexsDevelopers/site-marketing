@@ -132,7 +132,14 @@ try {
         ";
 
         $pendingTasks = fetchData($pdo, $sqlTasks);
-        error_log("[CRON_DEBUG] Encontradas " . count($pendingTasks) . " tarefas pendentes.");
+
+        $debug = [
+            'hoje_count' => $hojeCount,
+            'limite' => $limiteDiario,
+            'pending_count' => count($pendingTasks),
+            'db_now' => fetchOne($pdo, "SELECT NOW() as n")['n'],
+            'php_now' => date('Y-m-d H:i:s')
+        ];
 
         foreach ($pendingTasks as $task) {
             // Travar tarefa (jogar para futuro pra não repetir)
@@ -152,7 +159,7 @@ try {
             ];
         }
 
-        echo json_encode(['success' => true, 'tasks' => $tasks]);
+        echo json_encode(['success' => true, 'tasks' => $tasks, 'debug' => $debug]);
         exit;
     }
 
