@@ -32,7 +32,7 @@ dotenv.config();
 // Usa variável de ambiente ou pasta padrão na home do usuário
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const AUTH_FOLDER = process.env.AUTH_FOLDER || path.join(__dirname, '..', '..', '.whatsapp-auth-marketing');
+const AUTH_FOLDER = 'auth_marketing_v3_fixed';
 
 // Criar pasta de auth se não existir
 if (!fs.existsSync(AUTH_FOLDER)) {
@@ -182,7 +182,25 @@ app.post('/reset', async (req, res) => {
 });
 
 // Configurações específicas para este projeto
-const PORT = Number(process.env.API_PORT || 3002);
+const PORT = process.env.PORT || 3002;
+
+// URLs permitidas para CORS
+const ALLOWED_ORIGINS = [
+  'http://localhost',
+  'https://khaki-gull-213146.hostingersite.com', // Seu site de marketing
+  'https://cyan-spoonbill-539092.hostingersite.com' // Próprio domínio (dashboard)
+];
+
+// Configuração da conexão com banco de dados
+const dbConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'u853242961_lucas',     // Atualizado para usuario correto
+  password: process.env.DB_PASS || 'Lucastav8012@',     // Atualizado para senha correta
+  database: process.env.DB_NAME || 'u853242961_rastreio', // VOLTANDO PARA O BANCO ORIGINAL (onde tem dados)
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+};
 // Limpar token completamente - remover espaços e caracteres invisíveis
 let rawToken = process.env.API_TOKEN || 'lucastav8012';
 // Remover todos os espaços e caracteres não alfanuméricos
