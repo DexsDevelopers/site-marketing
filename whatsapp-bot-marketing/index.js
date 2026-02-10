@@ -178,6 +178,18 @@ app.get('/qr', (req, res) => {
     `);
 });
 
+// Formata número brasileiro para WhatsApp
+function formatBrazilNumber(raw) {
+  let digits = String(raw).replace(/\D+/g, '');
+  if (digits.startsWith('0')) digits = digits.slice(1);
+
+  // Se for muito longo (provável LID ou JID), não adicionar 55
+  if (digits.length > 13) return digits;
+
+  if (!digits.startsWith('55')) digits = '55' + digits;
+  return digits;
+}
+
 app.post('/send', async (req, res) => {
   // Validar token
   const token = req.headers['x-api-token'];
@@ -189,8 +201,13 @@ app.post('/send', async (req, res) => {
   if (!sock || !isReady) return res.status(503).json({ error: 'Bot not connected' });
 
   try {
-    const jid = to.includes('@') ? to : `${to}@s.whatsapp.net`;
+    let jid = to;
+    if (!jid.includes('@')) {
+      jid = formatBrazilNumber(jid) + '@s.whatsapp.net';
+    }
+
     await sock.sendMessage(jid, { text });
+    console.log(`[SEND] Mensagem enviada para ${jid}`);
     res.json({ success: true });
   } catch (error) {
     console.error('Erro envio:', error);
@@ -208,17 +225,22 @@ app.post('/send-media', async (req, res) => {
   if (!sock || !isReady) return res.status(503).json({ error: 'Bot not connected' });
 
   try {
-    const jid = to.includes('@') ? to : `${to}@s.whatsapp.net`;
+    let jid = to;
+    if (!jid.includes('@')) {
+      jid = formatBrazilNumber(jid) + '@s.whatsapp.net';
+    }
+
     const message = {};
 
     if (type === 'image') message.image = { url: mediaUrl };
     else if (type === 'video') message.video = { url: mediaUrl };
-    else if (type === 'audio') message.audio = { url: mediaUrl };
+    else if (type === 'audio') message.audio = { url: mediaUrl, mimetype: 'audio/mp4', ptt: true };
     else message.document = { url: mediaUrl };
 
     if (caption) message.caption = caption;
 
     await sock.sendMessage(jid, message);
+    console.log(`[SEND-MEDIA] Mídia (${type}) enviada para ${jid}`);
     res.json({ success: true });
   } catch (error) {
     console.error('Erro envio mídia:', error);
@@ -226,8 +248,59 @@ app.post('/send-media', async (req, res) => {
   }
 });
 
+// Array circular de logs para exibir na interface
+const memoryLogs = [];
+const MAX_LOGS = 200;
+
+function addLog(level, message) {
+  const logEntry = {
+    level,
+    message,
+    timestamp: Date.now()
+  };
+  memoryLogs.unshift(logEntry);
+  if (memoryLogs.length > MAX_LOGS) memoryLogs.pop();
+
+  // Também imprimir no console para debug da Hostinger
+  console.log(`[${level}] ${message}`);
+}
+
+// Sobrescrever console.log para capturar logs importantes
+const originalConsoleLog = console.log;
+console.log = function (...args) {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+  // Filtrar logs irrelevantes de debug
+  if (!msg.includes('rate-limit') && !msg.includes('Closing session')) {
+    addLog('INFO', msg);
+  }
+  originalConsoleLog.apply(console, args);
+};
+
+const originalConsoleError = console.error;
+console.error = function (...args) {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+  addLog('ERROR', msg);
+  originalConsoleError.apply(console, args);
+};
+
+app.get('/logs', (req, res) => {
+  const level = req.query.level;
+  const limit = Number(req.query.limit) || 100;
+
+  let filtered = memoryLogs;
+  if (level) {
+    filtered = filtered.filter(l => l.level === level);
+  }
+
+  res.json({
+    success: true,
+    logs: filtered.slice(0, limit),
+    count: filtered.length
+  });
+});
+
 // Iniciar
 app.listen(PORT, () => {
-  console.log(`[API] Servidor rodando na porta ${PORT}`);
+  addLog('SUCCESS', `Servidor API rodando na porta ${PORT}`);
   connectToWhatsApp();
 });
