@@ -11,7 +11,7 @@
 $host = 'localhost';
 $dbname = 'u853242961_marketings';
 $username = 'u853242961_lucas'; // Ou o usuário que tem acesso a esse banco
-$password = 'Lucas190105*'; // A senha que estava no config antigo
+$password = 'Lucastav8012@';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
