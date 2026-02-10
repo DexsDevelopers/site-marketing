@@ -3530,7 +3530,8 @@ async function start() {
       if (qr) {
         lastQR = qr;
         qrcode.generate(qr, { small: true });
-        log.info(`[MARKETING] QR Code gerado - Acesse http://localhost:${PORT}/qr`);
+        const publicUrl = process.env.WHATSAPP_API_URL || `http://localhost:${PORT}`;
+        log.info(`[MARKETING] QR Code gerado - Acesse ${publicUrl}/qr`);
       }
 
       // Log de estados intermediários para debug
