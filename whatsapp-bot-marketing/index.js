@@ -231,6 +231,7 @@ async function processMarketingTasks() {
 function startMarketingLoop() {
   if (marketingTimer) clearInterval(marketingTimer);
   addLog('INFO', 'Iniciando Loop de Marketing (60s)');
+  processMarketingTasks(); // Executa a primeira vez imediatamente
   marketingTimer = setInterval(processMarketingTasks, 60000);
 }
 
@@ -259,6 +260,14 @@ async function sendMarketingMessage(task) {
 
     if (sent) {
       addLog('SUCCESS', `Mensagem enviada para ${jid}`);
+
+      // LOGAR NO BANCO (Opcional, mas bom para estatística)
+      axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=log_send`, {
+        member_id: task.member_id,
+        phone: jid,
+        content: task.message
+      }).catch(e => { });
+
       return { success: true };
     } else {
       return { success: false, reason: 'fail_send' };

@@ -200,7 +200,29 @@ try {
         exit;
     }
 
-    // AÇÃO 5: LIMPAR TUDO
+    // AÇÃO 5: LOGAR ENVIO
+    elseif ($action === 'log_send') {
+        $memberId = $input['member_id'] ?? 0;
+        $phone = $input['phone'] ?? '';
+        $content = $input['content'] ?? '';
+
+        // Buscar ID da automação de marketing
+        $auto = fetchOne($pdo, "SELECT id FROM bot_automations WHERE nome = 'Campanha Marketing' LIMIT 1");
+        if (!$auto) {
+            executeQuery($pdo, "INSERT INTO bot_automations (nome, status) VALUES ('Campanha Marketing', 1)");
+            $autoId = $pdo->lastInsertId();
+        }
+        else {
+            $autoId = $auto['id'];
+        }
+
+        executeQuery($pdo, "INSERT INTO bot_automation_logs (automation_id, numero_origem, resposta_enviada, criado_em) VALUES (?, ?, ?, NOW())", [$autoId, $phone, $content]);
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    // AÇÃO 6: LIMPAR TUDO
     elseif ($action === 'clear_all_members') {
         executeQuery($pdo, "TRUNCATE TABLE marketing_membros");
         echo json_encode(['success' => true, 'message' => 'Todos os contatos foram removidos.']);

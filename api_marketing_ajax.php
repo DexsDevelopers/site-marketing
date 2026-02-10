@@ -567,6 +567,8 @@ try {
                 $response = [
                     'success' => true,
                     'message' => "Disparos acionados! $novosAtivados novos contatos entraram no funil e o robô foi notificado para iniciar agora.",
+                    'novos_ativados' => $novosAtivados,
+                    'pendentes' => 0, // O bot vai processar agora
                     'bot_response' => $botResult
                 ];
             }
