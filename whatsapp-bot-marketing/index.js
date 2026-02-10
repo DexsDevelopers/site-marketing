@@ -112,11 +112,48 @@ async function connectToWhatsApp() {
 
 // --- ROTAS DA API ---
 
+app.get('/', (req, res) => {
+  res.send(`
+      <html><body style="background:#111;color:#eee;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh">
+        <div style="text-align:center">
+          <h3>🤖 Bot Marketing Iniciado</h3>
+          <p>Acesse <a href="/qr" style="color:#4fc3f7">/qr</a> para conectar</p>
+          <p>Status: <span id="status">Aguardando...</span></p>
+          <script>
+            fetch('/status').then(r => r.json()).then(d => {
+              document.getElementById('status').innerText = d.status || 'Desconhecido';
+            }).catch(() => document.getElementById('status').innerText = 'Erro ao buscar status');
+          </script>
+        </div>
+      </body></html>
+    `);
+});
+
+app.get('/health', (req, res) => res.status(200).send('OK'));
+
 app.get('/status', (req, res) => {
   res.json({
     status: isReady ? 'CONNECTED' : (lastQR ? 'QR_CODE' : 'CONNECTING'),
     timestamp: Date.now()
   });
+});
+
+app.post('/check', async (req, res) => {
+  const token = req.headers['x-api-token'];
+  if (token !== process.env.API_TOKEN && token !== 'lucastav8012') {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const { to } = req.body;
+  if (!sock || !isReady) return res.status(503).json({ error: 'Bot not connected' });
+
+  try {
+    const jid = to.includes('@') ? to : `${to}@s.whatsapp.net`;
+    const [result] = await sock.onWhatsApp(jid);
+    res.json({ exists: result?.exists || false, jid: result?.jid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.get('/qr', (req, res) => {
