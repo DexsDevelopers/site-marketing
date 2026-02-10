@@ -4,100 +4,186 @@ require_once 'includes/auth_helper.php';
 require_once 'includes/db_connect.php';
 requireLogin();
 
-// Buscar mensagens atuais do funil
-$mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_id = 1 ORDER BY ordem ASC");
+// 1. Carregar Campanhas/Grupos
+$campanhas = fetchData($pdo, "SELECT * FROM marketing_campanhas ORDER BY id ASC");
+if (empty($campanhas)) {
+    // Se não existir nenhuma, criar a padrão
+    $pdo->exec("INSERT INTO marketing_campanhas (nome, ativo, membros_por_dia_grupo) VALUES ('Campanha Principal', 1, 5)");
+    $campanhas = fetchData($pdo, "SELECT * FROM marketing_campanhas ORDER BY id ASC");
+}
+
+// 2. Definir Campanha Atual
+$currentCampanhaId = isset($_GET['campanha_id']) ? intval($_GET['campanha_id']) : ($campanhas[0]['id'] ?? 1);
+$currentCampanha = null;
+foreach ($campanhas as $c) {
+    if ($c['id'] == $currentCampanhaId) {
+        $currentCampanha = $c;
+        break;
+    }
+}
+// Fallback se ID inválido
+if (!$currentCampanha && !empty($campanhas)) {
+    $currentCampanha = $campanhas[0];
+    $currentCampanhaId = $currentCampanha['id'];
+}
+
+// 3. Carregar Mensagens desta Campanha
+$mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_id = ? ORDER BY ordem ASC", [$currentCampanhaId]);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketing Hub | Funil</title>
+    <title>Marketing Hub | Funil - <?= htmlspecialchars($currentCampanha['nome']) ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        
+        /* Estilo do Dropdown de Campanha */
+        .campaign-selector {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        .campaign-selector option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        /* Toggle Switch para Ativo/Inativo */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin-right: 10px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .step-header-row {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            z-index: 9999;
+            margin-bottom: 0.5rem;
+        }
+        
+        .inactive-step {
+            opacity: 0.5;
+            filter: grayscale(0.8);
         }
     </style>
 </head>
-
 <body>
-    <div class="loading-overlay" id="loading">
-        <div class="spinner"><i class="fas fa-circle-notch fa-spin fa-3x"></i></div>
-    </div>
+    <div class="loading-overlay" id="loading"><div class="spinner"><i class="fas fa-circle-notch fa-spin fa-3x"></i></div></div>
 
     <div class="dashboard-container">
         <?php include 'includes/sidebar.php'; ?>
         <main class="main-content">
-            <header class="header animate-fade-in">
-                <div>
+            <header class="header animate-fade-in" style="flex-wrap: wrap; gap: 1rem;">
+                <div style="flex: 1;">
                     <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Funil de Vendas</h1>
-                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Configure a sequência de mensagens automática
-                        para seus leads.</p>
+                    <div style="display: flex; align-items: center; margin-top: 0.5rem;">
+                        <span style="color: var(--text-dim); margin-right: 10px;">Campanha:</span>
+                        <select class="campaign-selector" onchange="changeCampaign(this.value)">
+                            <?php foreach ($campanhas as $c): ?>
+                                <option value="<?= $c['id'] ?>" <?= $c['id'] == $currentCampanhaId ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($c['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button class="btn-modern small" onclick="newCampaign()">
+                            <i class="fas fa-plus"></i> Novo Grupo
+                        </button>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 1rem;">
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="text-align: right; margin-right: 1rem;">
+                         <small style="color: #666; display: block;">Membros Diários</small>
+                         <strong style="color: var(--primary);"><?= $currentCampanha['membros_por_dia_grupo'] ?? 5 ?></strong>
+                    </div>
                     <button class="btn-modern accent" onclick="triggerDisparos()" id="btn-trigger">
-                        <i class="fas fa-paper-plane"></i> Iniciar Agora
+                        <i class="fas fa-paper-plane"></i> Executar Agora
                     </button>
                     <button class="btn-modern" onclick="addNewStep()">
-                        <i class="fas fa-plus"></i> Novo Passo
+                        <i class="fas fa-plus"></i> Nova Mensagem
                     </button>
                 </div>
             </header>
 
             <div class="funnel-sequence" id="funnel-container">
                 <?php if (empty($mensagens)): ?>
-                <div class="panel" id="empty-state">
-                    <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
-                        <i class="fas fa-layer-group" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                        <p>Nenhuma mensagem configurada. Clique em "Novo Passo" para começar.</p>
+                    <div class="panel" id="empty-state">
+                        <div style="text-align: center; padding: 3rem; color: var(--text-dim);">
+                            <i class="fas fa-layer-group" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                            <h3>Este grupo está vazio</h3>
+                            <p>Adicione mensagens para começar seu funil nesta campanha.</p>
+                            <button class="btn-modern accent" onclick="addNewStep()" style="margin-top: 1rem;">
+                                <i class="fas fa-plus"></i> Adicionar Primeira Mensagem
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <?php
-endif; ?>
+                <?php endif; ?>
 
                 <?php foreach ($mensagens as $msg): ?>
-                <div class="funnel-step animate-fade-in" id="step-<?= $msg['id']?>" data-id="<?= $msg['id']?>">
-                    <div class="step-indicator">
-                        <div class="step-number">
-                            <?= $msg['ordem']?>
+                    <div class="funnel-step animate-fade-in <?= ($msg['ativo'] ?? 1) ? '' : 'inactive-step' ?>" id="step-<?= $msg['id'] ?>" data-id="<?= $msg['id'] ?>">
+                        <div class="step-indicator">
+                            <div class="step-number"><?= $msg['ordem'] ?></div>
+                        </div>
+                        <div class="step-content">
+                            <div class="step-header-row">
+                                <div class="delay-badge <?= $msg['delay_apos_anterior_minutos'] > 0 ? 'badge-primary' : '' ?>">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Esperar <?= $msg['delay_apos_anterior_minutos'] ?> min após anterior</span>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-size: 0.8rem; color: #666; margin-right: 8px;">Ativo:</span>
+                                    <label class="switch">
+                                        <input type="checkbox" onchange="toggleActive(<?= $msg['id'] ?>, this.checked)" <?= ($msg['ativo'] ?? 1) ? 'checked' : '' ?>>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <textarea onchange="updateStep(<?= $msg['id'] ?>)" id="content-<?= $msg['id'] ?>"><?= htmlspecialchars($msg['conteudo']) ?></textarea>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-modern" style="background: rgba(255,255,255,0.05); color: var(--text-main);" onclick="editStep(<?= $msg['id'] ?>)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-modern" style="background: rgba(255,59,59,0.1); color: var(--primary);" onclick="deleteStep(<?= $msg['id'] ?>)">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="step-content">
-                        <div class="delay-badge <?= $msg['delay_apos_anterior_minutos'] > 0 ? 'badge-primary' : ''?>">
-                            <i class="fas fa-clock"></i>
-                            <span>Esperar
-                                <?= $msg['delay_apos_anterior_minutos']?> minutos após o passo anterior
-                            </span>
-                        </div>
-                        <textarea onchange="updateStep(<?= $msg['id']?>)"
-                            id="content-<?= $msg['id']?>"><?= htmlspecialchars($msg['conteudo'])?></textarea>
-                    </div>
-                    <div class="step-actions">
-                        <button class="btn-modern" style="background: rgba(255,255,255,0.05); color: var(--text-main);"
-                            onclick="editStep(<?= $msg['id']?>)">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-modern" style="background: rgba(255,59,59,0.1); color: var(--primary);"
-                            onclick="deleteStep(<?= $msg['id']?>)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <?php
-endforeach; ?>
+                <?php endforeach; ?>
             </div>
         </main>
     </div>
@@ -105,77 +191,90 @@ endforeach; ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const API_URL = 'api_marketing_ajax.php';
+        const currentCampanhaId = <?= $currentCampanhaId ?>;
+
+        function changeCampaign(id) {
+            window.location.href = '?campanha_id=' + id;
+        }
+
+        async function newCampaign() {
+            const { value: nome } = await Swal.fire({
+                title: 'Nome do Novo Grupo/Campanha',
+                input: 'text',
+                inputLabel: 'Ex: Funil Black Friday, Aquecimento VIP...',
+                inputPlaceholder: 'Digite o nome...',
+                showCancelButton: true,
+                background: '#151518', color: '#e0e0e0', confirmButtonColor: '#ff3b3b'
+            });
+
+            if (nome) {
+                showLoading();
+                const fd = new FormData();
+                fd.append('action', 'save_campaign');
+                fd.append('nome', nome);
+                const res = await fetch(API_URL, { method: 'POST', body: fd }).then(r => r.json());
+                hideLoading();
+                if (res.success) {
+                    window.location.href = '?campanha_id=' + res.id;
+                } else {
+                    Swal.fire('Erro', res.message, 'error');
+                }
+            }
+        }
+
+        async function toggleActive(id, isActive) {
+            const fd = new FormData();
+            fd.append('action', 'toggle_message_active');
+            fd.append('id', id);
+            fd.append('ativo', isActive ? 1 : 0);
+            
+            // UI feedback imediato
+            const step = document.getElementById('step-' + id);
+            if (isActive) step.classList.remove('inactive-step');
+            else step.classList.add('inactive-step');
+
+            await fetch(API_URL, { method: 'POST', body: fd });
+        }
 
         async function triggerDisparos() {
-            console.log('🚀 triggerDisparos() chamado');
             const btn = document.getElementById('btn-trigger');
-            console.log('📍 Botão encontrado:', btn);
             const originalContent = btn.innerHTML;
-
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+            
             try {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-                console.log('⏳ Fazendo requisição para api_marketing_ajax.php?action=trigger_disparos');
-
-                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
-                console.log('📡 Resposta recebida:', response.status, response.statusText);
-
-                const data = await response.json();
-                console.log('📦 Dados JSON:', data);
-
-                if (data.success) {
-                    console.log('✅ Sucesso! Mostrando alerta...');
+                // Passar campanha_id para trigger saber o que disparar (futuro)
+                // Por enquanto trigger dispara a campanha padrao (id 1) ou se ajustarmos o backend.
+                // Idealmente o backend deve ler 'campanha_id' no trigger.
+                const res = await fetch(API_URL + '?action=trigger_disparos&campanha_id=' + currentCampanhaId).then(r => r.json());
+                
+                if (res.success) {
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Disparos Iniciados!',
-                        text: 'O robô começou a processar a fila agora.',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
-                        background: '#111114',
-                        color: '#f8f9fa',
-                        customClass: { popup: 'premium-swal' }
+                        icon: 'success', title: 'Disparos Iniciados!',
+                        text: res.message, toast: true, position: 'top-end',
+                        showConfirmButton: false, timer: 3000, background: '#111114', color: '#fff'
                     });
                 } else {
-                    console.log('❌ Erro retornado:', data.message);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: data.message,
-                        customClass: { popup: 'premium-swal' }
-                    });
+                    Swal.fire('Erro', res.message, 'error');
                 }
-            } catch (e) {
-                console.error('💥 Exceção capturada:', e);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Falha na conexão: ' + e.message,
-                    customClass: { popup: 'premium-swal' }
-                });
+            } catch(e) {
+                Swal.fire('Erro', 'Falha na conexão', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
-                console.log('🔄 Botão restaurado');
             }
         }
 
         async function addNewStep() {
             const { value: formValues } = await Swal.fire({
-                title: 'Novo Passo do Funil',
+                title: 'Nova Mensagem',
                 html:
-                    '<label style="color: #94a3b8; display: block; margin-bottom: 8px; text-align: left; font-size: 0.9rem;">Mensagem do WhatsApp</label>' +
-                    '<textarea id="swal-content" class="swal2-textarea" style="height: 150px;" placeholder="Digite aqui o que o Bot deve dizer..."></textarea>' +
-                    '<label style="color: #94a3b8; display: block; margin-top: 15px; margin-bottom: 8px; text-align: left; font-size: 0.9rem;">Delay (minutos após anterior)</label>' +
+                    '<label style="display:block; text-align:left; color:#888;">Conteúdo</label>' +
+                    '<textarea id="swal-content" class="swal2-textarea" placeholder="Olá, tudo bem?"></textarea>' +
+                    '<label style="display:block; text-align:left; color:#888; margin-top:10px;">Delay (minutos)</label>' +
                     '<input id="swal-delay" type="number" class="swal2-input" value="0" min="0">',
                 focusConfirm: false,
-                background: '#111114',
-                color: '#f8f9fa',
-                confirmButtonColor: '#ff3b3b',
-                confirmButtonText: '<i class="fas fa-save"></i> Criar Passo',
-                customClass: { popup: 'premium-swal' },
+                background: '#151518', color: '#e0e0e0', confirmButtonColor: '#ff3b3b',
                 preConfirm: () => {
                     return {
                         conteudo: document.getElementById('swal-content').value,
@@ -184,49 +283,25 @@ endforeach; ?>
                 }
             });
 
-            if (formValues) {
-                if (!formValues.conteudo) {
-                    return Swal.fire('Erro', 'O conteúdo é obrigatório', 'error');
-                }
-
-                showLoading();
-                const formData = new FormData();
-                formData.append('action', 'save_step');
-                formData.append('conteudo', formValues.conteudo);
-                formData.append('delay', formValues.delay);
-
-                try {
-                    const res = await fetch(API_URL, { method: 'POST', body: formData });
-                    const data = await res.json();
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        Swal.fire('Erro', data.message, 'error');
-                    }
-                } catch (e) {
-                    Swal.fire('Erro', 'Falha na conexão', 'error');
-                } finally {
-                    hideLoading();
-                }
+            if (formValues && formValues.conteudo) {
+                saveStep(0, formValues.conteudo, formValues.delay);
             }
         }
 
         async function editStep(id) {
             const content = document.getElementById('content-' + id).value;
-            const delayBadgeText = document.querySelector('#step-' + id + ' .delay-badge span').innerText;
-            const currentDelay = delayBadgeText.match(/\d+/)[0];
+            // Pegar delay do badge ou atributo data
+            // Simplificando: vamos pegar do badge via regex
+            const badge = document.querySelector(`#step-${id} .delay-badge span`).innerText;
+            const delay = badge.match(/\d+/)[0];
 
             const { value: formValues } = await Swal.fire({
-                title: 'Editar Passo',
+                title: 'Editar Mensagem',
                 html:
-                    '<label style="color: #888; display: block; margin-bottom: 5px; text-align: left;">Mensagem</label>' +
-                    `<textarea id="swal-content" class="swal2-textarea">${content}</textarea>` +
-                    '<label style="color: #888; display: block; margin-bottom: 5px; text-align: left;">Delay (minutos após anterior)</label>' +
-                    `<input id="swal-delay" type="number" class="swal2-input" value="${currentDelay}" min="0">`,
+                    '<textarea id="swal-content" class="swal2-textarea">' + content + '</textarea>' +
+                    '<input id="swal-delay" type="number" class="swal2-input" value="' + delay + '">',
                 focusConfirm: false,
-                background: '#151518',
-                color: '#e0e0e0',
-                confirmButtonColor: '#ff3b3b',
+                background: '#151518', color: '#e0e0e0', confirmButtonColor: '#ff3b3b',
                 preConfirm: () => {
                     return {
                         conteudo: document.getElementById('swal-content').value,
@@ -241,29 +316,37 @@ endforeach; ?>
         }
 
         async function updateStep(id) {
+            // Auto-save on blur do textarea
+            // Implementacao simplificada: chama saveStep com delay atual
             const content = document.getElementById('content-' + id).value;
-            const delayBadgeText = document.querySelector('#step-' + id + ' .delay-badge span').innerText;
-            const currentDelay = delayBadgeText.match(/\d+/)[0];
-            saveStep(id, content, currentDelay);
+            const badge = document.querySelector(`#step-${id} .delay-badge span`).innerText;
+            const delay = badge.match(/\d+/)[0];
+            
+            // Nao mostrar spinner no update silencioso
+            const fd = new FormData();
+            fd.append('action', 'save_step');
+            fd.append('id', id);
+            fd.append('conteudo', content);
+            fd.append('delay', delay);
+            fd.append('campanha_id', currentCampanhaId);
+            
+            fetch(API_URL, { method: 'POST', body: fd });
         }
 
         async function saveStep(id, conteudo, delay) {
             showLoading();
-            const formData = new FormData();
-            formData.append('action', 'save_step');
-            formData.append('id', id);
-            formData.append('conteudo', conteudo);
-            formData.append('delay', delay);
+            const fd = new FormData();
+            fd.append('action', 'save_step');
+            fd.append('id', id);
+            fd.append('conteudo', conteudo);
+            fd.append('delay', delay);
+            fd.append('campanha_id', currentCampanhaId); // IMPORTANTE: Enviar ID da campanha atual
 
             try {
-                const res = await fetch(API_URL, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) {
-                    location.reload();
-                } else {
-                    Swal.fire('Erro', data.message, 'error');
-                }
-            } catch (e) {
+                const res = await fetch(API_URL, { method: 'POST', body: fd }).then(r => r.json());
+                if (res.success) location.reload();
+                else Swal.fire('Erro', res.message, 'error');
+            } catch(e) {
                 Swal.fire('Erro', 'Falha na conexão', 'error');
             } finally {
                 hideLoading();
@@ -271,50 +354,24 @@ endforeach; ?>
         }
 
         async function deleteStep(id) {
-            const result = await Swal.fire({
-                title: 'Tem certeza?',
-                text: "Esta mensagem será removida da sequência.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ff3b3b',
-                cancelButtonColor: '#333',
-                confirmButtonText: 'Sim, remover!',
-                cancelButtonText: 'Cancelar',
-                background: '#151518',
-                color: '#e0e0e0'
+            const res = await Swal.fire({
+                title: 'Tem certeza?', text: 'Remover esta mensagem?', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ff3b3b',  background: '#151518', color: '#e0e0e0'
             });
 
-            if (result.isConfirmed) {
+            if (res.isConfirmed) {
                 showLoading();
-                const formData = new FormData();
-                formData.append('action', 'delete_step');
-                formData.append('id', id);
-
+                const fd = new FormData();
+                fd.append('action', 'delete_step');
+                fd.append('id', id);
                 try {
-                    const res = await fetch(API_URL, { method: 'POST', body: formData });
-                    const data = await res.json();
-                    if (data.success) {
+                    const r = await fetch(API_URL, { method: 'POST', body: fd }).then(j => j.json());
+                    if (r.success) {
                         document.getElementById('step-' + id).remove();
-                        if (document.querySelectorAll('.funnel-step').length === 0) {
-                            location.reload();
-                        }
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Removido!',
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true
-                        });
-                    } else {
-                        Swal.fire('Erro', data.message, 'error');
-                    }
-                } catch (e) {
-                    Swal.fire('Erro', 'Falha na conexão', 'error');
-                } finally {
-                    hideLoading();
-                }
+                        if (!document.querySelector('.funnel-step')) location.reload();
+                    } else Swal.fire('Erro', r.message, 'error');
+                } catch(e) { Swal.fire('Erro', 'Falha', 'error'); } 
+                finally { hideLoading(); }
             }
         }
 
@@ -322,5 +379,4 @@ endforeach; ?>
         function hideLoading() { document.getElementById('loading').style.display = 'none'; }
     </script>
 </body>
-
 </html>

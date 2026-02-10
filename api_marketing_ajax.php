@@ -401,6 +401,8 @@ try {
             $delay = (int)($_POST['delay'] ?? 0);
             $tipo = $_POST['tipo'] ?? 'texto';
             $ordem = (int)($_POST['ordem'] ?? 0);
+            $campanhaId = (int)($_POST['campanha_id'] ?? 1);
+            $ativo = (int)($_POST['ativo'] ?? 1);
 
             if (empty($conteudo)) {
                 $response = ['success' => false, 'message' => 'O conteúdo não pode estar vazio'];
@@ -408,16 +410,17 @@ try {
             }
 
             if ($id > 0) {
-                // Update
-                executeQuery($pdo, "UPDATE marketing_mensagens SET conteudo = ?, delay_apos_anterior_minutos = ?, tipo = ?, ordem = ? WHERE id = ?", [$conteudo, $delay, $tipo, $ordem, $id]);
+                // Update - não muda campanha_id no update para evitar confusão de ordem, a menos que explicitamente pedido (mas não vamos complicar agora)
+                executeQuery($pdo, "UPDATE marketing_mensagens SET conteudo = ?, delay_apos_anterior_minutos = ?, tipo = ?, ativo = ? WHERE id = ?", [$conteudo, $delay, $tipo, $ativo, $id]);
+            // Se a ordem foi mudada no frontend, deveria haver uma logica separada de reorder, mas aqui assumimos que ordem vem 0 ou mantem.
             }
             else {
                 // Insert
                 if ($ordem === 0) {
-                    $maxOrdem = fetchOne($pdo, "SELECT MAX(ordem) as m FROM marketing_mensagens")['m'] ?? 0;
+                    $maxOrdem = fetchOne($pdo, "SELECT MAX(ordem) as m FROM marketing_mensagens WHERE campanha_id = ?", [$campanhaId])['m'] ?? 0;
                     $ordem = $maxOrdem + 1;
                 }
-                executeQuery($pdo, "INSERT INTO marketing_mensagens (campanha_id, ordem, tipo, conteudo, delay_apos_anterior_minutos) VALUES (1, ?, ?, ?, ?)", [$ordem, $tipo, $conteudo, $delay]);
+                executeQuery($pdo, "INSERT INTO marketing_mensagens (campanha_id, ordem, tipo, conteudo, delay_apos_anterior_minutos, ativo) VALUES (?, ?, ?, ?, ?, ?)", [$campanhaId, $ordem, $tipo, $conteudo, $delay, $ativo]);
                 $id = $pdo->lastInsertId();
             }
 
