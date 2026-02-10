@@ -24,6 +24,13 @@
                 </a>
             </li>
             <li>
+                <a href="aluguel.php"
+                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'aluguel.php' ? 'active' : ''?>"
+                    style="color: #10b981;">
+                    <i class="fas fa-hand-holding-usd"></i> Conecte e Ganhe
+                </a>
+            </li>
+            <li>
                 <a href="settings.php"
                     class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''?>">
                     <i class="fas fa-cog"></i> Configurações

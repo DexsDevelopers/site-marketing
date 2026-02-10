@@ -112,49 +112,65 @@ try {
             }
         }
 
-        // B. Buscar Tarefas Pendentes
-        // Query otimizada para evitar erro de sintaxe
-        $sqlTasks = "
-            SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem, msg.midia_url, msg.tipo_midia
-            FROM marketing_membros m
-            JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem AND msg.campanha_id = 1
-            WHERE m.status = 'em_progresso' 
-            AND m.data_proximo_envio <= NOW()
-            ORDER BY m.data_proximo_envio ASC
-            LIMIT 5
-        ";
+        // B. Buscar Tarefas Pendentes com Lock para Multi-Bot
+        $pdo->beginTransaction();
+        try {
+            // Selecionar leads disponíveis e travar para outros bots não pegarem
+            $sqlLeads = "
+                SELECT m.id, m.telefone, m.ultimo_passo_id
+                FROM marketing_membros m
+                WHERE m.status = 'em_progresso' 
+                AND m.data_proximo_envio <= NOW()
+                ORDER BY m.data_proximo_envio ASC
+                LIMIT 5
+                FOR UPDATE SKIP LOCKED
+            ";
+            $leadsPendentes = fetchData($pdo, $sqlLeads);
 
-        $pendingTasks = fetchData($pdo, $sqlTasks);
+            if (empty($leadsPendentes)) {
+                $pdo->rollBack();
+                echo json_encode(['success' => true, 'tasks' => []]);
+                exit;
+            }
 
-        $debug = [
-            'hoje_count' => $hojeCount,
-            'limite' => $limiteDiario,
-            'pending_count' => count($pendingTasks),
-            'db_now' => fetchOne($pdo, "SELECT NOW() as n")['n'],
-            'php_now' => date('Y-m-d H:i:s')
-        ];
+            $ids = array_column($leadsPendentes, 'id');
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
 
-        foreach ($pendingTasks as $task) {
-            // Travar tarefa (jogar para futuro pra não repetir)
-            executeQuery($pdo, "UPDATE marketing_membros SET data_proximo_envio = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = ?", [$task['id']]);
+            // "Arrendar" por 5 minutos enquanto o bot tenta enviar
+            executeQuery($pdo, "UPDATE marketing_membros SET data_proximo_envio = DATE_ADD(NOW(), INTERVAL 5 MINUTE) WHERE id IN ($placeholders)", $ids);
 
-            // Gerar ID anti-ban simples
-            $randomId = substr(md5(uniqid()), 0, 6);
-            $msgContent = $task['conteudo'] . "\n\n_" . $randomId . "_";
+            $pdo->commit();
 
-            $tasks[] = [
-                'type' => 'send_message',
-                'phone' => $task['telefone'],
-                'message' => $msgContent,
-                'message_type' => $task['tipo_midia'] ?? 'texto',
-                'media_url' => $task['midia_url'] ?? null,
-                'member_id' => $task['id'],
-                'step_order' => $task['ordem']
-            ];
+            $tasks = [];
+            foreach ($leadsPendentes as $lead) {
+                // Buscar mensagem do próximo passo
+                $msg = fetchOne($pdo, "
+                    SELECT conteudo, tipo, ordem, midia_url, tipo_midia 
+                    FROM marketing_mensagens 
+                    WHERE campanha_id = 1 AND ordem = ?
+                ", [$lead['ultimo_passo_id'] + 1]);
+
+                if ($msg) {
+                    $randomId = substr(md5(uniqid()), 0, 6);
+                    $tasks[] = [
+                        'member_id' => $lead['id'],
+                        'phone' => $lead['telefone'],
+                        'message' => $msg['conteudo'] . "\n\n_" . $randomId . "_",
+                        'message_type' => $msg['tipo_midia'] ?: $msg['tipo'],
+                        'media_url' => $msg['midia_url'],
+                        'step_order' => (int)$msg['ordem']
+                    ];
+                }
+            }
+
+            echo json_encode(['success' => true, 'tasks' => $tasks]);
+            exit;
+
         }
-
-        echo json_encode(['success' => true, 'tasks' => $tasks, 'debug' => $debug]);
-        exit;
+        catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     // AÇÃO 3: ATUALIZAR TAREFA
