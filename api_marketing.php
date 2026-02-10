@@ -132,6 +132,7 @@ try {
         ";
 
         $pendingTasks = fetchData($pdo, $sqlTasks);
+        error_log("[CRON_DEBUG] Encontradas " . count($pendingTasks) . " tarefas pendentes.");
 
         foreach ($pendingTasks as $task) {
             // Travar tarefa (jogar para futuro pra não repetir)
