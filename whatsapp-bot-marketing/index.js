@@ -30,15 +30,7 @@ const API_TOKEN = process.env.WHATSAPP_API_TOKEN || 'lucastav8012';
 const MARKETING_SITE_URL = 'https://khaki-gull-213146.hostingersite.com';
 
 // CONFIGURAÇÃO DE PERSISTÊNCIA
-const args = process.argv.slice(2);
-const isProduction = process.env.NODE_ENV === 'production' || args.includes('--prod');
-let authPath;
-
-if (isProduction) {
-  authPath = path.join(__dirname, '..', '..', '.whatsapp-auth-marketing');
-} else {
-  authPath = path.resolve('./auth_info_baileys');
-}
+const authPath = path.resolve('./auth_info_baileys');
 
 if (!fs.existsSync(authPath)) {
   fs.mkdirSync(authPath, { recursive: true });
@@ -128,9 +120,8 @@ async function connectToWhatsApp() {
     addLog('INFO', 'Carregando estado de autenticação...');
     const { state, saveCreds } = await useMultiFileAuthState(authPath);
 
-    addLog('INFO', 'Buscando versão do Baileys...');
-    const { version } = await fetchLatestBaileysVersion().catch(e => ({ version: [0, 4, 0] }));
-    addLog('INFO', `Versão Baileys: ${version}`);
+    const version = [2, 3000, 1015901307];
+    addLog('INFO', `Usando versão Baileys: ${version}`);
 
     addLog('INFO', 'Criando socket...');
     sock = makeWASocket({
