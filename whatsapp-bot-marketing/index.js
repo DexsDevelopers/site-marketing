@@ -141,18 +141,33 @@ app.post('/reset', async (req, res) => {
 
     // Fechar conexão se existir
     if (sock) {
-      sock.end(undefined);
+      try {
+        sock.end(undefined);
+      } catch (e) {
+        console.log('⚠️ Erro ao fechar socket (pode já estar fechado):', e.message);
+      }
     }
 
-    // Apagar pasta auth_info_baileys
-    if (fs.existsSync('auth_info_baileys')) {
-      fs.rmSync('auth_info_baileys', { recursive: true, force: true });
-      console.log('✅ Pasta auth_info_baileys apagada com sucesso.');
-    } else {
-      console.log('ℹ️ Pasta auth_info_baileys não existia.');
+    // Apagar pasta de auth (usar AUTH_FOLDER que é onde os dados realmente ficam)
+    const authPaths = [AUTH_FOLDER, path.join(__dirname, 'auth_info_baileys')];
+    let deleted = false;
+
+    for (const authPath of authPaths) {
+      if (fs.existsSync(authPath)) {
+        fs.rmSync(authPath, { recursive: true, force: true });
+        console.log(`✅ Pasta ${authPath} apagada com sucesso.`);
+        deleted = true;
+      } else {
+        console.log(`ℹ️ Pasta ${authPath} não existia.`);
+      }
     }
 
-    res.json({ status: 'success', message: 'Conexão resetada. O bot irá reiniciar em 5 segundos para gerar novo QR Code.' });
+    res.json({
+      status: 'success',
+      message: `Conexão resetada${deleted ? ' e dados de sessão apagados' : ''}. O bot irá reiniciar em 5 segundos para gerar novo QR Code.`,
+      deleted_auth: deleted,
+      auth_folder: AUTH_FOLDER
+    });
 
     // Reiniciar processo (PM2 vai subir de volta)
     setTimeout(() => {
@@ -162,7 +177,7 @@ app.post('/reset', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Erro ao resetar:', error);
-    res.status(500).json({ status: 'error', message: 'Erro interno ao resetar' });
+    res.status(500).json({ status: 'error', message: 'Erro interno ao resetar: ' + error.message });
   }
 });
 
