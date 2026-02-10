@@ -23,12 +23,6 @@ try {
 
     // 3. Configurar Timezone
     date_default_timezone_set('America/Sao_Paulo');
-    try {
-        $pdo->exec("SET time_zone = '" . date('P') . "'");
-    }
-    catch (Exception $e) {
-        error_log("Aviso: Falha ao definir timezone MySQL: " . $e->getMessage());
-    }
 
     // 4. Capturar Input
     $method = $_SERVER['REQUEST_METHOD'];
