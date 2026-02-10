@@ -194,9 +194,9 @@ const ALLOWED_ORIGINS = [
 // Configuração da conexão com banco de dados
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'u853242961_johan71',     // Voltando para usuario original
-  password: process.env.DB_PASS || 'Lucastav8012@',     // Atualizado para senha correta
-  database: process.env.DB_NAME || 'u853242961_rastreio', // VOLTANDO PARA O BANCO ORIGINAL (onde tem dados)
+  user: process.env.DB_USER || 'u853242961_lucas',
+  password: process.env.DB_PASS || 'Lucastav8012@',
+  database: process.env.DB_NAME || 'u853242961_marketings',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -3524,7 +3524,7 @@ async function start() {
       if (qr) {
         lastQR = qr;
         qrcode.generate(qr, { small: true });
-        log.info(`QR Code gerado - Acesse http://localhost:${PORT}/qr`);
+        log.info(`[MARKETING] QR Code gerado - Acesse http://localhost:${PORT}/qr`);
       }
 
       // Log de estados intermediários para debug
