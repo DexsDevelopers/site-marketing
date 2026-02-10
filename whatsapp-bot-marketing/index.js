@@ -179,26 +179,34 @@ function startMarketingLoop() {
     isProcessingMarketing = true;
 
     try {
+      addLog('INFO', 'Consultando tarefas pendentes no funil...');
       const response = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`);
       const data = response.data;
 
-      if (data && data.success && data.tasks && data.tasks.length > 0) {
-        addLog('INFO', `Processando ${data.tasks.length} envios...`);
-
-        for (const task of data.tasks) {
-          const result = await sendMarketingMessage(task);
-          await axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=update_task`, {
-            member_id: task.member_id,
-            step_order: task.step_order,
-            success: result.success,
-            reason: result.reason
-          });
-          // Delay entre envios do loop
-          await new Promise(r => setTimeout(r, Math.floor(Math.random() * 30000) + 15000));
+      if (data && data.success) {
+        if (data.tasks && data.tasks.length > 0) {
+          addLog('INFO', `Encontradas ${data.tasks.length} tarefas. Iniciando disparos...`);
+          for (const task of data.tasks) {
+            const result = await sendMarketingMessage(task);
+            await axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=update_task`, {
+              member_id: task.member_id,
+              step_order: task.step_order,
+              success: result.success,
+              reason: result.reason
+            });
+            // Delay entre envios
+            const delay = Math.floor(Math.random() * 20000) + 10000; // 10-30s
+            await new Promise(r => setTimeout(r, delay));
+          }
+        } else {
+          // Log opcional para saber que a consulta foi feita mas não há nada
+          addLog('INFO', 'Nenhuma mensagem pendente no momento.');
         }
+      } else {
+        addLog('WARN', `Erro na resposta da API: ${data?.message || 'Erro desconhecido'}`);
       }
     } catch (e) {
-      // Ignorar erros silenciosos de rede
+      addLog('ERROR', `Falha ao conectar com o site para buscar tarefas: ${e.message}`);
     } finally {
       isProcessingMarketing = false;
     }
