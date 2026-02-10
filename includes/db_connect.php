@@ -5,9 +5,11 @@
  */
 
 // Configurações do banco (HARDCODED PARA RESTAURAR SITE)
+// Removida logica de .env temporariamente para evitar erro 500 por permissao ou versao PHP
+
 $host = 'localhost';
-$db = 'u853242961_marketings';
-$user = 'u853242961_lucas';
+$db = 'u853242961_rastreio'; // Voltando para o banco original onde estao os dados
+$user = 'u853242961_lucas';  // Mantendo usuario que sabemos que funciona (se ele tiver permissao no rastreio)
 $pass = 'Lucastav8012@';
 $charset = 'utf8mb4';
 
