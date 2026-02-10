@@ -415,19 +415,24 @@ try {
 
             if (isset($_FILES['midia']) && $_FILES['midia']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = __DIR__ . '/uploads/marketing/';
-                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-                
+                if (!is_dir($uploadDir))
+                    mkdir($uploadDir, 0777, true);
+
                 $fileName = time() . '_' . basename($_FILES['midia']['name']);
                 $targetFile = $uploadDir . $fileName;
-                
+
                 if (move_uploaded_file($_FILES['midia']['tmp_name'], $targetFile)) {
                     $midiaUrl = 'uploads/marketing/' . $fileName;
                     $mime = mime_content_type($targetFile);
-                    if (strpos($mime, 'image') !== false) $tipoMidia = 'image';
-                    elseif (strpos($mime, 'video') !== false) $tipoMidia = 'video';
-                    elseif (strpos($mime, 'audio') !== false) $tipoMidia = 'audio';
-                    else $tipoMidia = 'document'; // Default
-                    
+                    if (strpos($mime, 'image') !== false)
+                        $tipoMidia = 'image';
+                    elseif (strpos($mime, 'video') !== false)
+                        $tipoMidia = 'video';
+                    elseif (strpos($mime, 'audio') !== false)
+                        $tipoMidia = 'audio';
+                    else
+                        $tipoMidia = 'document'; // Default
+
                     $tipo = $tipoMidia; // Atualiza o tipo da mensagem
                 }
             }
@@ -436,16 +441,16 @@ try {
                 // Update
                 $sql = "UPDATE marketing_mensagens SET conteudo = ?, delay_apos_anterior_minutos = ?, tipo = ?, ativo = ?";
                 $params = [$conteudo, $delay, $tipo, $ativo];
-                
+
                 if ($midiaUrl) {
                     $sql .= ", midia_url = ?, tipo_midia = ?";
                     $params[] = $midiaUrl;
                     $params[] = $tipoMidia;
                 }
-                
+
                 $sql .= " WHERE id = ?";
                 $params[] = $id;
-                
+
                 executeQuery($pdo, $sql, $params);
             }
             else {
@@ -454,12 +459,12 @@ try {
                     $maxOrdem = fetchOne($pdo, "SELECT MAX(ordem) as m FROM marketing_mensagens WHERE campanha_id = ?", [$campanhaId])['m'] ?? 0;
                     $ordem = $maxOrdem + 1;
                 }
-                
+
                 executeQuery($pdo, "INSERT INTO marketing_mensagens 
                     (campanha_id, ordem, tipo, conteudo, delay_apos_anterior_minutos, ativo, midia_url, tipo_midia) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-                    [$campanhaId, $ordem, $tipo, $conteudo, $delay, $ativo, $midiaUrl, $tipoMidia]);
-                    
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                [$campanhaId, $ordem, $tipo, $conteudo, $delay, $ativo, $midiaUrl, $tipoMidia]);
+
                 $id = $pdo->lastInsertId();
             }
 
@@ -524,12 +529,16 @@ try {
                     break;
                 }
 
-                // 2. Colocar leads em 'em_progresso' que estavam como 'novo', respeitando o limite diário
-                $limiteDiario = intval($campanha['membros_por_dia_grupo'] ?? 100);
-                $hojeStats = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE (status = 'em_progresso' OR status = 'concluido') AND DATE(data_entrada_fluxo) = CURDATE()");
-                $hojeCount = intval($hojeStats['c'] ?? 0);
+                // --- RESET DE LIMITE (OPCIONAL/SOLICITADO) ---
+                // Se o usuário clicou em "Executar Agora", ele quer que o sistema ignore se o limite bateu.
+                // Resetamos a data_entrada_fluxo dos que entraram HOJE para permitir que novos entrem na cota.
+                executeQuery($pdo, "UPDATE marketing_membros SET data_entrada_fluxo = DATE_SUB(CURDATE(), INTERVAL 1 DAY) WHERE DATE(data_entrada_fluxo) = CURDATE()");
 
-                $vagas = $limiteDiario - $hojeCount;
+                // 2. Colocar leads em 'em_progresso' que estavam como 'novo', respeitando o novo espaço (vagas)
+                $limiteDiario = intval($campanha['membros_por_dia_grupo'] ?? 100);
+
+                // Agora hojeCount deve ser 0 após o reset acima
+                $vagas = $limiteDiario;
                 $novosAtivados = 0;
                 if ($vagas > 0) {
                     $novos = fetchData($pdo, "SELECT id FROM marketing_membros WHERE status = 'novo' ORDER BY id ASC LIMIT $vagas");
@@ -539,25 +548,26 @@ try {
                     }
                 }
 
-                // 3. Forçar 'data_proximo_envio' para 5 minutos atrás (garante processamento imediato)
-                executeQuery($pdo, "UPDATE marketing_membros SET data_proximo_envio = DATE_SUB(NOW(), INTERVAL 5 MINUTE) WHERE status = 'em_progresso' AND (data_proximo_envio > NOW() OR data_proximo_envio IS NULL)");
+                // 3. Forçar 'data_proximo_envio' para o passado (garante processamento imediato)
+                executeQuery($pdo, "UPDATE marketing_membros SET data_proximo_envio = DATE_SUB(NOW(), INTERVAL 5 MINUTE) WHERE status = 'em_progresso'");
 
-                // 4. Buscar tarefas pendentes para exibir contagem
-                $sqlTasks = "
-                    SELECT COUNT(*) as total
-                    FROM marketing_membros m
-                    JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem
-                    WHERE m.status = 'em_progresso' 
-                    AND m.data_proximo_envio <= NOW()
-                ";
-                $taskCount = fetchOne($pdo, $sqlTasks);
-                $pendentes = intval($taskCount['total'] ?? 0);
+                // 4. NOTIFICAR O BOT PARA EXECUTAR AGORA
+                $botUrl = getDynamicConfig('WHATSAPP_API_URL', 'http://localhost:3002');
+                $botUrl = rtrim($botUrl, '/');
+                $token = getDynamicConfig('WHATSAPP_API_TOKEN', 'lucastav8012');
+
+                $ch = curl_init("$botUrl/trigger");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                $botResult = curl_exec($ch);
+                curl_close($ch);
 
                 $response = [
                     'success' => true,
-                    'message' => "Disparos iniciados! $novosAtivados novos leads ativados. $pendentes mensagens na fila para envio.",
-                    'novos_ativados' => $novosAtivados,
-                    'pendentes' => $pendentes
+                    'message' => "Disparos acionados! $novosAtivados novos contatos entraram no funil e o robô foi notificado para iniciar agora.",
+                    'bot_response' => $botResult
                 ];
             }
             catch (Exception $e) {
