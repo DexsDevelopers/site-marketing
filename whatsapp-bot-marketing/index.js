@@ -3530,7 +3530,7 @@ async function start() {
       if (qr) {
         lastQR = qr;
         qrcode.generate(qr, { small: true });
-        const publicUrl = process.env.WHATSAPP_API_URL || `http://localhost:${PORT}`;
+        const publicUrl = process.env.WHATSAPP_API_URL || 'https://cyan-spoonbill-539092.hostingersite.com';
         log.info(`[MARKETING] QR Code gerado - Acesse ${publicUrl}/qr`);
       }
 
