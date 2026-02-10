@@ -47,7 +47,7 @@ function normalizePhoneToDigits(?string $input): ?string
     return null;
 }
 
-function whatsappApiConfig(): array
+function whatsappApiConfig()
 {
     // Usar valores fixos diretamente para evitar erro 500 de leitura de arquivo no servidor
     $baseUrl = 'https://cyan-spoonbill-539092.hostingersite.com';
