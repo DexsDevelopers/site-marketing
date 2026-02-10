@@ -26,6 +26,7 @@ import pino from 'pino';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import FormData from 'form-data';
+import { useMySQLAuthState } from './auth_adapter.js';
 dotenv.config();
 
 // Pasta de autenticação FORA do diretório Git para não ser sobrescrita pelo deploy
@@ -3031,7 +3032,12 @@ async function start() {
     const { version, isLatest } = await fetchLatestBaileysVersion();
     log.info(`WhatsApp Web version: ${version?.join('.')} (latest=${isLatest})`);
 
-    const { state, saveCreds } = await useMultiFileAuthState(AUTH_FOLDER);
+    // const { state, saveCreds } = await useMultiFileAuthState(AUTH_FOLDER);
+
+    // USAR MYSQL PARA PERSISTÊNCIA DE SESSÃO
+    // Isso resolve o problema de pedir QR Code a cada deploy/reinício
+    log.info('🔐 Iniciando autenticação via MySQL...');
+    const { state, saveCreds } = await useMySQLAuthState(dbConfig);
 
     // Logger personalizado que silencia TUDO do Baileys
     const silentLogger = pino({

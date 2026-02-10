@@ -140,6 +140,14 @@ CREATE TABLE IF NOT EXISTS whatsapp_notificacoes (
     atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_notification (codigo, status_titulo, status_data)
 );
+
+-- Tabela de Sessão do WhatsApp (Baileys Auth) - Para persistência no Banco de Dados
+CREATE TABLE IF NOT EXISTS baileys_auth_store (
+    `key` VARCHAR(191) NOT NULL PRIMARY KEY,
+    `value` LONGTEXT NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 ";
 
 try {
