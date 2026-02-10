@@ -122,48 +122,69 @@ async function safeSendMessage(sock, jid, message, options = {}) {
 
 // Função Principal de Conexão
 async function connectToWhatsApp() {
-  addLog('INFO', 'Iniciando conexão Baileys...');
-  const { state, saveCreds } = await useMultiFileAuthState(authPath);
-  const { version } = await fetchLatestBaileysVersion();
+  try {
+    addLog('INFO', `Iniciando conexão Baileys... (Auth: ${authPath})`);
 
-  sock = makeWASocket({
-    auth: state,
-    logger: pino({ level: 'silent' }),
-    version,
-    browser: ["Marketing Bot", "Chrome", "10.0"],
-    printQRInTerminal: true,
-    markOnlineOnConnect: true,
-    syncFullHistory: false
-  });
+    addLog('INFO', 'Carregando estado de autenticação...');
+    const { state, saveCreds } = await useMultiFileAuthState(authPath);
 
-  sock.ev.on('creds.update', saveCreds);
+    addLog('INFO', 'Buscando versão do Baileys...');
+    const { version } = await fetchLatestBaileysVersion().catch(e => ({ version: [0, 4, 0] }));
+    addLog('INFO', `Versão Baileys: ${version}`);
 
-  sock.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    addLog('INFO', 'Criando socket...');
+    sock = makeWASocket({
+      auth: state,
+      logger: pino({ level: 'silent' }),
+      version,
+      browser: Browsers.macOS('Desktop'), // Mais estável
+      printQRInTerminal: false,
+      markOnlineOnConnect: true,
+      syncFullHistory: false,
+      connectTimeoutMs: 60000,
+      defaultQueryTimeoutMs: 0,
+      keepAliveIntervalMs: 10000
+    });
 
-    if (qr) {
-      lastQR = qr;
-      addLog('INFO', 'Novo QR Code gerado');
-    }
+    sock.ev.on('creds.update', async () => {
+      addLog('INFO', 'Credenciais atualizadas');
+      await saveCreds();
+    });
 
-    if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-      addLog('WARN', `Conexão fechada. Reconectando: ${shouldReconnect}`);
-      isReady = false;
-      if (shouldReconnect) {
-        setTimeout(connectToWhatsApp, 5000);
-      } else {
-        addLog('ERROR', 'Logged out. Resetando sessão...');
-        fs.rmSync(authPath, { recursive: true, force: true });
-        connectToWhatsApp();
+    sock.ev.on('connection.update', (update) => {
+      const { connection, lastDisconnect, qr } = update;
+
+      if (qr) {
+        lastQR = qr;
+        addLog('INFO', 'Novo QR Code gerado');
       }
-    } else if (connection === 'open') {
-      addLog('SUCCESS', 'WhatsApp Conectado!');
-      isReady = true;
-      lastQR = null;
-      startMarketingLoop();
-    }
-  });
+
+      if (connection === 'close') {
+        const errorCode = (lastDisconnect?.error)?.output?.statusCode;
+        const shouldReconnect = errorCode !== DisconnectReason.loggedOut;
+        addLog('WARN', `Conexão fechada (${errorCode}). Reconectando: ${shouldReconnect}`);
+        isReady = false;
+        if (shouldReconnect) {
+          setTimeout(connectToWhatsApp, 5000);
+        } else {
+          addLog('ERROR', 'Logged out. Resetando sessão...');
+          if (fs.existsSync(authPath)) {
+            fs.rmSync(authPath, { recursive: true, force: true });
+          }
+          connectToWhatsApp();
+        }
+      } else if (connection === 'open') {
+        addLog('SUCCESS', 'WhatsApp Conectado!');
+        isReady = true;
+        lastQR = null;
+        startMarketingLoop();
+      }
+    });
+
+  } catch (e) {
+    addLog('ERROR', `Erro fatal na conexão: ${e.message}`);
+    setTimeout(connectToWhatsApp, 10000);
+  }
 }
 
 // ===== MARKETING LOOP =====

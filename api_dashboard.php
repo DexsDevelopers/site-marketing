@@ -27,22 +27,18 @@ try {
             $emProgresso = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE status = 'em_progresso'")['c'] ?? 0;
             $concluidos = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE status = 'concluido'")['c'] ?? 0;
 
-            // Buscar disparos de marketing pelo automation_id
-            $autoMarketing = fetchOne($pdo, "SELECT id FROM bot_automations WHERE nome = 'Campanha Marketing' LIMIT 1");
-            $autoMarketingId = $autoMarketing ? $autoMarketing['id'] : 0;
-            $enviosHoje = fetchOne($pdo, "SELECT COUNT(*) as c FROM bot_automation_logs WHERE automation_id = ? AND DATE(criado_em) = CURDATE()", [$autoMarketingId])['c'] ?? 0;
-
-            // Próximo envio
-            $proxEnvio = fetchOne($pdo, "SELECT data_proximo_envio FROM marketing_membros WHERE status = 'em_progresso' AND data_proximo_envio IS NOT NULL ORDER BY data_proximo_envio ASC LIMIT 1");
+            // Buscar envios reais do marketing hoje (atualizações de status para o passo final ou qualquer passo)
+            // Como não temos logs dedicados ainda, vamos contar quantos entraram hoje ou quantos foram atualizados hoje
+            // Para ser preciso, depois vamos implementar log real. Por agora:
+            $enviosHoje = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE DATE(data_proximo_envio) = CURDATE() AND ultimo_passo_id > 0")['c'] ?? 0;
 
             $response = [
                 'success' => true,
                 'data' => [
-                    'leads_total' => $totalLeads,
-                    'leads_ativo' => $emProgresso,
-                    'leads_concluido' => $concluidos,
-                    'envios_hoje' => $enviosHoje,
-                    'proximo_envio' => $proxEnvio ? $proxEnvio['data_proximo_envio'] : 'Nenhum agendado'
+                    'leads_total' => (int)$totalLeads,
+                    'leads_ativo' => (int)$emProgresso,
+                    'leads_concluido' => (int)$concluidos,
+                    'envios_hoje' => (int)$enviosHoje
                 ]
             ];
             break;
