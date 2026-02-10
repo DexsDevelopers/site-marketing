@@ -34,11 +34,13 @@ export const useMySQLAuthState = async (dbConfig) => {
         try {
             const [rows] = await pool.query('SELECT value FROM baileys_auth_store WHERE `key` = ?', [key]);
             if (rows.length > 0) {
+                // console.log(`📖 Auth Lido: ${key}`);
                 return JSON.parse(rows[0].value, BufferJSON.reviver);
             }
+            console.log(`ℹ️ Auth não encontrado: ${key}`);
             return null;
         } catch (error) {
-            console.error('❌ Erro ao ler Auth do MySQL:', error.message);
+            console.error(`❌ Erro ao ler Auth do MySQL (${key}):`, error.message);
             return null;
         }
     };
@@ -51,8 +53,9 @@ export const useMySQLAuthState = async (dbConfig) => {
                 'INSERT INTO baileys_auth_store (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
                 [key, jsonValue, jsonValue]
             );
+            // console.log(`💾 Auth Salvo: ${key} (${jsonValue.length} bytes)`);
         } catch (error) {
-            console.error('❌ Erro ao escrever Auth no MySQL:', error.message);
+            console.error(`❌ Erro ao escrever Auth no MySQL (${key}):`, error.message);
         }
     };
 
@@ -60,8 +63,9 @@ export const useMySQLAuthState = async (dbConfig) => {
     const removeData = async (key) => {
         try {
             await pool.query('DELETE FROM baileys_auth_store WHERE `key` = ?', [key]);
+            console.log(`🗑️ Auth Removido: ${key}`);
         } catch (error) {
-            console.error('❌ Erro ao remover Auth do MySQL:', error.message);
+            console.error(`❌ Erro ao remover Auth do MySQL (${key}):`, error.message);
         }
     };
 
