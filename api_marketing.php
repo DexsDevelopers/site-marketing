@@ -116,7 +116,7 @@ try {
         // B. Buscar Tarefas Pendentes
         // Query otimizada para evitar erro de sintaxe
         $sqlTasks = "
-            SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem
+            SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem, msg.midia_url, msg.tipo_midia
             FROM marketing_membros m
             JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem AND msg.campanha_id = 1
             WHERE m.status = 'em_progresso' 
@@ -147,7 +147,8 @@ try {
                 'type' => 'send_message',
                 'phone' => $task['telefone'],
                 'message' => $msgContent,
-                'message_type' => $task['tipo'] ?? 'texto',
+                'message_type' => $task['tipo_midia'] ?? 'texto',
+                'media_url' => $task['midia_url'] ?? null,
                 'member_id' => $task['id'],
                 'step_order' => $task['ordem']
             ];

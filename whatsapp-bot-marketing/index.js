@@ -223,7 +223,17 @@ async function sendMarketingMessage(task) {
       jid = clean.length >= 15 ? clean + '@lid' : clean + '@s.whatsapp.net';
     }
 
-    const msgContent = { text: task.message };
+    let msgContent = { text: task.message };
+
+    if (task.media_url) {
+      const mediaUrl = task.media_url.startsWith('http') ? task.media_url : `${MARKETING_SITE_URL}/${task.media_url}`;
+      if (task.message_type === 'image') {
+        msgContent = { image: { url: mediaUrl }, caption: task.message };
+      } else if (task.message_type === 'video') {
+        msgContent = { video: { url: mediaUrl }, caption: task.message };
+      }
+    }
+
     const sent = await safeSendMessage(sock, jid, msgContent);
 
     if (sent) {
