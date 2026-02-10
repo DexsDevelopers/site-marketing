@@ -172,11 +172,36 @@ requireLogin();
             }
         }
 
+        let qrPollInterval = null;
+
         async function loadQR() {
-            const response = await fetch('api_dashboard.php?action=get_qr');
-            const result = await response.json();
-            if (result.success && result.qr) {
-                document.getElementById('qr-container').innerHTML = `<img src="${result.qr}" class="qr-image">`;
+            try {
+                const response = await fetch('api_dashboard.php?action=get_qr');
+                const result = await response.json();
+                const qrContainer = document.getElementById('qr-container');
+                
+                if (result.success && result.qr) {
+                    // QR disponível — mostrar imagem
+                    qrContainer.innerHTML = `<img src="${result.qr}" class="qr-image" style="max-width:100%; border-radius:12px;">`;
+                    // Continuar polling para detectar quando o QR for escaneado
+                    if (!qrPollInterval) {
+                        qrPollInterval = setInterval(loadQR, 5000);
+                    }
+                } else if (result.success && result.ready) {
+                    // Bot já conectado — mostrar ícone de sucesso
+                    qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-check-circle" style="font-size:3rem; color:#00ff88;"></i><p style="margin-top:1rem;">Autenticado</p></div>';
+                    // Parar polling
+                    if (qrPollInterval) { clearInterval(qrPollInterval); qrPollInterval = null; }
+                } else {
+                    // QR não disponível e bot não conectado — aguardando inicialização
+                    qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary); margin-bottom: 1rem;"></i><p style="font-size: 0.85rem; color: ar(--text-dim);">Aguardando QR Code do bot...</p></div>';
+                   // Fazer polling para pegar o QR quando ficar disponível
+                    if (!qrPollInterval) {
+                       qrPollInterval = setInterval(loadQR, 5000);
+                   }
+                }
+            } catch (e) {
+                console.error('Erro ao carregar QR:', e);
             }
         }
 
@@ -267,7 +292,7 @@ requireLogin();
         async function triggerDisparos() {
             const btn = document.getElementById('btn-trigger');
             if (!btn) {
-                console.error('Botão não encontrado!');
+            .error('Botão não encontrado!');
                 return;
             }
 

@@ -3975,12 +3975,23 @@ app.get('/status', (req, res) => {
 
 // QR Code
 app.get('/qr', async (req, res) => {
+  const wantsJson = (req.headers['accept'] || '').includes('application/json')
+    || (req.headers['content-type'] || '').includes('application/json')
+    || req.query.format === 'json';
+
   if (!lastQR) {
+    if (wantsJson) {
+      return res.status(200).json({
+        qr: null,
+        ready: isReady,
+        message: isReady ? 'Bot já está conectado' : 'Aguardando inicialização, QR ainda não gerado'
+      });
+    }
     return res.status(404).send(`
       <html><body style="background:#111;color:#eee;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh">
         <div style="text-align:center">
           <h3>Nenhum QR disponível</h3>
-          <p>O bot já está conectado ou aguardando inicialização.</p>
+          <p>${isReady ? 'O bot já está conectado ao WhatsApp.' : 'Aguardando inicialização... Recarregue em alguns segundos.'}</p>
           <a href="/status" style="color:#4fc3f7">Ver status</a>
         </div>
       </body></html>
@@ -3988,6 +3999,11 @@ app.get('/qr', async (req, res) => {
   }
   try {
     const dataUrl = await QRCodeImg.toDataURL(lastQR, { scale: 8, margin: 1 });
+
+    if (wantsJson) {
+      return res.json({ qr: dataUrl, ready: false, message: 'QR Code disponível para escaneamento' });
+    }
+
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(`
       <html><body style="background:#0f0f10;color:#eee;font-family:system-ui;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh">
@@ -3995,10 +4011,14 @@ app.get('/qr', async (req, res) => {
           <h3>Escaneie o QR Code</h3>
           <img src="${dataUrl}" style="image-rendering: pixelated; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5)" />
           <p style="margin-top:20px;color:#888">Após escanear, esta página mostrará "Nenhum QR disponível"</p>
+          <script>setTimeout(() => location.reload(), 30000);</script>
         </div>
       </body></html>
     `);
   } catch (e) {
+    if (wantsJson) {
+      return res.status(500).json({ qr: null, error: 'Falha ao gerar QR' });
+    }
     res.status(500).send('Falha ao gerar QR');
   }
 });

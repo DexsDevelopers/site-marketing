@@ -84,10 +84,14 @@ try {
             $token = $apiConfig['token'];
             $baseUrl = $apiConfig['base_url'];
 
-            $ch = curl_init($baseUrl . '/qr');
+            $ch = curl_init($baseUrl . '/qr?format=json');
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => ['x-api-token: ' . $token, 'ngrok-skip-browser-warning: true'],
+                CURLOPT_HTTPHEADER => [
+                    'x-api-token: ' . $token,
+                    'Accept: application/json',
+                    'ngrok-skip-browser-warning: true'
+                ],
                 CURLOPT_TIMEOUT => 5,
                 CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_SSL_VERIFYHOST => false,
@@ -97,12 +101,20 @@ try {
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            if ($httpCode === 200 && $result) {
+            if ($result) {
                 $decoded = json_decode($result, true);
-                $response = ['success' => true, 'qr' => $decoded['qr'] ?? null];
+                if ($decoded && isset($decoded['qr'])) {
+                    $response = ['success' => true, 'qr' => $decoded['qr'], 'ready' => $decoded['ready'] ?? false];
+                }
+                elseif ($decoded && isset($decoded['ready']) && $decoded['ready']) {
+                    $response = ['success' => true, 'qr' => null, 'ready' => true, 'message' => 'Bot já está conectado'];
+                }
+                else {
+                    $response = ['success' => false, 'message' => $decoded['message'] ?? 'QR não disponível'];
+                }
             }
             else {
-                $response = ['success' => false, 'message' => 'Bot offline ou QR não disponível'];
+                $response = ['success' => false, 'message' => 'Bot offline ou inacessível'];
             }
             break;
 
