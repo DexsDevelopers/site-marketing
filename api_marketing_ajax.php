@@ -427,6 +427,24 @@ try {
             $response = ['success' => true, 'message' => 'Passo salvo com sucesso!', 'id' => $id];
             break;
 
+
+        case 'save_campaign':
+            $nome = $_POST['nome'] ?? '';
+            if (empty($nome)) {
+                $response = ['success' => false, 'message' => 'Nome da campanha é obrigatório'];
+                break;
+            }
+            executeQuery($pdo, "INSERT INTO marketing_campanhas (nome, ativo, membros_por_dia_grupo) VALUES (?, 1, 5)", [$nome]);
+            $response = ['success' => true, 'message' => 'Campanha criada!', 'id' => $pdo->lastInsertId()];
+            break;
+
+        case 'toggle_message_active':
+            $id = (int)$_POST['id'];
+            $ativo = (int)$_POST['ativo']; // 0 ou 1
+            executeQuery($pdo, "UPDATE marketing_mensagens SET ativo = ? WHERE id = ?", [$ativo, $id]);
+            $response = ['success' => true, 'message' => 'Status atualizado!'];
+            break;
+
         case 'delete_step':
             $id = (int)$_POST['id'];
             if (!$id) {
@@ -521,4 +539,4 @@ if (ob_get_length())
     ob_clean();
 
 echo json_encode($response);
-exit;// Force Update v2
+exit; // Force Update v2
