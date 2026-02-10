@@ -156,12 +156,12 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
                             <select name="status" class="form-control" style="width: 150px; padding: 0.5rem 1rem;"
                                 onchange="this.form.submit()">
                                 <option value="">Todos Status</option>
-                                <option value="novo" <?= $status == 'novo' ? 'selected' : '' ?>>Novo</option>
-                                <option value="em_progresso" <?= $status == 'em_progresso' ? 'selected' : '' ?>>Em
+                                <option value="novo" <?=$status=='novo' ? 'selected' : ''?>>Novo</option>
+                                <option value="em_progresso" <?=$status=='em_progresso' ? 'selected' : ''?>>Em
                                     Progresso</option>
-                                <option value="concluido" <?= $status == 'concluido' ? 'selected' : '' ?>>Concluído
+                                <option value="concluido" <?=$status=='concluido' ? 'selected' : ''?>>Concluído
                                 </option>
-                                <option value="bloqueado" <?= $status == 'bloqueado' ? 'selected' : '' ?>>Bloqueado
+                                <option value="bloqueado" <?=$status=='bloqueado' ? 'selected' : ''?>>Bloqueado
                                 </option>
                             </select>
                             <button type="submit" class="btn-modern" style="padding: 0.5rem 1rem;"><i
@@ -412,16 +412,46 @@ endforeach; ?>
         }
 
         async function resetLead(id) {
-            // Pode implementar um reset individual se necessário via AJAX
-            Swal.fire({
+            const res = await Swal.fire({
                 title: 'Resetar Lead?',
                 text: "O lead voltará para o primeiro passo do funil.",
                 icon: 'question',
                 showCancelButton: true,
+                confirmButtonText: 'Sim, resetar!',
+                cancelButtonText: 'Cancelar',
                 confirmButtonColor: '#ff3b3b',
                 background: '#151518',
                 color: '#e0e0e0'
             });
+
+            if (res.isConfirmed) {
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'reset_lead');
+                    formData.append('id', id);
+
+                    const response = await fetch('api_marketing_ajax.php', { method: 'POST', body: formData });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Lead Resetado!',
+                            text: 'O lead voltou para o primeiro passo.',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            background: '#151518',
+                            color: '#e0e0e0'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Erro', data.message || 'Falha ao resetar lead', 'error');
+                    }
+                } catch (e) {
+                    Swal.fire('Erro', 'Falha na conexão com o servidor', 'error');
+                }
+            }
         }
     </script>
 </body>

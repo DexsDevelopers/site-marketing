@@ -48,16 +48,18 @@ try {
             break;
 
         case 'get_bot_status':
-            // Config do bot de marketing (Porta 3002)
-            $token = 'lucastav8012';
-            $baseUrl = 'https://cyan-spoonbill-539092.hostingersite.com';
+            $apiConfig = whatsappApiConfig();
+            $token = $apiConfig['token'];
+            $baseUrl = $apiConfig['base_url'];
 
             $ch = curl_init($baseUrl . '/status');
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => ['x-api-token: ' . $token],
-                CURLOPT_TIMEOUT => 3,
-                CURLOPT_SSL_VERIFYPEER => false
+                CURLOPT_HTTPHEADER => ['x-api-token: ' . $token, 'ngrok-skip-browser-warning: true'],
+                CURLOPT_TIMEOUT => 5,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_FOLLOWLOCATION => true
             ]);
             $result = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -78,15 +80,18 @@ try {
             break;
 
         case 'get_qr':
-            $token = 'lucastav8012';
-            $baseUrl = 'https://cyan-spoonbill-539092.hostingersite.com';
+            $apiConfig = whatsappApiConfig();
+            $token = $apiConfig['token'];
+            $baseUrl = $apiConfig['base_url'];
 
             $ch = curl_init($baseUrl . '/qr');
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => ['x-api-token: ' . $token],
-                CURLOPT_TIMEOUT => 3,
-                CURLOPT_SSL_VERIFYPEER => false
+                CURLOPT_HTTPHEADER => ['x-api-token: ' . $token, 'ngrok-skip-browser-warning: true'],
+                CURLOPT_TIMEOUT => 5,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_FOLLOWLOCATION => true
             ]);
             $result = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

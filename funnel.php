@@ -96,12 +96,6 @@ endif; ?>
                         </button>
                     </div>
                 </div>
-                <?php foreach ($mensagens as $index => $msg):
-        if ($index < count($mensagens) - 1): ?>
-                <!-- Connector line logic if needed -->
-                <?php
-        endif;
-    endforeach; ?>
                 <?php
 endforeach; ?>
             </div>
@@ -125,7 +119,7 @@ endforeach; ?>
 
                 const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
                 console.log('📡 Resposta recebida:', response.status, response.statusText);
-                
+
                 const data = await response.json();
                 console.log('📦 Dados JSON:', data);
 

@@ -217,6 +217,21 @@ try {
             $response = ['success' => true, 'message' => 'Todos os contatos foram removidos com sucesso!'];
             break;
 
+        case 'reset_lead':
+            $id = (int)($_POST['id'] ?? 0);
+            if ($id <= 0) {
+                $response = ['success' => false, 'message' => 'ID inválido'];
+                break;
+            }
+            executeQuery($pdo, "UPDATE marketing_membros SET status = 'novo', ultimo_passo_id = 0, data_proximo_envio = NULL WHERE id = ?", [$id]);
+            $response = ['success' => true, 'message' => 'Lead resetado para o início do funil!'];
+            break;
+
+        case 'get_funnel_steps':
+            $steps = fetchData($pdo, "SELECT id, ordem, tipo, conteudo, delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = 1 ORDER BY ordem ASC");
+            $response = ['success' => true, 'data' => $steps];
+            break;
+
         case 'migrate_db':
             // Migração de banco de dados para suportar JIDs
             try {

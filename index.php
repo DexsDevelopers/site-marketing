@@ -193,35 +193,56 @@ requireLogin();
             } catch (e) { }
         }
 
-        // Funil mock (para visual)
-        function loadFunnel() {
+        async function loadFunnel() {
             const funnel = document.getElementById('funnel-container');
-            funnel.innerHTML = `
-                <table class="table-modern">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Conteúdo</th>
-                            <th>Delay</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Olá! Tudo bem? Este é o seu primeiro passo...</td>
-                            <td>Imediato</td>
-                            <td><i class="fas fa-edit" style="cursor:pointer;"></i></td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Passando para lembrar que temos uma novidade...</td>
-                            <td>2 horas</td>
-                            <td><i class="fas fa-edit" style="cursor:pointer;"></i></td>
-                        </tr>
-                    </tbody>
-                </table>
-            `;
+            try {
+                const response = await fetch('api_marketing_ajax.php?action=get_funnel_steps');
+                const result = await response.json();
+
+                if (result.success && result.data && result.data.length > 0) {
+                    let rows = '';
+                    result.data.forEach(step => {
+                        const contentPreview = step.conteudo.length > 60
+                            ? step.conteudo.substring(0, 60) + '...'
+                            : step.conteudo;
+                        const delay = step.delay_apos_anterior_minutos > 0
+                            ? step.delay_apos_anterior_minutos + ' min'
+                            : 'Imediato';
+                        rows += `
+                            <tr>
+                                <td>${step.ordem}</td>
+                                <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(contentPreview)}</td>
+                                <td>${delay}</td>
+                                <td><a href="funnel.php" style="color: var(--primary);"><i class="fas fa-edit"></i></a></td>
+                            </tr>
+                        `;
+                    });
+
+                    funnel.innerHTML = `
+                        <table class="table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Conteúdo</th>
+                                    <th>Delay</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    `;
+                } else {
+                    funnel.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">Nenhuma mensagem configurada. <a href="funnel.php" style="color: var(--primary);">Configurar funil</a></p>';
+                }
+            } catch (e) {
+                funnel.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">Erro ao carregar funil.</p>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         async function updateActivity() {
