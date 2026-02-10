@@ -16,23 +16,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    // Login hardcoded simples (mas seguro) para este painel exclusivo
-    // Usuário: admin
-    // Senha: (a mesma do banco de dados para facilitar: Lucastav8012@)
-    
-    if ($username === 'admin' && $password === 'Lucastav8012@') {
+    // Carregar variáveis de ambiente
+    $envFile = __DIR__ . '/.env';
+    if (file_exists($envFile)) {
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            if (strpos(trim($line), '#') === 0)
+                continue;
+            list($name, $value) = explode('=', $line, 2);
+            putenv(sprintf('%s=%s', trim($name), trim($value)));
+        }
+    }
+
+    $adminUser = getenv('ADMIN_USER') ?: 'admin';
+    $adminPass = getenv('ADMIN_PASS') ?: 'Lucastav8012@';
+
+    if ($username === $adminUser && $password === $adminPass) {
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['admin_username'] = $username;
         $_SESSION['login_time'] = time();
         header('Location: index.php');
         exit;
-    } else {
+    }
+    else {
         $error = 'Usuário ou senha incorretos.';
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             min-height: 100vh;
             background: radial-gradient(circle at top right, #1a0b0b, #000);
         }
+
         .login-card {
             background: rgba(20, 20, 25, 0.9);
             padding: 3rem;
@@ -54,40 +68,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: 1px solid rgba(255, 59, 59, 0.2);
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
+
         .login-logo {
             font-size: 3rem;
             color: var(--primary);
             margin-bottom: 1.5rem;
         }
+
         .input-group {
             margin-bottom: 1.5rem;
             text-align: left;
         }
+
         .input-group label {
             display: block;
             color: var(--text-dim);
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
         }
+
         .form-control {
             width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 1rem;
             border-radius: 12px;
             color: white;
             font-size: 1rem;
             transition: all 0.3s;
-            box-sizing: border-box; 
+            box-sizing: border-box;
         }
+
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 15px rgba(255, 59, 59, 0.2);
         }
+
         .btn-login {
             width: 100%;
             padding: 1rem;
@@ -101,10 +121,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: all 0.3s;
             margin-top: 1rem;
         }
+
         .btn-login:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(255, 59, 59, 0.3);
         }
+
         .error-msg {
             background: rgba(255, 59, 59, 0.1);
             color: #ff5c5c;
@@ -119,18 +141,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body>
     <div class="login-card">
         <div class="login-logo">
             <i class="fab fa-whatsapp"></i>
         </div>
         <h2 style="margin-bottom: 2rem;">Acesso Restrito</h2>
-        
+
         <?php if ($error): ?>
-            <div class="error-msg">
-                <i class="fas fa-exclamation-circle"></i> <?= $error ?>
-            </div>
-        <?php endif; ?>
+        <div class="error-msg">
+            <i class="fas fa-exclamation-circle"></i>
+            <?= $error?>
+        </div>
+        <?php
+endif; ?>
 
         <form method="POST">
             <div class="input-group">
@@ -148,4 +173,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </body>
+
 </html>
