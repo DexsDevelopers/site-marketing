@@ -232,11 +232,11 @@ app.get('/instance/qr/:sessionId', async (req, res) => {
     inst = await createInstance(sessionId);
   }
 
-  if (inst.isReady) return res.send('Connected');
-  if (!inst.lastQR) return res.send('Loading');
+  if (inst.isReady) return res.json({ status: 'connected' });
+  if (!inst.lastQR) return res.json({ status: 'loading' });
 
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(inst.lastQR)}`;
-  res.send(`<img src="${qrImageUrl}" />`);
+  res.json({ status: 'qr', qr: qrImageUrl });
 });
 
 app.post('/instance/create', async (req, res) => {
