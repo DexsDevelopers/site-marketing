@@ -3059,7 +3059,7 @@ async function start() {
       auth: state,
       logger: silentLogger,
       version,
-      browser: Browsers.appropriate('Desktop'),
+      browser: ["Marketing Bot", "Chrome", "10.0"],
       connectTimeoutMs: 60000,
       keepAliveIntervalMs: 20000,  // Keep-alive mais frequente (20s)
       retryRequestDelayMs: 500,
