@@ -1,3 +1,0 @@
-<?php
-header('Content-Type: text/plain');
-echo file_get_contents('api_marketing.php');
