@@ -22,9 +22,9 @@ $options = [
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 
-    // Forçar timezone correto para alinhar PHP e MySQL
+// Forçar timezone no PHP (mas não no MySQL para evitar erro de permissão)
     date_default_timezone_set('America/Sao_Paulo');
-    $pdo->exec("SET time_zone = '-03:00'");
+    // $pdo->exec("SET time_zone = '-03:00'"); // Desabilitado para compatibilidade Hostinger
 }
 catch (\PDOException $e) {
     error_log("Erro de conexão com o banco: " . $e->getMessage());
