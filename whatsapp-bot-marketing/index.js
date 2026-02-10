@@ -194,7 +194,7 @@ const ALLOWED_ORIGINS = [
 // Configuração da conexão com banco de dados
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'u853242961_lucas',     // Atualizado para usuario correto
+  user: process.env.DB_USER || 'u853242961_johan71',     // Voltando para usuario original
   password: process.env.DB_PASS || 'Lucastav8012@',     // Atualizado para senha correta
   database: process.env.DB_NAME || 'u853242961_rastreio', // VOLTANDO PARA O BANCO ORIGINAL (onde tem dados)
   waitForConnections: true,

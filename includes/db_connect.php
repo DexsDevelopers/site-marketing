@@ -9,7 +9,7 @@
 
 $host = 'localhost';
 $db = 'u853242961_rastreio'; // Voltando para o banco original onde estao os dados
-$user = 'u853242961_lucas';  // Mantendo usuario que sabemos que funciona (se ele tiver permissao no rastreio)
+$user = 'u853242961_johan71';  // Voltando para usuario original que tem permissao no rastreio
 $pass = 'Lucastav8012@';
 $charset = 'utf8mb4';
 
