@@ -506,4 +506,77 @@ function notifyWhatsappTaxa(PDO $pdo, string $codigo, float $taxaValor, string $
     else {
         writeLog("Notificação de taxa enviada para {$codigo}", 'INFO');
     }
+}// Adicionando a função helper para envio de mídia no final do arquivo existente
+// Função a ser adicionada ao includes/whatsapp_helper.php
+
+function sendWhatsappMedia(string $telefone, string $mediaUrl, string $caption = '', string $tipo = 'image'): array
+{
+    if (!function_exists('curl_init')) {
+        return ['success' => false, 'error' => 'curl_extension_missing'];
+    }
+
+    $config = whatsappApiConfig();
+    if (!$config['enabled']) {
+        return ['success' => false, 'error' => 'disabled'];
+    }
+
+    // Check token
+    if (empty($config['token']) || $config['token'] === 'troque-este-token') {
+        return ['success' => false, 'error' => 'token_not_configured'];
+    }
+
+    $endpoint = $config['base_url'] . '/send-media';
+
+    // Se a URL for relativa (uploads/...), converter para absoluta
+    if (!filter_var($mediaUrl, FILTER_VALIDATE_URL)) {
+        // Tentar construir URL absoluta baseada na config do site (se houver) ou usar hardcoded base
+        // Como o bot roda em outro dominio/porta, ele precisa acessar a imagem PUBLICAMENTE.
+        // A imagem está em 'uploads/marketing/xyz.jpg' no servidor PHP.
+        // Vamos assumir que o script roda onde a imagem está acessível.
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'] ?? 'khaki-gull-213146.hostingersite.com';
+        $mediaUrl = $protocol . $host . '/' . ltrim($mediaUrl, '/');
+    }
+
+    $payload = json_encode([
+        'to' => $telefone,
+        'caption' => $caption,
+        'mediaUrl' => $mediaUrl,
+        'type' => $tipo
+    ], JSON_UNESCAPED_UNICODE);
+
+    $ch = curl_init($endpoint);
+    $tokenClean = trim($config['token']);
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'x-api-token: ' . $tokenClean,
+            'ngrok-skip-browser-warning: true'
+        ],
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_TIMEOUT => 60, // Mídia pode demorar mais
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_SSL_VERIFYPEER => false
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if ($response === false) {
+        $error = curl_error($ch);
+        curl_close($ch);
+        return ['success' => false, 'error' => $error];
+    }
+
+    curl_close($ch);
+    $success = $httpCode >= 200 && $httpCode < 300;
+
+    return [
+        'success' => $success,
+        'http_code' => $httpCode,
+        'response' => $response
+    ];
 }

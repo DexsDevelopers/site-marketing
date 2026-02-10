@@ -4146,6 +4146,50 @@ app.post('/send', auth, async (req, res) => {
 });
 
 // Verificar número
+// Enviar mídia
+app.post('/send-media', auth, async (req, res) => {
+  try {
+    if (!isReady) return res.status(503).json({ ok: false, error: 'not_ready' });
+
+    let { to, caption, mediaUrl, type, mimetype } = req.body || {};
+    if (!to || !mediaUrl) return res.status(400).json({ ok: false, error: 'missing_params' });
+
+    log.info(`[SEND-MEDIA] Recebido destino: "${to}", URL: "${mediaUrl}", Tipo: "${type}"`);
+
+    let digits = to;
+    let mappedJid = to;
+
+    if (typeof to === 'string' && !to.includes('@')) {
+      digits = formatBrazilNumber(to);
+      const resolution = await resolveJidFromPhone(digits);
+      mappedJid = resolution.mappedJid;
+    } else {
+      digits = String(to).split('@')[0];
+    }
+
+    let messageContent = {};
+    if (type === 'image') {
+      messageContent = { image: { url: mediaUrl }, caption: caption };
+    } else if (type === 'video') {
+      messageContent = { video: { url: mediaUrl }, caption: caption, mimetype: mimetype || 'video/mp4' };
+    } else if (type === 'audio') {
+      messageContent = { audio: { url: mediaUrl }, mimetype: mimetype || 'audio/mp4', ptt: true }; // Audio como PTT (nota de voz)
+    } else {
+      messageContent = { document: { url: mediaUrl }, mimetype: mimetype || 'application/pdf', fileName: caption || 'documento' };
+    }
+
+    await safeSendMessage(sock, mappedJid, messageContent);
+    lastHeartbeat = Date.now();
+
+    log.success(`[SEND-MEDIA] Mídia enviada para ${mappedJid}`);
+    return res.json({ ok: true, to: digits, jid: mappedJid });
+
+  } catch (err) {
+    log.error(`Erro ao enviar mídia: ${err.message}`);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 app.post('/check', auth, async (req, res) => {
   try {
     if (!isReady) return res.status(503).json({ ok: false, error: 'not_ready' });

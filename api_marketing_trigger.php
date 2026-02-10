@@ -54,7 +54,7 @@ try {
     // 4. Buscar tarefas pendentes
     // JOIN com marketing_mensagens filtra apenas mensagens ATIVAS desta campanha
     $sqlTasks = "
-        SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem
+        SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem, msg.midia_url, msg.tipo_midia
         FROM marketing_membros m
         JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem
         WHERE m.status = 'em_progresso' 
@@ -71,10 +71,23 @@ try {
 
     foreach ($tasks as $t) {
         $randomId = substr(md5(uniqid()), 0, 5);
-        $msg = $t['conteudo']; // Removido ID aleatorio visivel se nao for debug
-        // $msg .= "\n\n_" . $randomId . "_"; // Opcional
+        $msgContent = $t['conteudo'];
 
-        $result = sendWhatsappMessage($t['telefone'], $msg);
+        if (!empty($t['midia_url'])) {
+            // Se tiver media, envia media com caption
+            // Garantir URL absoluta se for relativa
+            $mediaUrl = $t['midia_url'];
+            if (!filter_var($mediaUrl, FILTER_VALIDATE_URL)) {
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                $host = $_SERVER['HTTP_HOST'] ?? 'khaki-gull-213146.hostingersite.com';
+                $mediaUrl = $protocol . $host . '/' . ltrim($mediaUrl, '/');
+            }
+            $result = sendWhatsappMedia($t['telefone'], $mediaUrl, $msgContent, $t['tipo_midia'] ?? 'image');
+        }
+        else {
+            // Texto puro
+            $result = sendWhatsappMessage($t['telefone'], $msgContent);
+        }
 
         if ($result['success']) {
             $enviados++;

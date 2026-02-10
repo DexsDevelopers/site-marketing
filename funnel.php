@@ -100,6 +100,15 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
             opacity: 0.5;
             filter: grayscale(0.8);
         }
+
+        .media-preview {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            object-fit: cover;
+            border: 1px solid #333;
+        }
     </style>
 </head>
 <body>
@@ -126,10 +135,6 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
                     </div>
                 </div>
                 <div style="display: flex; gap: 1rem; align-items: center;">
-                    <div style="text-align: right; margin-right: 1rem;">
-                         <small style="color: #666; display: block;">Membros Diários</small>
-                         <strong style="color: var(--primary);"><?= $currentCampanha['membros_por_dia_grupo'] ?? 5 ?></strong>
-                    </div>
                     <button class="btn-modern accent" onclick="triggerDisparos()" id="btn-trigger">
                         <i class="fas fa-paper-plane"></i> Executar Agora
                     </button>
@@ -172,6 +177,17 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
                                     </label>
                                 </div>
                             </div>
+                            
+                            <?php if (!empty($msg['midia_url'])): ?>
+                                <?php if ($msg['tipo_midia'] == 'image'): ?>
+                                    <img src="<?= htmlspecialchars($msg['midia_url']) ?>" class="media-preview" alt="Mídia">
+                                <?php else: ?>
+                                    <div class="media-preview" style="display:flex;align-items:center;justify-content:center;background:#222;">
+                                        <i class="fas fa-file-video"></i>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
                             <textarea onchange="updateStep(<?= $msg['id'] ?>)" id="content-<?= $msg['id'] ?>"><?= htmlspecialchars($msg['conteudo']) ?></textarea>
                         </div>
                         <div class="step-actions">
@@ -227,12 +243,9 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
             fd.append('action', 'toggle_message_active');
             fd.append('id', id);
             fd.append('ativo', isActive ? 1 : 0);
-            
-            // UI feedback imediato
             const step = document.getElementById('step-' + id);
             if (isActive) step.classList.remove('inactive-step');
             else step.classList.add('inactive-step');
-
             await fetch(API_URL, { method: 'POST', body: fd });
         }
 
@@ -241,13 +254,8 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
             const originalContent = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
-            
             try {
-                // Passar campanha_id para trigger saber o que disparar (futuro)
-                // Por enquanto trigger dispara a campanha padrao (id 1) ou se ajustarmos o backend.
-                // Idealmente o backend deve ler 'campanha_id' no trigger.
                 const res = await fetch(API_URL + '?action=trigger_disparos&campanha_id=' + currentCampanhaId).then(r => r.json());
-                
                 if (res.success) {
                     Swal.fire({
                         icon: 'success', title: 'Disparos Iniciados!',
@@ -271,6 +279,8 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
                 html:
                     '<label style="display:block; text-align:left; color:#888;">Conteúdo</label>' +
                     '<textarea id="swal-content" class="swal2-textarea" placeholder="Olá, tudo bem?"></textarea>' +
+                    '<label style="display:block; text-align:left; color:#888; margin-top:10px;">Mídia (Imagem/Video opcional)</label>' +
+                    '<input type="file" id="swal-file" class="swal2-file" accept="image/*,video/*">' +
                     '<label style="display:block; text-align:left; color:#888; margin-top:10px;">Delay (minutos)</label>' +
                     '<input id="swal-delay" type="number" class="swal2-input" value="0" min="0">',
                 focusConfirm: false,
@@ -278,69 +288,69 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
                 preConfirm: () => {
                     return {
                         conteudo: document.getElementById('swal-content').value,
-                        delay: document.getElementById('swal-delay').value
+                        delay: document.getElementById('swal-delay').value,
+                        file: document.getElementById('swal-file').files[0]
                     }
                 }
             });
 
-            if (formValues && formValues.conteudo) {
-                saveStep(0, formValues.conteudo, formValues.delay);
+            if (formValues && (formValues.conteudo || formValues.file)) {
+                saveStep(0, formValues.conteudo, formValues.delay, formValues.file);
             }
         }
 
         async function editStep(id) {
             const content = document.getElementById('content-' + id).value;
-            // Pegar delay do badge ou atributo data
-            // Simplificando: vamos pegar do badge via regex
             const badge = document.querySelector(`#step-${id} .delay-badge span`).innerText;
             const delay = badge.match(/\d+/)[0];
 
             const { value: formValues } = await Swal.fire({
                 title: 'Editar Mensagem',
                 html:
+                    '<label style="display:block; text-align:left; color:#888;">Conteúdo</label>' +
                     '<textarea id="swal-content" class="swal2-textarea">' + content + '</textarea>' +
+                    '<label style="display:block; text-align:left; color:#888; margin-top:10px;">Nova Mídia (Substituir)</label>' +
+                    '<input type="file" id="swal-file" class="swal2-file" accept="image/*,video/*">' +
+                    '<label style="display:block; text-align:left; color:#888; margin-top:10px;">Delay (minutos)</label>' +
                     '<input id="swal-delay" type="number" class="swal2-input" value="' + delay + '">',
                 focusConfirm: false,
                 background: '#151518', color: '#e0e0e0', confirmButtonColor: '#ff3b3b',
                 preConfirm: () => {
                     return {
                         conteudo: document.getElementById('swal-content').value,
-                        delay: document.getElementById('swal-delay').value
+                        delay: document.getElementById('swal-delay').value,
+                        file: document.getElementById('swal-file').files[0]
                     }
                 }
             });
 
             if (formValues) {
-                saveStep(id, formValues.conteudo, formValues.delay);
+                saveStep(id, formValues.conteudo, formValues.delay, formValues.file);
             }
         }
 
         async function updateStep(id) {
-            // Auto-save on blur do textarea
-            // Implementacao simplificada: chama saveStep com delay atual
             const content = document.getElementById('content-' + id).value;
-            const badge = document.querySelector(`#step-${id} .delay-badge span`).innerText;
-            const delay = badge.match(/\d+/)[0];
-            
-            // Nao mostrar spinner no update silencioso
+            // Apenas update de texto silencioso
             const fd = new FormData();
             fd.append('action', 'save_step');
             fd.append('id', id);
             fd.append('conteudo', content);
-            fd.append('delay', delay);
             fd.append('campanha_id', currentCampanhaId);
-            
             fetch(API_URL, { method: 'POST', body: fd });
         }
 
-        async function saveStep(id, conteudo, delay) {
+        async function saveStep(id, conteudo, delay, file) {
             showLoading();
             const fd = new FormData();
             fd.append('action', 'save_step');
             fd.append('id', id);
             fd.append('conteudo', conteudo);
-            fd.append('delay', delay);
-            fd.append('campanha_id', currentCampanhaId); // IMPORTANTE: Enviar ID da campanha atual
+            fd.append('delay', delay || 0);
+            fd.append('campanha_id', currentCampanhaId); 
+            if (file) {
+                fd.append('midia', file);
+            }
 
             try {
                 const res = await fetch(API_URL, { method: 'POST', body: fd }).then(r => r.json());

@@ -404,15 +404,49 @@ try {
             $campanhaId = (int)($_POST['campanha_id'] ?? 1);
             $ativo = (int)($_POST['ativo'] ?? 1);
 
-            if (empty($conteudo)) {
-                $response = ['success' => false, 'message' => 'O conteúdo não pode estar vazio'];
+            if (empty($conteudo) && empty($_FILES['midia']['name'])) {
+                $response = ['success' => false, 'message' => 'O conteúdo ou uma mídia é obrigatório'];
                 break;
             }
 
+            // Upload de Mídia
+            $midiaUrl = null;
+            $tipoMidia = 'texto';
+
+            if (isset($_FILES['midia']) && $_FILES['midia']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/uploads/marketing/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                
+                $fileName = time() . '_' . basename($_FILES['midia']['name']);
+                $targetFile = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($_FILES['midia']['tmp_name'], $targetFile)) {
+                    $midiaUrl = 'uploads/marketing/' . $fileName;
+                    $mime = mime_content_type($targetFile);
+                    if (strpos($mime, 'image') !== false) $tipoMidia = 'image';
+                    elseif (strpos($mime, 'video') !== false) $tipoMidia = 'video';
+                    elseif (strpos($mime, 'audio') !== false) $tipoMidia = 'audio';
+                    else $tipoMidia = 'document'; // Default
+                    
+                    $tipo = $tipoMidia; // Atualiza o tipo da mensagem
+                }
+            }
+
             if ($id > 0) {
-                // Update - não muda campanha_id no update para evitar confusão de ordem, a menos que explicitamente pedido (mas não vamos complicar agora)
-                executeQuery($pdo, "UPDATE marketing_mensagens SET conteudo = ?, delay_apos_anterior_minutos = ?, tipo = ?, ativo = ? WHERE id = ?", [$conteudo, $delay, $tipo, $ativo, $id]);
-            // Se a ordem foi mudada no frontend, deveria haver uma logica separada de reorder, mas aqui assumimos que ordem vem 0 ou mantem.
+                // Update
+                $sql = "UPDATE marketing_mensagens SET conteudo = ?, delay_apos_anterior_minutos = ?, tipo = ?, ativo = ?";
+                $params = [$conteudo, $delay, $tipo, $ativo];
+                
+                if ($midiaUrl) {
+                    $sql .= ", midia_url = ?, tipo_midia = ?";
+                    $params[] = $midiaUrl;
+                    $params[] = $tipoMidia;
+                }
+                
+                $sql .= " WHERE id = ?";
+                $params[] = $id;
+                
+                executeQuery($pdo, $sql, $params);
             }
             else {
                 // Insert
@@ -420,11 +454,16 @@ try {
                     $maxOrdem = fetchOne($pdo, "SELECT MAX(ordem) as m FROM marketing_mensagens WHERE campanha_id = ?", [$campanhaId])['m'] ?? 0;
                     $ordem = $maxOrdem + 1;
                 }
-                executeQuery($pdo, "INSERT INTO marketing_mensagens (campanha_id, ordem, tipo, conteudo, delay_apos_anterior_minutos, ativo) VALUES (?, ?, ?, ?, ?, ?)", [$campanhaId, $ordem, $tipo, $conteudo, $delay, $ativo]);
+                
+                executeQuery($pdo, "INSERT INTO marketing_mensagens 
+                    (campanha_id, ordem, tipo, conteudo, delay_apos_anterior_minutos, ativo, midia_url, tipo_midia) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+                    [$campanhaId, $ordem, $tipo, $conteudo, $delay, $ativo, $midiaUrl, $tipoMidia]);
+                    
                 $id = $pdo->lastInsertId();
             }
 
-            $response = ['success' => true, 'message' => 'Passo salvo com sucesso!', 'id' => $id];
+            $response = ['success' => true, 'message' => 'Passo salvo com mídia!', 'id' => $id];
             break;
 
 
