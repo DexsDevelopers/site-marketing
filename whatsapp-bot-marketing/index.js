@@ -261,29 +261,36 @@ function addLog(level, message) {
   memoryLogs.unshift(logEntry);
   if (memoryLogs.length > MAX_LOGS) memoryLogs.pop();
 
-  // Também imprimir no console para debug da Hostinger
-  console.log(`[${level}] ${message}`);
+  // Usar o log original para evitar recursão infinita
+  originalConsoleLog(`[${level}] ${message}`);
 }
 
 // Sobrescrever console.log para capturar logs importantes
 const originalConsoleLog = console.log;
 console.log = function (...args) {
   const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-  // Filtrar logs irrelevantes de debug
-  if (!msg.includes('rate-limit') && !msg.includes('Closing session')) {
+  // Filtrar logs irrelevantes de debug ou logs que nós mesmos geramos via addLog (para evitar duplicidade visual)
+  if (!msg.includes('rate-limit') && !msg.includes('Closing session') && !msg.startsWith('[')) {
     addLog('INFO', msg);
+  } else {
+    originalConsoleLog.apply(console, args);
   }
-  originalConsoleLog.apply(console, args);
 };
 
 const originalConsoleError = console.error;
 console.error = function (...args) {
   const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
   addLog('ERROR', msg);
+  // originalConsoleError já é chamado via addLog -> originalConsoleLog se quisermos separar
+  // mas aqui vamos garantir que imprima no stderr original também
   originalConsoleError.apply(console, args);
 };
 
 app.get('/logs', (req, res) => {
+  const token = req.query.token || req.headers['x-api-token'];
+  if (token !== process.env.API_TOKEN && token !== 'lucastav8012') {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
   const level = req.query.level;
   const limit = Number(req.query.limit) || 100;
 
