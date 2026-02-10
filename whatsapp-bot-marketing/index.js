@@ -254,6 +254,17 @@ app.get('/status', (req, res) => {
   res.json({ status: isReady ? 'CONNECTED' : (lastQR ? 'QR_CODE' : 'CONNECTING'), timestamp: Date.now() });
 });
 
+app.get('/ping', async (req, res) => {
+  try {
+    const start = Date.now();
+    const response = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`);
+    const duration = Date.now() - start;
+    res.json({ success: true, duration, data: response.data });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 app.get('/logs', (req, res) => {
   const token = req.query.token || req.headers['x-api-token'];
   if (token !== API_TOKEN) return res.status(401).json({ success: false });
