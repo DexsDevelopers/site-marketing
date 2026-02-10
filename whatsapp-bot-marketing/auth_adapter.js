@@ -1,4 +1,3 @@
-
 import mysql from 'mysql2/promise';
 import { proto, initAuthCreds, BufferJSON } from '@whiskeysockets/baileys';
 
@@ -24,7 +23,6 @@ export const useMySQLAuthState = async (dbConfig) => {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
-        // console.log('✅ Tabela baileys_auth_store verificada/criada com sucesso.');
     } catch (error) {
         console.error('❌ Erro ao criar tabela baileys_auth_store:', error.message);
     }
@@ -34,10 +32,9 @@ export const useMySQLAuthState = async (dbConfig) => {
         try {
             const [rows] = await pool.query('SELECT value FROM baileys_auth_store WHERE `key` = ?', [key]);
             if (rows.length > 0) {
-                // console.log(`📖 Auth Lido: ${key}`);
+                // BufferJSON.reviver lida com a reconstrução dos Buffers
                 return JSON.parse(rows[0].value, BufferJSON.reviver);
             }
-            console.log(`ℹ️ Auth não encontrado: ${key}`);
             return null;
         } catch (error) {
             console.error(`❌ Erro ao ler Auth do MySQL (${key}):`, error.message);
@@ -48,12 +45,12 @@ export const useMySQLAuthState = async (dbConfig) => {
     // Função auxiliar para escrever no banco
     const writeData = async (key, value) => {
         try {
+            // BufferJSON.replacer prepara os Buffers para stringify
             const jsonValue = JSON.stringify(value, BufferJSON.replacer);
             await pool.query(
                 'INSERT INTO baileys_auth_store (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
                 [key, jsonValue, jsonValue]
             );
-            // console.log(`💾 Auth Salvo: ${key} (${jsonValue.length} bytes)`);
         } catch (error) {
             console.error(`❌ Erro ao escrever Auth no MySQL (${key}):`, error.message);
         }
@@ -63,7 +60,6 @@ export const useMySQLAuthState = async (dbConfig) => {
     const removeData = async (key) => {
         try {
             await pool.query('DELETE FROM baileys_auth_store WHERE `key` = ?', [key]);
-            console.log(`🗑️ Auth Removido: ${key}`);
         } catch (error) {
             console.error(`❌ Erro ao remover Auth do MySQL (${key}):`, error.message);
         }
