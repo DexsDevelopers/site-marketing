@@ -82,7 +82,7 @@ async function createInstance(sessionId, phoneForPairing = null) {
       auth: state,
       logger: pino({ level: 'silent' }),
       version: latestVersion,
-      browser: ["WhatsApp Money", "Chrome", "121.0.6167.160"],
+      browser: ["Ubuntu", "Chrome", "20.0.04"],
       connectTimeoutMs: 60000,
       keepAliveIntervalMs: 30000,
       printQRInTerminal: false
