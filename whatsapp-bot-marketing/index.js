@@ -82,10 +82,11 @@ async function createInstance(sessionId, phoneForPairing = null) {
       auth: state,
       logger: pino({ level: 'silent' }),
       version: latestVersion,
-      browser: ["Ubuntu", "Chrome", "20.0.04"],
+      browser: ["Ubuntu", "Chrome", "114.0.5735.198"],
       connectTimeoutMs: 60000,
       keepAliveIntervalMs: 30000,
-      printQRInTerminal: false
+      printQRInTerminal: false,
+      generateHighQualityLinkPreview: false
     });
   } catch (err) {
     addLog(sessionId, 'ERROR', `Erro ao criar socket: ${err.message}`);
@@ -98,6 +99,7 @@ async function createInstance(sessionId, phoneForPairing = null) {
     isReady: false,
     lastQR: null,
     pairingCode: null,
+    _pendingPairing: null,
     uptimeStart: null
   };
 
@@ -113,17 +115,21 @@ async function createInstance(sessionId, phoneForPairing = null) {
       addLog(sessionId, 'INFO', 'Novo QR Code gerado');
       updateRemoteStatus(sessionId, 'aguardando_qr');
 
-      // Se estamos esperando pareamento por número, gerar o código agora que o socket está pronto
+      // Se estamos esperando pareamento por número, gerar o código com pequeno delay
       if (instanceData._pendingPairing && !instanceData.pairingCode) {
         const pairingNumber = instanceData._pendingPairing;
         instanceData._pendingPairing = null;
-        try {
-          const code = await sock.requestPairingCode(pairingNumber);
-          instanceData.pairingCode = code;
-          addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado para ${pairingNumber}: ${code}`);
-        } catch (err) {
-          addLog(sessionId, 'ERROR', `Erro ao gerar código de pareamento: ${err.message}`);
-        }
+
+        // Delay de 2s após o QR para garantir estabilidade do socket
+        setTimeout(async () => {
+          try {
+            const code = await sock.requestPairingCode(pairingNumber);
+            instanceData.pairingCode = code;
+            addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado para ${pairingNumber}: ${code}`);
+          } catch (err) {
+            addLog(sessionId, 'ERROR', `Erro ao gerar código de pareamento: ${err.message}`);
+          }
+        }, 2000);
       }
     }
 
