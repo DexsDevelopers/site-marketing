@@ -8,6 +8,13 @@ try {
     echo "<pre>";
     print_r($columns);
     echo "</pre>";
+    // Verificar se a coluna role existe
+    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'role'");
+    if (!$stmt->fetch()) {
+        echo "<p>Adicionando coluna 'role'...</p>";
+        $pdo->exec("ALTER TABLE users ADD COLUMN role ENUM('admin', 'user') DEFAULT 'user'");
+        echo "<p>Coluna 'role' adicionada!</p>";
+    }
 }
 catch (Exception $e) {
     echo "<h1>Erro: " . $e->getMessage() . "</h1>";
