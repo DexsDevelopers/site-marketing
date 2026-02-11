@@ -267,6 +267,53 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             font-family: inherit;
         }
 
+        /* --- Tutorial --- */
+        .tutorial-card {
+            margin-top: 2rem;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+        }
+
+        .tutorial-card h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .steps {
+            list-style: none;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--text-dim);
+        }
+
+        .step-number {
+            background: var(--primary);
+            color: #000;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
         /* --- Mobile --- */
         @media (max-width: 1024px) {
             .grid {
@@ -365,6 +412,35 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                         <button class="btn btn-outline" id="btn-gen" onclick="generateSession()">
                             <i class="fas fa-sync"></i> Gerar Novo Código
                         </button>
+
+                        <!-- Tutorial Manual -->
+                        <div class="tutorial-card">
+                            <h3><i class="fas fa-info-circle"></i> Como conectar (Celular Solitário)</h3>
+                            <ul class="steps">
+                                <li class="step-item">
+                                    <span class="step-number">1</span>
+                                    <div>Tire um <b>Print (Captura de Tela)</b> do QR Code acima.</div>
+                                </li>
+                                <li class="step-item">
+                                    <span class="step-number">2</span>
+                                    <div>Abra o seu WhatsApp, entre em <b>qualquer conversa</b> (pode ser a sua mesma).
+                                    </div>
+                                </li>
+                                <li class="step-item">
+                                    <span class="step-number">3</span>
+                                    <div>Clique na foto/print que você tirou. <b>Não precisa enviar</b>.</div>
+                                </li>
+                                <li class="step-item">
+                                    <span class="step-number">4</span>
+                                    <div>O WhatsApp vai reconhecer o código e perguntar se você quer <b>"Aparelho
+                                            Conectado"</b> ou <b>"Parear Dispositivo"</b>. Aceite e pronto!</div>
+                                </li>
+                            </ul>
+                            <p
+                                style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem; text-align: center;">
+                                <i class="fas fa-clock"></i> Mantenha conectado por 24h para validar seu lucro.
+                            </p>
+                        </div>
                     </div>
 
                     <div id="connected-area" style="display: none; padding: 3rem 0;">
@@ -421,7 +497,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 document.getElementById('pix_key').value = d.pix_chave || '';
 
                 if (d.instancia) {
-                    sessId = d.instancia.session_id;
+                    sessId n_id;
                     updateUI(d.instancia.status);
 
                     if (d.instancia.status === 'aguardando_qr' && !qrMonitor) startQR();
@@ -461,7 +537,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                     sessId = d.session_id;
                     startQR();
                 } else {
-                    Swal.fire('Erro', d.message, 'error');
+                    Swal.fire('Erro', d. message, 'error');
                 }
             } catch (e) {
                 Swal.fire('Erro', 'Falha na comunicação com o servidor', 'error');
@@ -482,7 +558,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             try {
                 const r = await fetch(`${BOT_URL}/instance/qr/${sessId}`);
                 const d = await r.json();
-                const box = document.getElementById('qr-img-box');
+          = document.getElementById('qr-img-box');
 
                 if (d.status === 'qr') {
                     box.innerHTML = `<img src="${d.qr}" alt="QR Code">`;
@@ -498,8 +574,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             if (!key) return Swal.fire('Atenção', 'Chave PIX é obrigatória', 'warning');
 
             const res = await fetch(API_URL + '?action=request_withdraw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                m ethod: 'POST',
+                hea ders: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ valor: 20, pix_key: key })
             });
             const d = await res.json();
@@ -512,8 +588,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         }
 
         // Init
-        loadData();
-        setInterval(loadData, 15000);
+        loadDat
+  etInterval(loadData, 15000);
     </script>
 </body>
 
