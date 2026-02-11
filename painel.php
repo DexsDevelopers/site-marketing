@@ -500,6 +500,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         async function loadData() {
             try {
                 const r = await fetch(API_URL + '?action=get_user_dashboard');
+                if (!r.ok) throw new Error('Network response was not ok');
                 const d = await r.json();
                 if (!d.success) return;
 
@@ -508,13 +509,13 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 document.getElementById('pix_key').value = d.pix_chave || '';
 
                 if (d.instancia) {
-                    sessId n_id;
+                    sessId = d.instancia.session_id;
                     updateUI(d.instancia.status);
 
                     if (d.instancia.status === 'aguardando_qr' && !qrMonitor) startQR();
                     else if (d.instancia.status === 'conectado') stopQR();
                 }
-            } catch (e) { }
+            } catch (e) { console.error('Dashboard error:', e); }
         }
 
         function updateUI(status) {
@@ -569,14 +570,13 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         async function fetchQR() {
             if (!sessId) return;
             qrAttempts++;
-
-            // Mostrar aviso após 3 tentativas (~15 segundos)
             if (qrAttempts > 3) {
                 document.getElementById('qr-warning').style.display = 'block';
             }
 
             try {
                 const r = await fetch(`${BOT_URL}/instance/qr/${sessId}`);
+                if (!r.ok) return;
                 const d = await r.json();
                 const box = document.getElementById('qr-img-box');
 
@@ -594,23 +594,27 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             const key = document.getElementById('pix_key').value;
             if (!key) return Swal.fire('Atenção', 'Chave PIX é obrigatória', 'warning');
 
-            const res = await fetch(API_URL + '?action=request_withdraw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ valor: 20, pix_key: key })
-            });
-            const d = await res.json();
-            if (d.success) {
-                Swal.fire('Solicitado!', d.message, 'success');
-                loadData();
-            } else {
-                Swal.fire('Erro', d.message, 'error');
+            try {
+                const res = await fetch(API_URL + '?action=request_withdraw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ valor: 20, pix_key: key })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    Swal.fire('Solicitado!', d.message, 'success');
+                    loadData();
+                } else {
+                    Swal.fire('Erro', d.message, 'error');
+                }
+            } catch (e) {
+                Swal.fire('Erro', 'Falha ao solicitar saque', 'error');
             }
         }
 
         // Init
-        loadDat
-        etInterval(loadData, 15000);
+        loadData();
+        setInterval(loadData, 15000);
     </script>
 </body>
 
