@@ -111,6 +111,15 @@ try {
         echo json_encode(['success' => true, 'message' => 'Saque solicitado com sucesso!']);
         exit;
     }
+
+    // 6. GET EXTRATO
+    elseif ($action === 'get_extrato') {
+        requireLogin();
+        $userId = $_SESSION['user_id'];
+        $extrato = fetchData($pdo, "SELECT * FROM wa_pagamentos WHERE user_id = ? ORDER BY created_at DESC", [$userId]);
+        echo json_encode(['success' => true, 'extrato' => $extrato]);
+        exit;
+    }
 }
 catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

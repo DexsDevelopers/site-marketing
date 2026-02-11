@@ -366,7 +366,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="extrato.php" class="nav-link">
                         <i class="fas fa-history"></i>
                         <span>Extrato</span>
                     </a>
@@ -537,7 +537,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                     sessId = d.session_id;
                     startQR();
                 } else {
-                    Swal.fire('Erro', d. message, 'error');
+                    Swal.fire('Erro', d.message, 'error');
                 }
             } catch (e) {
                 Swal.fire('Erro', 'Falha na comunicação com o servidor', 'error');
@@ -589,7 +589,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
 
         // Init
         loadDat
-  etInterval(loadData, 15000);
+        etInterval(loadData, 15000);
     </script>
 </body>
 
