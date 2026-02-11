@@ -193,23 +193,6 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             background: var(--surface);
         }
 
-        .qr-container {
-            background: #fff;
-            width: 260px;
-            height: 260px;
-            margin: 2rem auto;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .qr-container img {
-            width: 220px;
-            height: 220px;
-        }
-
         .btn {
             padding: 1rem 2rem;
             border-radius: 12px;
@@ -358,23 +341,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             border-radius: 12px;
             margin: 1rem 0;
             display: none;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-dim);
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border-bottom: 2px solid transparent;
-            transition: 0.3s;
-        }
-
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
+            text-align: center;
         }
     </style>
 </head>
@@ -430,70 +397,47 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 <div class="card qr-section">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="font-family: 'Outfit';">Conexão</h2>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="tab-btn active" onclick="switchMethod('qr')" id="tab-qr">QR Code</button>
-                            <button class="tab-btn" onclick="switchMethod('phone')" id="tab-phone">Número</button>
-                        </div>
+                        <h2 style="font-family: 'Outfit';"><i class="fab fa-whatsapp"
+                                style="color: var(--primary); margin-right: 8px;"></i>Conexão WhatsApp</h2>
                     </div>
 
-                    <div id="qr-area">
-                        <p style="color: var(--text-dim); font-size: 0.9rem;">Escaneie o código para começar a faturar.
-                        </p>
-                        <div class="qr-container" id="qr-img-box">
-                            <i class="fas fa-spinner fa-spin fa-2x" style="color: #666"></i>
-                        </div>
-
-                        <!-- Aviso de Demora -->
-                        <div id="qr-warning"
-                            style="display:none; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: left;">
-                            <p style="color: #f59e0b; font-size: 0.85rem; font-weight: 600; line-height: 1.4;">
-                                <i class="fas fa-hourglass-half"></i> O QR Code está demorando? <br>
-                                <span style="font-weight: 400; opacity: 0.9;">Tente aguardar 30 segundos, recarregar a
-                                    página ou clicar em "Gerar Novo Código" se ele não aparecer.</span>
-                            </p>
-                        </div>
-                        <button class="btn btn-outline" id="btn-gen" onclick="generateSession()">
-                            <i class="fas fa-sync"></i> Gerar Novo Código
-                        </button>
-                    </div>
-
-                    <div id="phone-area" style="display: none;">
+                    <div id="phone-area">
                         <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.5rem;">Vincule sua conta
                             usando apenas o código, sem precisar de outro celular.</p>
                         <div class="form-group" style="text-align: left;">
                             <label>Seu número (com DDD)</label>
-                            <input type="text" id="pairing_phone" class="form-control" placeholder="Ex: 11999998888">
+                            <input type="text" id="pairing_phone" class="form-control" placeholder="Ex: 51999998888">
                         </div>
                         <div id="pairing-code-box" class="pairing-code-display"></div>
                         <button class="btn btn-primary" id="btn-pair" onclick="generatePairingCode()"
-                            style="margin-top: 1rem;">
-                            <i class="fas fa-key"></i> Receber Código
+                            style="margin-top: 1rem; width: 100%;">
+                            <i class="fas fa-key"></i> Gerar Código de Conexão
                         </button>
-                        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1rem;">O código aparecerá aqui
-                            em alguns segundos.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1rem; text-align: center;">O
+                            código aparecerá aqui em alguns segundos.</p>
                     </div>
-                    <!-- Tutorial Manual -->
+
+                    <!-- Tutorial -->
                     <div class="tutorial-card">
-                        <h3><i class="fas fa-info-circle"></i> Como conectar (Celular Solitário)</h3>
+                        <h3><i class="fas fa-info-circle"></i> Como conectar</h3>
                         <ul class="steps">
                             <li class="step-item">
                                 <span class="step-number">1</span>
-                                <div>Tire um <b>Print (Captura de Tela)</b> do QR Code acima.</div>
-                            </li>
-                            <li class="step-item">
-                                <span class="step-number">2</span>
-                                <div>Abra o seu WhatsApp, entre em <b>qualquer conversa</b> (pode ser a sua mesma).
+                                <div>Digite seu <b>número com DDD</b> no campo acima e clique em <b>"Gerar Código"</b>.
                                 </div>
                             </li>
                             <li class="step-item">
+                                <span class="step-number">2</span>
+                                <div>Um <b>código de 8 caracteres</b> aparecerá na tela. Copie ou anote ele.</div>
+                            </li>
+                            <li class="step-item">
                                 <span class="step-number">3</span>
-                                <div>Clique na foto/print que você tirou. <b>Não precisa enviar</b>.</div>
+                                <div>No seu WhatsApp, vá em <b>Configurações > Aparelhos Conectados > Conectar um
+                                        aparelho</b>.</div>
                             </li>
                             <li class="step-item">
                                 <span class="step-number">4</span>
-                                <div>O WhatsApp vai reconhecer o código e perguntar se você quer <b>"Aparelho
-                                        Conectado"</b> ou <b>"Parear Dispositivo"</b>. Aceite e pronto!</div>
+                                <div>Clique em <b>"Conectar com número de telefone"</b> e insira o código. Pronto!</div>
                             </li>
                         </ul>
                         <p
@@ -509,8 +453,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                         <i class="fas fa-check"></i>
                     </div>
                     <h2 style="color: var(--primary);">Conectado & Lucrando!</h2>
-                    <p style="color: var(--text-dim); margin-top: 1rem;">Seu WhatsApp está validando redes de
-                        marketing agora.</p>
+                    <p style="color: var(--text-dim); margin-top: 1rem;">Seu WhatsApp está validando redes de marketing
+                        agora.</p>
                 </div>
             </div>
 
@@ -544,13 +488,11 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         const API_URL = 'api_marketing_aluguel.php';
         const BOT_URL = 'https://cyan-spoonbill-539092.hostingersite.com';
         let sessId = null;
-        let qrMonitor = null;
-        let qrAttempts = 0;
 
         async function loadData() {
             try {
                 const r = await fetch(API_URL + '?action=get_user_dashboard');
-                if (!r.ok) throw new Error('Network response was not ok');
+                if (!r.ok) throw new Error('Network error');
                 const d = await r.json();
                 if (!d.success) return;
 
@@ -561,9 +503,6 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 if (d.instancia) {
                     sessId = d.instancia.session_id;
                     updateUI(d.instancia.status);
-
-                    if (d.instancia.status === 'aguardando_qr' && !qrMonitor) startQR();
-                    else if (d.instancia.status === 'conectado') stopQR();
                 }
             } catch (e) { console.error('Dashboard error:', e); }
         }
@@ -571,76 +510,19 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         function updateUI(status) {
             const dot = document.getElementById('global-status-dot');
             const text = document.getElementById('global-status-text');
-            const qrArea = document.getElementById('qr-area');
+            const phoneArea = document.getElementById('phone-area');
             const connArea = document.getElementById('connected-area');
 
             if (status === 'conectado') {
                 dot.className = 'status-dot online';
                 text.innerText = 'Online & Ativo';
-                qrArea.style.display = 'none';
-                connArea.style.display = 'block';
+                if (phoneArea) phoneArea.style.display = 'none';
+                if (connArea) connArea.style.display = 'block';
             } else {
                 dot.className = 'status-dot';
-                text.innerText = status === 'aguardando_qr' ? 'Aguardando Login' : 'Desconectado';
-                qrArea.style.display = 'block';
-                connArea.style.display = 'none';
-            }
-        }
-
-        async function generateSession() {
-            const btn = document.getElementById('btn-gen');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
-            qrAttempts = 0;
-            document.getElementById('qr-warning').style.display = 'none';
-            document.getElementById('qr-img-box').innerHTML = '<i class="fas fa-spinner fa-spin fa-2x" style="color: #666"></i>';
-            stopQR();
-
-            try {
-                // 1. Pegar (ou criar) sessão no backend
-                const res = await fetch(API_URL + '?action=setup_instance');
-                const d = await res.json();
-                if (d.success) {
-                    sessId = d.session_id;
-
-                    // 2. Resetar no bot para forçar novo QR
-                    await fetch(`${BOT_URL}/instance/reset/${sessId}`, { method: 'POST' }).catch(() => { });
-
-                    // 3. Esperar o bot criar a nova instância e gerar o QR
-                    setTimeout(() => { startQR(); }, 3000);
-                } else {
-                    Swal.fire('Erro', d.message, 'error');
-                }
-            } catch (e) {
-                Swal.fire('Erro', 'Falha na comunicação com o servidor', 'error');
-            }
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sync"></i> Gerar Novo Código';
-        }
-
-        function startQR() {
-            if (qrMonitor) return;
-            fetchQR();
-            qrMonitor = setInterval(fetchQR, 5000);
-        }
-        function stopQR() { if (qrMonitor) { clearInterval(qrMonitor); qrMonitor = null; } }
-
-        function switchMethod(method) {
-            const qrTab = document.getElementById('tab-qr');
-            const phoneTab = document.getElementById('tab-phone');
-            const qrArea = document.getElementById('qr-area');
-            const phoneArea = document.getElementById('phone-area');
-
-            if (method === 'qr') {
-                qrTab.classList.add('active');
-                phoneTab.classList.remove('active');
-                qrArea.style.display = 'block';
-                phoneArea.style.display = 'none';
-            } else {
-                qrTab.classList.remove('active');
-                phoneTab.classList.add('active');
-                qrArea.style.display = 'none';
-                phoneArea.style.display = 'block';
+                text.innerText = status === 'aguardando_qr' ? 'Aguardando Conexão' : 'Desconectado';
+                if (phoneArea) phoneArea.style.display = 'block';
+                if (connArea) connArea.style.display = 'none';
             }
         }
 
@@ -656,7 +538,6 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             codeBox.style.display = 'none';
 
             try {
-                // Garantir que temos uma sessão iniciada antes de pedir código
                 if (!sessId) {
                     const resSess = await fetch(API_URL + '?action=setup_instance');
                     const dSess = await resSess.json();
@@ -682,30 +563,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 Swal.fire('Erro', 'Falha na comunicação', 'error');
             }
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-key"></i> Receber Código';
-        }
-
-        async function fetchQR() {
-            if (!sessId) return;
-            qrAttempts++;
-            if (qrAttempts > 3) {
-                document.getElementById('qr-warning').style.display = 'block';
-            }
-
-            try {
-                const r = await fetch(`${BOT_URL}/instance/qr/${sessId}`);
-                if (!r.ok) return;
-                const d = await r.json();
-                const box = document.getElementById('qr-img-box');
-
-                if (d.status === 'qr') {
-                    box.innerHTML = `<img src="${d.qr}" alt="QR Code">`;
-                    document.getElementById('qr-warning').style.display = 'none';
-                } else if (d.status === 'connected') {
-                    stopQR();
-                    loadData();
-                }
-            } catch (e) { }
+            btn.innerHTML = '<i class="fas fa-key"></i> Gerar Código de Conexão';
         }
 
         async function requestWithdraw() {
@@ -730,9 +588,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             }
         }
 
-        // Init
         loadData();
-        setInterval(loadData, 15000);
+        setInterval(loadData, 10000);
     </script>
 </body>
 
