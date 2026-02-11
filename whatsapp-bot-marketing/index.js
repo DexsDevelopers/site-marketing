@@ -54,10 +54,17 @@ function formatJid(phone) {
   return digits.length >= 15 ? digits + '@lid' : digits + '@s.whatsapp.net';
 }
 
-async function createInstance(sessionId) {
+async function createInstance(sessionId, phoneForPairing = null) {
   if (instances.has(sessionId)) {
     const inst = instances.get(sessionId);
     if (inst.isReady) return inst;
+    // Se já existe mas queremos código de pareamento e não está pronto
+    if (phoneForPairing && !inst.isReady) {
+      // Vamos forçar recriação para garantir o trigger do código
+      addLog(sessionId, 'INFO', `Solicitando código de pareamento para ${phoneForPairing}`);
+    } else {
+      return inst;
+    }
   }
 
   addLog(sessionId, 'INFO', `Iniciando instância: ${sessionId}`);
@@ -90,6 +97,7 @@ async function createInstance(sessionId) {
     sock,
     isReady: false,
     lastQR: null,
+    pairingCode: null,
     uptimeStart: null
   };
 
@@ -129,6 +137,19 @@ async function createInstance(sessionId) {
       updateRemoteStatus(sessionId, 'conectado');
     }
   });
+
+  // Se foi passado um número para pareamento
+  if (phoneForPairing && !state.creds.registered) {
+    setTimeout(async () => {
+      try {
+        const code = await sock.requestPairingCode(phoneForPairing.replace(/\D/g, ''));
+        instanceData.pairingCode = code;
+        addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado: ${code}`);
+      } catch (err) {
+        addLog(sessionId, 'ERROR', `Erro ao gerar código de pareamento: ${err.message}`);
+      }
+    }, 3000);
+  }
 
   return instanceData;
 }
@@ -246,6 +267,38 @@ app.get('/instance/qr/:sessionId', async (req, res) => {
 
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(inst.lastQR)}`;
   res.json({ status: 'qr', qr: qrImageUrl });
+});
+
+app.post('/instance/pairing-code', async (req, res) => {
+  const { sessionId, phone } = req.body;
+  if (!sessionId || !phone) return res.status(400).json({ error: 'Missing sessionId or phone' });
+
+  // Forçar limpeza se já existir para garantir novo código
+  const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
+  if (fs.existsSync(sessionPath)) {
+    // Opcional: só limpar se não estiver conectado
+    const existing = instances.get(sessionId);
+    if (!existing || !existing.isReady) {
+      fs.rmSync(sessionPath, { recursive: true, force: true });
+      instances.delete(sessionId);
+    }
+  }
+
+  const inst = await createInstance(sessionId, phone);
+
+  // Aguardar um pouco o timeout do code
+  let attempts = 0;
+  const checkCode = setInterval(() => {
+    if (inst.pairingCode || attempts > 20) {
+      clearInterval(checkCode);
+      if (inst.pairingCode) {
+        res.json({ status: 'code', code: inst.pairingCode });
+      } else {
+        res.status(500).json({ status: 'error', message: 'Timeout ao gerar código' });
+      }
+    }
+    attempts++;
+  }, 1000);
 });
 
 app.post('/instance/create', async (req, res) => {

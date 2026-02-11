@@ -346,6 +346,36 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 margin-left: 0;
             }
         }
+
+        .pairing-code-display {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 5px;
+            color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 2px solid transparent;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
     </style>
 </head>
 
@@ -399,8 +429,12 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 <!-- Conexão -->
                 <div class="card qr-section">
                     <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h2 style="font-family: 'Outfit';">Conexão WhatsApp</h2>
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-family: 'Outfit';">Conexão</h2>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="tab-btn active" onclick="switchMethod('qr')" id="tab-qr">QR Code</button>
+                            <button class="tab-btn" onclick="switchMethod('phone')" id="tab-phone">Número</button>
+                        </div>
                     </div>
 
                     <div id="qr-area">
@@ -422,72 +456,88 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                         <button class="btn btn-outline" id="btn-gen" onclick="generateSession()">
                             <i class="fas fa-sync"></i> Gerar Novo Código
                         </button>
-
-                        <!-- Tutorial Manual -->
-                        <div class="tutorial-card">
-                            <h3><i class="fas fa-info-circle"></i> Como conectar (Celular Solitário)</h3>
-                            <ul class="steps">
-                                <li class="step-item">
-                                    <span class="step-number">1</span>
-                                    <div>Tire um <b>Print (Captura de Tela)</b> do QR Code acima.</div>
-                                </li>
-                                <li class="step-item">
-                                    <span class="step-number">2</span>
-                                    <div>Abra o seu WhatsApp, entre em <b>qualquer conversa</b> (pode ser a sua mesma).
-                                    </div>
-                                </li>
-                                <li class="step-item">
-                                    <span class="step-number">3</span>
-                                    <div>Clique na foto/print que você tirou. <b>Não precisa enviar</b>.</div>
-                                </li>
-                                <li class="step-item">
-                                    <span class="step-number">4</span>
-                                    <div>O WhatsApp vai reconhecer o código e perguntar se você quer <b>"Aparelho
-                                            Conectado"</b> ou <b>"Parear Dispositivo"</b>. Aceite e pronto!</div>
-                                </li>
-                            </ul>
-                            <p
-                                style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem; text-align: center;">
-                                <i class="fas fa-clock"></i> Mantenha conectado por 24h para validar seu lucro.
-                            </p>
-                        </div>
                     </div>
 
-                    <div id="connected-area" style="display: none; padding: 3rem 0;">
-                        <div
-                            style="width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; font-size: 2rem;">
-                            <i class="fas fa-check"></i>
+                    <div id="phone-area" style="display: none;">
+                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.5rem;">Digite seu número
+                            com DDD para receber o código de pareamento.</p>
+                        <div class="form-group" style="text-align: left;">
+                            <label>Número do WhatsApp</label>
+                            <input type="text" id="pairing_phone" class="form-control" placeholder="Ex: 5511999999999">
                         </div>
-                        <h2 style="color: var(--primary);">Conectado & Lucrando!</h2>
-                        <p style="color: var(--text-dim); margin-top: 1rem;">Seu WhatsApp está validando redes de
-                            marketing agora.</p>
-                    </div>
-                </div>
-
-                <!-- Financeiro -->
-                <div style="display: flex; flex-direction: column; gap: 2rem;">
-                    <div class="card balance-card">
-                        <h3>Saldo Disponível</h3>
-                        <div class="amount" id="user-balance">R$ 0,00</div>
-                        <p style="font-size: 0.85rem; font-weight: 600;">Mínimo para saque: R$ 20,00</p>
-                    </div>
-
-                    <div class="card">
-                        <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">Solicitar Saque</h3>
-                        <div class="form-group">
-                            <label>Sua Chave PIX</label>
-                            <input type="text" id="pix_key" class="form-control" placeholder="CPF, E-mail ou Celular">
-                        </div>
-                        <button class="btn btn-primary" onclick="requestWithdraw()" style="margin-top: 1.5rem;">
-                            <i class="fas fa-wallet"></i> Sacar via PIX Agora
+                        <div id="pairing-code-box" class="pairing-code-display"></div>
+                        <button class="btn btn-primary" id="btn-pair" onclick="generatePairingCode()"
+                            style="margin-top: 1rem;">
+                            <i class="fas fa-key"></i> Receber Código
                         </button>
-                        <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 1rem; text-align: center;">
-                            * Pagamentos realizados em até 24h úteis.
+                        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1rem;">O código aparecerá aqui
+                            em alguns segundos.</p>
+                    </div>
+                    <!-- Tutorial Manual -->
+                    <div class="tutorial-card">
+                        <h3><i class="fas fa-info-circle"></i> Como conectar (Celular Solitário)</h3>
+                        <ul class="steps">
+                            <li class="step-item">
+                                <span class="step-number">1</span>
+                                <div>Tire um <b>Print (Captura de Tela)</b> do QR Code acima.</div>
+                            </li>
+                            <li class="step-item">
+                                <span class="step-number">2</span>
+                                <div>Abra o seu WhatsApp, entre em <b>qualquer conversa</b> (pode ser a sua mesma).
+                                </div>
+                            </li>
+                            <li class="step-item">
+                                <span class="step-number">3</span>
+                                <div>Clique na foto/print que você tirou. <b>Não precisa enviar</b>.</div>
+                            </li>
+                            <li class="step-item">
+                                <span class="step-number">4</span>
+                                <div>O WhatsApp vai reconhecer o código e perguntar se você quer <b>"Aparelho
+                                        Conectado"</b> ou <b>"Parear Dispositivo"</b>. Aceite e pronto!</div>
+                            </li>
+                        </ul>
+                        <p
+                            style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem; text-align: center;">
+                            <i class="fas fa-clock"></i> Mantenha conectado por 24h para validar seu lucro.
                         </p>
                     </div>
                 </div>
+
+                <div id="connected-area" style="display: none; padding: 3rem 0;">
+                    <div
+                        style="width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; font-size: 2rem;">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2 style="color: var(--primary);">Conectado & Lucrando!</h2>
+                    <p style="color: var(--text-dim); margin-top: 1rem;">Seu WhatsApp está validando redes de
+                        marketing agora.</p>
+                </div>
             </div>
-        </main>
+
+            <!-- Financeiro -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                <div class="card balance-card">
+                    <h3>Saldo Disponível</h3>
+                    <div class="amount" id="user-balance">R$ 0,00</div>
+                    <p style="font-size: 0.85rem; font-weight: 600;">Mínimo para saque: R$ 20,00</p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">Solicitar Saque</h3>
+                    <div class="form-group">
+                        <label>Sua Chave PIX</label>
+                        <input type="text" id="pix_key" class="form-control" placeholder="CPF, E-mail ou Celular">
+                    </div>
+                    <button class="btn btn-primary" onclick="requestWithdraw()" style="margin-top: 1.5rem;">
+                        <i class="fas fa-wallet"></i> Sacar via PIX Agora
+                    </button>
+                    <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 1rem; text-align: center;">
+                        * Pagamentos realizados em até 24h úteis.
+                    </p>
+                </div>
+            </div>
+    </div>
+    </main>
     </div>
 
     <script>
@@ -566,6 +616,58 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             qrMonitor = setInterval(fetchQR, 5000);
         }
         function stopQR() { if (qrMonitor) { clearInterval(qrMonitor); qrMonitor = null; } }
+
+        function switchMethod(method) {
+            const qrTab = document.getElementById('tab-qr');
+            const phoneTab = document.getElementById('tab-phone');
+            const qrArea = document.getElementById('qr-area');
+            const phoneArea = document.getElementById('phone-area');
+
+            if (method === 'qr') {
+                qrTab.classList.add('active');
+                phoneTab.classList.remove('active');
+                qrArea.style.display = 'block';
+                phoneArea.style.display = 'none';
+            } else {
+                qrTab.classList.remove('active');
+                phoneTab.classList.add('active');
+                qrArea.style.display = 'none';
+                phoneArea.style.display = 'block';
+            }
+        }
+
+        async function generatePairingCode() {
+            const phone = document.getElementById('pairing_phone').value.replace(/\D/g, '');
+            if (!phone || phone.length < 10) return Swal.fire('Atenção', 'Digite um número válido com DDD', 'warning');
+
+            const btn = document.getElementById('btn-pair');
+            const codeBox = document.getElementById('pairing-code-box');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+            codeBox.style.display = 'none';
+
+            try {
+                const res = await fetch(`${BOT_URL}/instance/pairing-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: sessId || `user_<?= $_SESSION['user_id']?>`, phone: phone })
+                });
+                const d = await res.json();
+
+                if (d.status === 'code') {
+                    codeBox.innerText = d.code;
+                    codeBox.style.display = 'block';
+                    Swal.fire('Código Gerado!', 'Insira o código no seu WhatsApp: Configurações > Aparelhos Conectados > Conectar com número de telefone', 'success');
+                } else {
+                    Swal.fire('Erro', d.message || 'Erro ao gerar código', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Erro', 'Falha na comunicação', 'error');
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key"></i> Receber Código';
+        }
 
         async function fetchQR() {
             if (!sessId) return;
