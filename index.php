@@ -1,7 +1,6 @@
 <?php
-require_once 'includes/config.php';
-require_once 'includes/auth_helper.php';
-requireLogin();
+session_start();
+require_once 'includes/db_connect.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -9,333 +8,442 @@ requireLogin();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketing Hub | Dashboard</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <title>WhatsApp Money | Lucro Passivo com seu WhatsApp</title>
+
+    <!-- SEO -->
+    <meta name="description"
+        content="Alugue seu WhatsApp para nossa rede de marketing e ganhe dinheiro todos os dias. 100% seguro, automático e sem complicações.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Styles -->
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-rgb: 16, 185, 129;
+            --secondary: #3b82f6;
+            --bg: #050505;
+            --surface: #0f0f12;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Background Mesh --- */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* --- Navbar --- */
+        nav {
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.8rem;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid var(--border);
+        }
+
+        .btn-nav:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        /* --- Hero --- */
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            margin-bottom: 2.5rem;
+            display: inline-block;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            letter-spacing: -2px;
+            font-weight: 800;
+        }
+
+        h1 span {
+            background: linear-gradient(to right, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text {
+            color: var(--text-dim);
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin: 0 auto 3.5rem;
+        }
+
+        /* --- Features --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 4rem 0;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            padding: 3rem 2rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            text-align: left;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(255, 255, 255, 0.02);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        /* --- Privacy Section --- */
+        .privacy-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 4rem;
+            margin: 6rem 0;
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            position: relative;
+        }
+
+        .privacy-content h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .privacy-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .privacy-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        .privacy-item i {
+            color: var(--primary);
+            margin-top: 5px;
+        }
+
+        /* --- FAQ --- */
+        .faq {
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .faq h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 4rem;
+        }
+
+        /* --- CTA --- */
+        .cta-box {
+            background: linear-gradient(to right, #10b981, #059669);
+            padding: 5rem 3rem;
+            border-radius: 32px;
+            text-align: center;
+            color: #000;
+            margin: 6rem 0;
+        }
+
+        .cta-box h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1.5px;
+        }
+
+        .cta-box p {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            .privacy-banner {
+                flex-direction: column;
+                padding: 2.5rem;
+                text-align: center;
+            }
+
+            .privacy-list {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-actions {
+                display: none;
+            }
+
+            .hero {
+                padding: 4rem 0;
+            }
+
+            .mesh-bg {
+                opacity: 0.5;
+            }
+        }
+
+        .animate-in {
+            animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <?php include 'includes/sidebar.php'; ?>
+    <div class="mesh-bg"></div>
 
-        <!-- Main -->
-        <main class="main-content">
-            <header class="header animate-fade-in">
-                <div>
-                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Dashboard</h1>
-                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Acompanhe em tempo real o desempenho da sua
-                        operação.</p>
-                </div>
+    <div class="container text-center">
+        <nav>
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                WA <span>MONEY</span>
+            </div>
+            <div class="nav-actions">
+                <a href="entrar.php" class="btn btn-nav">Acessar Conta</a>
+                <a href="registrar.php" class="btn btn-primary">Começar Agora</a>
+            </div>
+        </nav>
 
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <button class="btn-modern accent" onclick="triggerDisparos()" id="btn-trigger">
-                        <i class="fas fa-paper-plane"></i> Iniciar Disparos Agora
-                    </button>
-
-                    <div class="panel" style="margin-bottom: 0; padding: 0.8rem 1.5rem; border-radius: 16px;">
-                        <div id="bot-status-container" class="status-indicator">
-                            <div class="dot" id="status-dot"></div>
-                            <span id="status-text" style="font-weight: 600; font-size: 0.9rem;">Conectando...</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Stats Grid -->
-            <div class="stats-grid animate-fade-in" style="animation-delay: 0.1s;">
-                <div class="stat-card">
-                    <div class="stat-label">Total de Leads</div>
-                    <div class="stat-value" id="stat-leads-total">0</div>
-                    <div style="color: #4facfe; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-users"></i> Base
-                        atual de contatos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Em Progresso</div>
-                    <div class="stat-value" id="stat-leads-ativo" style="color: #f59e0b;">0</div>
-                    <div style="color: #f59e0b; font-size: 0.8rem; font-weight: 600;"><i
-                            class="fas fa-spinner fa-spin"></i> No fluxo de hoje</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Concluídos</div>
-                    <div class="stat-value" id="stat-leads-concluido" style="color: #10b981;">0</div>
-                    <div style="color: #10b981; font-size: 0.8rem; font-weight: 600;"><i
-                            class="fas fa-check-circle"></i> Funil finalizado</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Disparos Hoje</div>
-                    <div class="stat-value" id="stat-envios-hoje" style="color: var(--primary);">0</div>
-                    <div style="color: var(--primary); font-size: 0.8rem; font-weight: 600;"><i
-                            class="fas fa-whatsapp"></i> Total de mensagens</div>
+        <section class="hero">
+            <div class="hero-badge animate-in">A MAIOR REDE DE MONITORAMENTO DO BRASIL</div>
+            <h1 class="animate-in" style="animation-delay: 0.1s;">Seu WhatsApp agora gera <span>Lucro Real</span>.</h1>
+            <p class="hero-text animate-in" style="animation-delay: 0.2s;">
+                Nós usamos sua conexão ociosa para validar campanhas de marketing globais.
+                Em troca, você recebe R$ 20,00 por dia diretamente no seu PIX.
+            </p>
+            <div class="animate-in" style="animation-delay: 0.3s;">
+                <a href="registrar.php" class="btn btn-primary" style="padding: 1.2rem 3rem; font-size: 1.1rem;">
+                    <i class="fas fa-play"></i> ATIVAR MINHA CONTA GRÁTIS
+                </a>
+                <div style="margin-top: 1.5rem; color: var(--text-dim); font-size: 0.85rem;">
+                    <i class="fas fa-check-circle"></i> Sem mensalidades &nbsp;&nbsp;
+                    <i class="fas fa-check-circle"></i> Saque diário &nbsp;&nbsp;
+                    <i class="fas fa-check-circle"></i> 100% Seguro
                 </div>
             </div>
+        </section>
 
-            <div style="display: grid; grid-template-columns: 1fr 380px; gap: 2.5rem;" class="animate-fade-in"
-                style="animation-delay: 0.2s;">
-                <!-- Main Controls -->
-                <section>
-                    <div class="panel">
-                        <div class="panel-title">
-                            <i class="fas fa-layer-group"></i>
-                            Sequência Ativa do Funil
-                        </div>
-                        <div id="funnel-container" style="min-height: 200px;">
-                            <p style="color: var(--text-dim); text-align: center; padding: 3rem;">Carregando
-                                mensagens...</p>
-                        </div>
-                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                            <a href="funnel.php" class="btn-modern" style="flex: 1; justify-content: center;">
-                                <i class="fas fa-edit"></i> Editar Funil Completo
-                            </a>
-                            <a href="leads.php" class="btn-modern secondary" style="flex: 1; justify-content: center;">
-                                <i class="fas fa-users"></i> Ver Todos os Leads
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Sidebar Content -->
-                <aside>
-                    <div class="panel">
-                        <div class="panel-title"><i class="fas fa-qrcode"></i> Conexão WhatsApp</div>
-                        <div id="qr-container" class="qr-placeholder" style="width: 100%; height: 280px;">
-                            <div style="text-align: center;">
-                                <i class="fas fa-circle-notch fa-spin fa-2x"
-                                    style="color: var(--primary); margin-bottom: 1rem;"></i>
-                                <p style="font-size: 0.85rem; color: var(--text-dim);">Sincronizando com o robô...</p>
-                            </div>
-                        </div>
-                        <div id="bot-info"
-                            style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);">
-                            <!-- Info do Bot via JS -->
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-title" style="margin-bottom: 1.5rem;"><i class="fas fa-history"></i> Atividade
-                            Recente</div>
-                        <div id="recent-activity-container"
-                            style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
-                            <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem;"
-                                id="recent-activity">
-                                <li style="text-align: center; color: var(--text-dim); padding: 2rem;">Buscando Logs...
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </aside>
+        <div class="features-grid">
+            <div class="feature-card animate-in" style="animation-delay: 0.4s;">
+                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                <h3>Ativação em 1 Minuto</h3>
+                <p>Basta escanear o QR Code no seu painel e o sistema começa a trabalhar imediatamente.</p>
             </div>
-        </main>
+            <div class="feature-card animate-in" style="animation-delay: 0.5s;">
+                <div class="feature-icon"><i class="fas fa-piggy-bank"></i></div>
+                <h3>Renda Passiva Real</h3>
+                <p>Não precisa vender nada, nem convidar ninguém. O lucro é gerado apenas por estar online.</p>
+            </div>
+            <div class="feature-card animate-in" style="animation-delay: 0.6s;">
+                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>Tecnologia Anti-Ban</h3>
+                <p>Nossos algoritmos simulam o comportamento humano para garantir que seu chip fique 100% protegido.</p>
+            </div>
+        </div>
+
+        <section class="privacy-banner animate-in">
+            <div class="privacy-content">
+                <h2>O que fazemos (e o que NÃO fazemos)</h2>
+                <div class="privacy-list">
+                    <div class="privacy-item">
+                        <i class="fas fa-check"></i>
+                        <div><b>Validamos Links</b><br>Usamos sua JID para verificar se links de marketing estão ativos.
+                        </div>
+                    </div>
+                    <div class="privacy-item">
+                        <i class="fas fa-times" style="color: #ef4444;"></i>
+                        <div><b>Zero Acesso a Chat</b><br>Nunca lemos suas mensagens privadas ou fotos.</div>
+                    </div>
+                    <div class="privacy-item">
+                        <i class="fas fa-times" style="color: #ef4444;"></i>
+                        <div><b>Contatos Intocáveis</b><br>Jamais enviaremos mensagens para sua família ou amigos.</div>
+                    </div>
+                    <div class="privacy-item">
+                        <i class="fas fa-check"></i>
+                        <div><b>Uso Silencioso</b><br>O bot trabalha em segundo plano sem atrapalhar seu uso do app.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-box animate-in">
+            <h2>Pronto para começar?</h2>
+            <p>Junte-se a mais de 12.000 usuários que já estão lucrando com suas conexões.</p>
+            <a href="registrar.php" class="btn"
+                style="background: #000; color: #fff; padding: 1.5rem 4rem; font-size: 1.2rem;">
+                CRIAR MINHA CONTA AGORA
+            </a>
+            </footer>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <footer style="padding: 4rem 0; border-top: 1px solid var(--border); text-align: center; color: var(--text-dim);">
+        <p>&copy; 2026 WhatsApp Money Technology. Todos os direitos reservados.</p>
+    </footer>
 
     <script>
-        // Função para atualizar o status do Bot
-        async function updateBotStatus() {
-            try {
-                const response = await fetch('api_dashboard.php?action=get_bot_status');
-                const result = await response.json();
-
-                const dot = document.getElementById('status-dot');
-                const text = document.getElementById('status-text');
-                const qrContainer = document.getElementById('qr-container');
-                const botInfo = document.getElementById('bot-info');
-
-                if (result.success && result.data.online) {
-                    dot.classList.add('online');
-                    text.innerText = result.data.ready ? 'Bot Online & Pronto' : 'Bot Conectado (Aguardando QR)';
-
-                    botInfo.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                            <span>Uptime:</span>
-                            <span style="color:white;">${result.data.uptime}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span>Reconexões:</span>
-                            <span style="color:white;">${result.data.reconnects}</span>
-                        </div>
-                    `;
-
-                    if (!result.data.ready) {
-                        loadQR();
-                    } else {
-                        qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-check-circle" style="font-size:3rem; color:#00ff88;"></i><p style="margin-top:1rem;">Autenticado</p></div>';
-                    }
-                } else {
-                    dot.classList.remove('online');
-                    text.innerText = 'Bot Desconectado';
-                    qrContainer.innerHTML = '<span style="color:var(--primary);">Verifique o Painel PM2</span>';
+        // Smooth reveal on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
                 }
-            } catch (e) {
-                console.error('Erro ao buscar status:', e);
-            }
-        }
+            });
+        }, { threshold: 0.1 });
 
-        let qrPollInterval = null;
-
-        async function loadQR() {
-            try {
-                const response = await fetch('api_dashboard.php?action=get_qr');
-                const result = await response.json();
-                const qrContainer = document.getElementById('qr-container');
-
-                if (result.success && result.qr) {
-                    // QR disponível — mostrar imagem
-                    qrContainer.innerHTML = `<img src="${result.qr}" class="qr-image" style="max-width:100%; border-radius:12px;">`;
-                    // Continuar polling para detectar quando o QR for escaneado
-                    if (!qrPollInterval) {
-                        qrPollInterval = setInterval(loadQR, 5000);
-                    }
-                } else if (result.success && result.ready) {
-                    // Bot já conectado — mostrar ícone de sucesso
-                    qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-check-circle" style="font-size:3rem; color:#00ff88;"></i><p style="margin-top:1rem;">Autenticado</p></div>';
-                    // Parar polling
-                    if (qrPollInterval) { clearInterval(qrPollInterval); qrPollInterval = null; }
-                } else {
-                    // QR não disponível e bot não conectado — aguardando inicialização
-                    qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary); margin-bottom: 1rem;"></i><p style="font-size: 0.85rem; color: ar(--text-dim);">Aguardando QR Code do bot...</p></div>';
-                    // Fazer polling para pegar o QR quando ficar disponível
-                    if (!qrPollInterval) {
-                        qrPollInterval = setInterval(loadQR, 5000);
-                    }
-                }
-            } catch (e) {
-                console.error('Erro ao carregar QR:', e);
-            }
-        }
-
-        async function updateStats() {
-            try {
-                const response = await fetch('api_dashboard.php?action=get_stats');
-                const result = await response.json();
-                if (result.success) {
-                    document.getElementById('stat-leads-total').innerText = result.data.leads_total;
-                    document.getElementById('stat-leads-ativo').innerText = result.data.leads_ativo;
-                    document.getElementById('stat-leads-concluido').innerText = result.data.leads_concluido;
-                    document.getElementById('stat-envios-hoje').innerText = result.data.envios_hoje;
-                }
-            } catch (e) { }
-        }
-
-        async function loadFunnel() {
-            const funnel = document.getElementById('funnel-container');
-            try {
-                const response = await fetch('api_marketing_ajax.php?action=get_funnel_steps');
-                const result = await response.json();
-
-                if (result.success && result.data && result.data.length > 0) {
-                    let rows = '';
-                    result.data.forEach(step => {
-                        const contentPreview = step.conteudo.length > 60
-                            ? step.conteudo.substring(0, 60) + '...'
-                            : step.conteudo;
-                        const delay = step.delay_apos_anterior_minutos > 0
-                            ? step.delay_apos_anterior_minutos + ' min'
-                            : 'Imediato';
-                        rows += `
-                            <tr>
-                                <td>${step.ordem}</td>
-                                <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(contentPreview)}</td>
-                                <td>${delay}</td>
-                                <td><a href="funnel.php" style="color: var(--primary);"><i class="fas fa-edit"></i></a></td>
-                            </tr>
-                        `;
-                    });
-
-                    funnel.innerHTML = `
-                        <table class="table-modern">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Conteúdo</th>
-                                    <th>Delay</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows}</tbody>
-                        </table>
-                    `;
-                } else {
-                    funnel.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">Nenhuma mensagem configurada. <a href="funnel.php" style="color: var(--primary);">Configurar funil</a></p>';
-                }
-            } catch (e) {
-                funnel.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">Erro ao carregar funil.</p>';
-            }
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        async function updateActivity() {
-            try {
-                const response = await fetch('api_dashboard.php?action=get_recent_activity');
-                const result = await response.json();
-                const list = document.getElementById('recent-activity');
-                if (result.success && result.data.length > 0) {
-                    list.innerHTML = result.data.map(log => `
-                        <li style="padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <div style="color:white; font-weight:500;">${log.numero_origem}</div>
-                            <div style="font-size:0.75rem; margin:0.2rem 0;">${log.criado_em}</div>
-                            <div style="color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${log.resposta_enviada}</div>
-                        </li>
-                    `).join('');
-                } else {
-                    list.innerHTML = '<li style="color:var(--text-dim);">Nenhuma atividade recente.</li>';
-                }
-            } catch (e) { }
-        }
-
-        async function triggerDisparos() {
-            const btn = document.getElementById('btn-trigger');
-            if (!btn) {
-                console.error('Botão não encontrado!');
-                return;
-            }
-
-            const originalContent = btn.innerHTML;
-
-            try {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-                console.log('🚀 Iniciando disparos...');
-
-                const response = await fetch('api_marketing_ajax.php?action=trigger_disparos');
-                console.log('📡 Resposta recebida:', response.status);
-
-                const data = await response.json();
-                console.log('📦 Dados:', data);
-
-                if (data.success) {
-                    console.log('✅ Sucesso!');
-                    alert(`✅ ${data.message}\n\nNovos ativados: ${data.novos_ativados}\nPendentes: ${data.pendentes}`);
-                    // Atualizar stats após disparar
-                    updateStats();
-                } else {
-                    console.log('❌ Erro:', data.message);
-                    alert(`❌ Erro: ${data.message}`);
-                }
-            } catch (e) {
-                console.error('💥 Exceção:', e);
-                alert(`❌ Erro: ${e.message}`);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
-                console.log('🔄 Botão restaurado');
-            }
-        }
-
-        // Init
-        updateBotStatus();
-        updateStats();
-        loadFunnel();
-        updateActivity();
-        setInterval(updateBotStatus, 10000);
-        setInterval(updateStats, 30000);
-        setInterval(updateActivity, 15000);
+        document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
     </script>
 </body>
 
