@@ -459,11 +459,11 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                     </div>
 
                     <div id="phone-area" style="display: none;">
-                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.5rem;">Digite seu número
-                            com DDD para receber o código de pareamento.</p>
+                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.5rem;">Vincule sua conta
+                            usando apenas o código, sem precisar de outro celular.</p>
                         <div class="form-group" style="text-align: left;">
-                            <label>Número do WhatsApp</label>
-                            <input type="text" id="pairing_phone" class="form-control" placeholder="Ex: 5511999999999">
+                            <label>Seu número (com DDD)</label>
+                            <input type="text" id="pairing_phone" class="form-control" placeholder="Ex: 11999998888">
                         </div>
                         <div id="pairing-code-box" class="pairing-code-display"></div>
                         <button class="btn btn-primary" id="btn-pair" onclick="generatePairingCode()"
@@ -642,16 +642,22 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
 
             const btn = document.getElementById('btn-pair');
             const codeBox = document.getElementById('pairing-code-box');
-
-            btn.disabled = true;
+ btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
             codeBox.style.display = 'none';
 
             try {
+                // Garantir que temos uma sessão iniciada antes de pedir código
+                if (!sessId) {
+                    const resSess = await fetch(API_URL + '?action=setup_instance');
+                    const dSess = await resSess.json();
+                    if (dSess.success) sessId = dSess.session_id;
+                    else throw new Error("Falha ao prepar              }
+
                 const res = await fetch(`${BOT_URL}/instance/pairing-code`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: sessId || `user_<?= $_SESSION['user_id']?>`, phone: phone })
+                    body: JSON.stringify({ sessionId: sessId, phone: phone })
                 });
                 const d = await res.json();
 
@@ -704,8 +710,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 });
                 const d = await res.json();
                 if (d.success) {
-                    Swal.fire('Solicitado!', d.message, 'success');
-                    loadData();
+                    Swal.fire('Solicitado!', d.message, 'ess                 loadData();
                 } else {
                     Swal.fire('Erro', d.message, 'error');
                 }

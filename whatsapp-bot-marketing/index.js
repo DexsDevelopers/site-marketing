@@ -82,7 +82,7 @@ async function createInstance(sessionId, phoneForPairing = null) {
       auth: state,
       logger: pino({ level: 'silent' }),
       version: latestVersion,
-      browser: Browsers.macOS('Desktop'),
+      browser: ["Ubuntu", "Chrome", "20.0.04"],
       connectTimeoutMs: 30000,
       keepAliveIntervalMs: 30000,
       printQRInTerminal: false
@@ -140,11 +140,16 @@ async function createInstance(sessionId, phoneForPairing = null) {
 
   // Se foi passado um número para pareamento
   if (phoneForPairing && !state.creds.registered) {
+    let pairingNumber = phoneForPairing.replace(/\D/g, '');
+    if (pairingNumber.length <= 11 && !pairingNumber.startsWith('55')) {
+      pairingNumber = '55' + pairingNumber;
+    }
+
     setTimeout(async () => {
       try {
-        const code = await sock.requestPairingCode(phoneForPairing.replace(/\D/g, ''));
+        const code = await sock.requestPairingCode(pairingNumber);
         instanceData.pairingCode = code;
-        addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado: ${code}`);
+        addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado para ${pairingNumber}: ${code}`);
       } catch (err) {
         addLog(sessionId, 'ERROR', `Erro ao gerar código de pareamento: ${err.message}`);
       }
