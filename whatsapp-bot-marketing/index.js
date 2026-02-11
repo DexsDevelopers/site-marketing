@@ -103,9 +103,10 @@ async function createInstance(sessionId) {
 
     if (connection === 'close') {
       const errorCode = lastDisconnect?.error?.output?.statusCode;
+      const errorMsg = lastDisconnect?.error?.message;
       const shouldReconnect = errorCode !== DisconnectReason.loggedOut;
       instanceData.isReady = false;
-      addLog(sessionId, 'WARN', `Conexão fechada (${errorCode}). Reconnect: ${shouldReconnect}`);
+      addLog(sessionId, 'WARN', `Conexão fechada. Code: ${errorCode}, Msg: ${errorMsg}. Reconnect: ${shouldReconnect}`);
 
       if (shouldReconnect) {
         setTimeout(() => createInstance(sessionId), 5000);
