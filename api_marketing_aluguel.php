@@ -75,8 +75,15 @@ try {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['sessionId' => $sessToCall]));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_exec($ch);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        $resBot = curl_exec($ch);
+        $errBot = curl_error($ch);
         curl_close($ch);
+
+        if ($errBot) {
+            error_log("Erro ao notificar bot: $errBot");
+        }
 
         echo json_encode(['success' => true, 'session_id' => $sessToCall]);
         exit;
