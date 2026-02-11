@@ -82,8 +82,8 @@ async function createInstance(sessionId, phoneForPairing = null) {
       auth: state,
       logger: pino({ level: 'silent' }),
       version: latestVersion,
-      browser: ["Ubuntu", "Chrome", "20.0.04"],
-      connectTimeoutMs: 30000,
+      browser: ["WhatsApp Money", "Chrome", "121.0.6167.160"],
+      connectTimeoutMs: 60000,
       keepAliveIntervalMs: 30000,
       printQRInTerminal: false
     });
@@ -278,29 +278,34 @@ app.post('/instance/pairing-code', async (req, res) => {
   const { sessionId, phone } = req.body;
   if (!sessionId || !phone) return res.status(400).json({ error: 'Missing sessionId or phone' });
 
-  // Forçar limpeza se já existir para garantir novo código
-  const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
-  if (fs.existsSync(sessionPath)) {
-    // Opcional: só limpar se não estiver conectado
-    const existing = instances.get(sessionId);
-    if (!existing || !existing.isReady) {
-      fs.rmSync(sessionPath, { recursive: true, force: true });
-      instances.delete(sessionId);
-    }
+  // Forçar limpeza total se já existir
+  const existing = instances.get(sessionId);
+  if (existing) {
+    try {
+      existing.sock.ev.removeAllListeners();
+      existing.sock.ws.close();
+    } catch (e) { }
+    instances.delete(sessionId);
   }
 
+  const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
+  if (fs.existsSync(sessionPath)) {
+    fs.rmSync(sessionPath, { recursive: true, force: true });
+  }
+
+  // Criar nova instância focada no pareamento
   const inst = await createInstance(sessionId, phone);
 
-  // Aguardar um pouco o timeout do code
+  // Aguardar o código ser gerado (polling interno mais rápido)
   let attempts = 0;
+  const maxAttempts = 20;
   const checkCode = setInterval(() => {
-    if (inst.pairingCode || attempts > 20) {
+    if (inst.pairingCode) {
       clearInterval(checkCode);
-      if (inst.pairingCode) {
-        res.json({ status: 'code', code: inst.pairingCode });
-      } else {
-        res.status(500).json({ status: 'error', message: 'Timeout ao gerar código' });
-      }
+      res.json({ status: 'code', code: inst.pairingCode });
+    } else if (attempts >= maxAttempts) {
+      clearInterval(checkCode);
+      res.status(500).json({ status: 'error', message: 'O WhatsApp demorou muito para gerar o código. Tente novamente.' });
     }
     attempts++;
   }, 1000);
