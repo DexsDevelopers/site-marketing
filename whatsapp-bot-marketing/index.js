@@ -61,20 +61,23 @@ async function createInstance(sessionId) {
   }
 
   addLog(sessionId, 'INFO', `Iniciando instância: ${sessionId}`);
+  const { version: latestVersion, isLatest } = await fetchLatestBaileysVersion();
+  addLog(sessionId, 'INFO', `Usando Baileys v${latestVersion} (Latest: ${isLatest})`);
+
   const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
   if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath, { recursive: true });
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-  const version = [2, 3000, 1015901307];
 
   const sock = makeWASocket({
     auth: state,
     logger: pino({ level: 'silent' }),
-    version,
+    version: latestVersion,
     browser: Browsers.macOS('Desktop'),
     markOnlineOnConnect: true,
     connectTimeoutMs: 60000,
-    keepAliveIntervalMs: 15000
+    keepAliveIntervalMs: 30000,
+    printQRInTerminal: false
   });
 
   const instanceData = {
