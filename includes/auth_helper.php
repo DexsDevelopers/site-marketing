@@ -13,18 +13,32 @@ if (session_status() === PHP_SESSION_NONE) {
  * Verificar se o usuário está logado
  * Redireciona para login se não estiver
  */
-function requireLogin($redirectUrl = 'login.php') {
-    if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+function requireLogin($redirectUrl = 'login.php')
+{
+    $isLogged = (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) ||
+        (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true);
+
+    if (!$isLogged) {
+        if (strpos($_SERVER['PHP_SELF'], 'api_') !== false) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Sessão expirada.']);
+            exit;
+        }
         header('Location: ' . $redirectUrl);
         exit;
     }
-    
+
     // Verificar timeout de sessão (2 horas)
-    $sessionTimeout = 7200; // 2 horas em segundos
+    $sessionTimeout = 7200;
     $loginTime = $_SESSION['login_time'] ?? 0;
-    
+
     if (time() - $loginTime > $sessionTimeout) {
         session_destroy();
+        if (strpos($_SERVER['PHP_SELF'], 'api_') !== false) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Sessão expirada.']);
+            exit;
+        }
         header('Location: ' . $redirectUrl . '?timeout=1');
         exit;
     }
@@ -34,14 +48,16 @@ function requireLogin($redirectUrl = 'login.php') {
  * Verificar se o usuário está logado (sem redirecionar)
  * @return bool
  */
-function isLoggedIn() {
+function isLoggedIn()
+{
     return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
 
 /**
  * Fazer logout
  */
-function logout($redirectUrl = 'login.php') {
+function logout($redirectUrl = 'login.php')
+{
     session_destroy();
     header('Location: ' . $redirectUrl);
     exit;
@@ -51,7 +67,8 @@ function logout($redirectUrl = 'login.php') {
  * Obter nome do usuário logado
  * @return string
  */
-function getLoggedUsername() {
+function getLoggedUsername()
+{
     return $_SESSION['admin_username'] ?? 'Admin';
 }
 
@@ -59,7 +76,8 @@ function getLoggedUsername() {
  * Obter tempo de login
  * @return int timestamp
  */
-function getLoginTime() {
+function getLoginTime()
+{
     return $_SESSION['login_time'] ?? 0;
 }
 ?>
