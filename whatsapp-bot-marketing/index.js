@@ -112,6 +112,19 @@ async function createInstance(sessionId, phoneForPairing = null) {
       instanceData.lastQR = qr;
       addLog(sessionId, 'INFO', 'Novo QR Code gerado');
       updateRemoteStatus(sessionId, 'aguardando_qr');
+
+      // Se estamos esperando pareamento por número, gerar o código agora que o socket está pronto
+      if (instanceData._pendingPairing && !instanceData.pairingCode) {
+        const pairingNumber = instanceData._pendingPairing;
+        instanceData._pendingPairing = null;
+        try {
+          const code = await sock.requestPairingCode(pairingNumber);
+          instanceData.pairingCode = code;
+          addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado para ${pairingNumber}: ${code}`);
+        } catch (err) {
+          addLog(sessionId, 'ERROR', `Erro ao gerar código de pareamento: ${err.message}`);
+        }
+      }
     }
 
     if (connection === 'close') {
@@ -138,26 +151,14 @@ async function createInstance(sessionId, phoneForPairing = null) {
     }
   });
 
-  // Se foi passado um número para pareamento
+  // Se foi passado um número para pareamento, marcar para gerar quando o QR chegar
   if (phoneForPairing && !state.creds.registered) {
     let pairingNumber = phoneForPairing.replace(/\D/g, '');
     if (pairingNumber.length <= 11 && !pairingNumber.startsWith('55')) {
       pairingNumber = '55' + pairingNumber;
     }
-
-    setTimeout(async () => {
-      try {
-        if (sock.ws.readyState === 1) { // 1 = OPEN
-          const code = await sock.requestPairingCode(pairingNumber);
-          instanceData.pairingCode = code;
-          addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado para ${pairingNumber}: ${code}`);
-        } else {
-          addLog(sessionId, 'WARN', `Socket não está pronto para gerar código (State: ${sock.ws.readyState})`);
-        }
-      } catch (err) {
-        addLog(sessionId, 'ERROR', `Erro ao gerar código de pareamento: ${err.message}`);
-      }
-    }, 6000);
+    instanceData._pendingPairing = pairingNumber;
+    addLog(sessionId, 'INFO', `Pareamento pendente para ${pairingNumber}. Aguardando socket ficar pronto...`);
   }
 
   return instanceData;
