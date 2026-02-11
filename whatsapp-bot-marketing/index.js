@@ -138,9 +138,16 @@ async function createInstance(sessionId, phoneForPairing = null) {
       const errorMsg = lastDisconnect?.error?.message;
       const shouldReconnect = errorCode !== DisconnectReason.loggedOut;
       instanceData.isReady = false;
-      addLog(sessionId, 'WARN', `Conexão fechada. Code: ${errorCode}, Msg: ${errorMsg}. Reconnect: ${shouldReconnect}`);
 
-      if (shouldReconnect) {
+      if (errorCode === 515) {
+        // 515 = Stream Errored - comportamento ESPERADO após pairing code
+        // Reconectar RÁPIDO preservando credenciais
+        addLog(sessionId, 'INFO', `Reconectando após pareamento (Code: 515)...`);
+        instances.delete(sessionId);
+        setTimeout(() => createInstance(sessionId), 1500);
+      } else if (shouldReconnect) {
+        addLog(sessionId, 'WARN', `Conexão fechada. Code: ${errorCode}, Msg: ${errorMsg}. Reconnect: true`);
+        instances.delete(sessionId);
         setTimeout(() => createInstance(sessionId), 5000);
       } else {
         addLog(sessionId, 'ERROR', 'Logout detectado. Removendo sessão.');
