@@ -69,16 +69,21 @@ async function createInstance(sessionId) {
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 
-  const sock = makeWASocket({
-    auth: state,
-    logger: pino({ level: 'silent' }),
-    version: latestVersion,
-    browser: Browsers.macOS('Desktop'),
-    markOnlineOnConnect: true,
-    connectTimeoutMs: 60000,
-    keepAliveIntervalMs: 30000,
-    printQRInTerminal: false
-  });
+  let sock;
+  try {
+    sock = makeWASocket({
+      auth: state,
+      logger: pino({ level: 'silent' }),
+      version: latestVersion,
+      browser: Browsers.macOS('Desktop'),
+      connectTimeoutMs: 30000,
+      keepAliveIntervalMs: 30000,
+      printQRInTerminal: false
+    });
+  } catch (err) {
+    addLog(sessionId, 'ERROR', `Erro ao criar socket: ${err.message}`);
+    return null;
+  }
 
   const instanceData = {
     sessionId,
