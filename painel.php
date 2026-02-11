@@ -328,21 +328,20 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             .main {
                 margin-left: 0;
             }
-        }
 
-        .pairing-code-display {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 800;
-            letter-spacing: 5px;
-            color: var(--primary);
-            background: rgba(16, 185, 129, 0.1);
-            padding: 1rem;
-            border-radius: 12px;
-            margin: 1rem 0;
-            display: none;
-            text-align: center;
-        }
+            .pairing-code-display {
+                font-family: 'Outfit', sans-serif;
+                font-size: 2.5rem;
+                font-weight: 800;
+                letter-spacing: 5px;
+                color: var(--primary);
+                background: rgba(16, 185, 129, 0.1);
+                padding: 1rem;
+                border-radius: 12px;
+                margin: 1rem 0;
+                display: none;
+                text-align: center;
+            }
     </style>
 </head>
 

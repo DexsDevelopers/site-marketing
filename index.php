@@ -257,6 +257,85 @@ require_once 'includes/db_connect.php';
             margin-top: 5px;
         }
 
+        /* --- Feedbacks --- */
+        .feedbacks {
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .feedbacks h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            margin-bottom: 3.5rem;
+            letter-spacing: -1.5px;
+        }
+
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feedback-card {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            text-align: left;
+            transition: 0.3s;
+        }
+
+        .feedback-card:hover {
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 2rem;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #000;
+            font-family: 'Outfit';
+        }
+
+        .user-meta h4 {
+            font-size: 1rem;
+            margin: 0;
+            color: #fff;
+        }
+
+        .user-meta span {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .feedback-text {
+            color: var(--text-dim);
+            font-size: 1rem;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .stars {
+            color: #fbbf24;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            gap: 4px;
+        }
+
         /* --- FAQ --- */
         .faq {
             padding: 6rem 0;
@@ -379,7 +458,7 @@ require_once 'includes/db_connect.php';
             <div class="feature-card animate-in" style="animation-delay: 0.4s;">
                 <div class="feature-icon"><i class="fas fa-bolt"></i></div>
                 <h3>Ativação em 1 Minuto</h3>
-                <p>Basta escanear o QR Code no seu painel e o sistema começa a trabalhar imediatamente.</p>
+                <p>Basta vincular seu número no painel via código e o sistema começa a trabalhar imediatamente.</p>
             </div>
             <div class="feature-card animate-in" style="animation-delay: 0.5s;">
                 <div class="feature-icon"><i class="fas fa-piggy-bank"></i></div>
@@ -419,7 +498,61 @@ require_once 'includes/db_connect.php';
             </div>
         </section>
 
+        <section class="feedbacks">
+            <h2 class="animate-in">O que dizem nossos <span>Parceiros</span></h2>
+            <div class="feedback-grid">
+                <div class="feedback-card animate-in" style="animation-delay: 0.1s;">
+                    <div class="stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="feedback-text">"No começo achei que era golpe, mas recebi meus primeiros R$ 20,00 no PIX
+                        hoje cedo. O sistema é muito simples de usar e o suporte é nota 10!"</p>
+                    <div class="user-info">
+                        <div class="user-avatar">RS</div>
+                        <div class="user-meta">
+                            <h4>Ricardo Santos</h4>
+                            <span>há 2 horas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-card animate-in" style="animation-delay: 0.2s;">
+                    <div class="stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="feedback-text">"O melhor de tudo é que não atrapalha em nada o uso do WhatsApp. Fica lá
+                        quietinho em segundo plano e o saldo vai subindo todo dia."</p>
+                    <div class="user-info">
+                        <div class="user-avatar">AM</div>
+                        <div class="user-meta">
+                            <h4>Ana Maria</h4>
+                            <span>há 5 horas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-card animate-in" style="animation-delay: 0.3s;">
+                    <div class="stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="feedback-text">"Já testei vários apps de ganhar dinheiro assistindo vídeo, mas esse é o
+                        único que realmente paga automático sem precisar fazer nada."</p>
+                    <div class="user-info">
+                        <div class="user-avatar">LT</div>
+                        <div class="user-meta">
+                            <h4>Lucas Teixeira</h4>
+                            <span>há 8 horas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="cta-box animate-in">
+
             <h2>Pronto para começar?</h2>
             <p>Junte-se a mais de 12.000 usuários que já estão lucrando com suas conexões.</p>
             <a href="registrar.php" class="btn"

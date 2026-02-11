@@ -6,8 +6,8 @@
     <nav>
         <ul class="nav-links">
             <li>
-                <a href="index.php"
-                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''?>">
+                <a href="admin_dashboard.php"
+                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'admin_dashboard.php' ? 'active' : ''?>">
                     <i class="fas fa-chart-line"></i> Dashboard
                 </a>
             </li>
@@ -24,10 +24,17 @@
                 </a>
             </li>
             <li>
-                <a href="aluguel.php"
-                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'aluguel.php' ? 'active' : ''?>"
+                <a href="painel.php"
+                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'painel.php' ? 'active' : ''?>"
                     style="color: #10b981;">
                     <i class="fas fa-hand-holding-usd"></i> Conecte e Ganhe
+                </a>
+            </li>
+            <li>
+                <a href="admin_bot_marketing.php"
+                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'admin_bot_marketing.php' ? 'active' : ''?>"
+                    style="color: #FF3333;">
+                    <i class="fas fa-robot"></i> Marketing Bot
                 </a>
             </li>
             <li>

@@ -1135,35 +1135,33 @@ foreach ($msgEtapas as $k => $v) {
         <nav class="flex-1 py-4">
             <div class="px-4 mb-2 text-xs text-zinc-500 uppercase tracking-wider">Menu</div>
 
-            <a href="admin_bot_config.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
+            <a href="admin_dashboard.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
                 <i class="fas fa-chart-line w-5"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a href="admin_bot_automations.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
+            <a href="admin_dashboard.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
                 <i class="fas fa-bolt w-5"></i>
                 <span>Automações</span>
             </a>
 
-            <a href="admin_bot_settings.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
+            <a href="settings.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
                 <i class="fas fa-cog w-5"></i>
                 <span>Configurações</span>
             </a>
 
-            <a href="admin_bot_logs.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
+            <a href="logs.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
                 <i class="fas fa-history w-5"></i>
                 <span>Logs</span>
             </a>
-            <span>Logs</span>
-            </a>
 
-            <a href="admin_bot_licenses.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300"
+            <a href="admin_dashboard.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300"
                 style="background: linear-gradient(135deg, rgba(255,51,51,0.1), rgba(255,102,0,0.1)); border-left: 3px solid #FF3333;">
                 <i class="fas fa-key w-5" style="color: #FF3333;"></i>
                 <span>Licenças de Grupos</span>
             </a>
 
-            <a href="admin_bot_ia.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300"
+            <a href="admin_dashboard.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300"
                 style="background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(6,182,212,0.1)); border-left: 3px solid #8B5CF6;">
                 <i class="fas fa-brain w-5" style="color: #8B5CF6;"></i>
                 <span>IA do Bot</span>
@@ -1175,19 +1173,19 @@ foreach ($msgEtapas as $k => $v) {
                 <span>Marketing</span>
             </a>
 
-            <a href="admin_bot_messages.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
+            <a href="funnel.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
                 <i class="fas fa-comment-dots w-5"></i>
                 <span>Mensagens</span>
             </a>
 
             <div class="px-4 mt-6 mb-2 text-xs text-zinc-500 uppercase tracking-wider">Links</div>
 
-            <a href="dashboard.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
+            <a href="admin_dashboard.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
                 <i class="fas fa-home w-5"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a href="admin.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
+            <a href="admin_dashboard.php" class="sidebar-item flex items-center gap-3 px-6 py-3 text-zinc-300">
                 <i class="fas fa-arrow-left w-5"></i>
                 <span>Painel Rastreamento</span>
             </a>
@@ -2529,7 +2527,7 @@ endif; ?>
                 for (let i = 0; i < tasks.length; i++) {
                     const task = tasks[i];
                     const displayPhone = task.phone.includes('@') ? task.phone.split('@')[0] : task.phone;
-                    
+
                     addLog(`Enviando para ${displayPhone} (${i + 1}/${tasks.length})...`, 'info');
 
                     const result = await executeSingleTask(task);
