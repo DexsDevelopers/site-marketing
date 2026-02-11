@@ -409,6 +409,16 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                         <div class="qr-container" id="qr-img-box">
                             <i class="fas fa-spinner fa-spin fa-2x" style="color: #666"></i>
                         </div>
+
+                        <!-- Aviso de Demora -->
+                        <div id="qr-warning"
+                            style="display:none; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: left;">
+                            <p style="color: #f59e0b; font-size: 0.85rem; font-weight: 600; line-height: 1.4;">
+                                <i class="fas fa-hourglass-half"></i> O QR Code está demorando? <br>
+                                <span style="font-weight: 400; opacity: 0.9;">Tente aguardar 30 segundos, recarregar a
+                                    página ou clicar em "Gerar Novo Código" se ele não aparecer.</span>
+                            </p>
+                        </div>
                         <button class="btn btn-outline" id="btn-gen" onclick="generateSession()">
                             <i class="fas fa-sync"></i> Gerar Novo Código
                         </button>
@@ -485,6 +495,7 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         const BOT_URL = 'https://cyan-spoonbill-539092.hostingersite.com';
         let sessId = null;
         let qrMonitor = null;
+        let qrAttempts = 0;
 
         async function loadData() {
             try {
@@ -529,6 +540,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             const btn = document.getElementById('btn-gen');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+            qrAttempts = 0;
+            document.getElementById('qr-warning').style.display = 'none';
 
             try {
                 const res = await fetch(API_URL + '?action=setup_instance');
@@ -555,13 +568,21 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
 
         async function fetchQR() {
             if (!sessId) return;
+            qrAttempts++;
+
+            // Mostrar aviso após 3 tentativas (~15 segundos)
+            if (qrAttempts > 3) {
+                document.getElementById('qr-warning').style.display = 'block';
+            }
+
             try {
                 const r = await fetch(`${BOT_URL}/instance/qr/${sessId}`);
                 const d = await r.json();
-          = document.getElementById('qr-img-box');
+                const box = document.getElementById('qr-img-box');
 
                 if (d.status === 'qr') {
                     box.innerHTML = `<img src="${d.qr}" alt="QR Code">`;
+                    document.getElementById('qr-warning').style.display = 'none';
                 } else if (d.status === 'connected') {
                     stopQR();
                     loadData();
@@ -574,8 +595,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             if (!key) return Swal.fire('Atenção', 'Chave PIX é obrigatória', 'warning');
 
             const res = await fetch(API_URL + '?action=request_withdraw', {
-                m ethod: 'POST',
-                hea ders: { 'Content-Type': 'application/json' },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ valor: 20, pix_key: key })
             });
             const d = await res.json();
