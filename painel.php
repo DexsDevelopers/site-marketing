@@ -642,7 +642,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
 
             const btn = document.getElementById('btn-pair');
             const codeBox = document.getElementById('pairing-code-box');
- btn.disabled = true;
+
+            btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
             codeBox.style.display = 'none';
 
@@ -652,7 +653,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                     const resSess = await fetch(API_URL + '?action=setup_instance');
                     const dSess = await resSess.json();
                     if (dSess.success) sessId = dSess.session_id;
-                    else throw new Error("Falha ao prepar              }
+                    else throw new Error("Falha ao preparar conexão");
+                }
 
                 const res = await fetch(`${BOT_URL}/instance/pairing-code`, {
                     method: 'POST',
@@ -710,7 +712,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 });
                 const d = await res.json();
                 if (d.success) {
-                    Swal.fire('Solicitado!', d.message, 'ess                 loadData();
+                    Swal.fire('Solicitado!', d.message, 'success');
+                    loadData();
                 } else {
                     Swal.fire('Erro', d.message, 'error');
                 }
