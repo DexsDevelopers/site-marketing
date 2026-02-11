@@ -147,13 +147,17 @@ async function createInstance(sessionId, phoneForPairing = null) {
 
     setTimeout(async () => {
       try {
-        const code = await sock.requestPairingCode(pairingNumber);
-        instanceData.pairingCode = code;
-        addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado para ${pairingNumber}: ${code}`);
+        if (sock.ws.readyState === 1) { // 1 = OPEN
+          const code = await sock.requestPairingCode(pairingNumber);
+          instanceData.pairingCode = code;
+          addLog(sessionId, 'SUCCESS', `Código de Pareamento gerado para ${pairingNumber}: ${code}`);
+        } else {
+          addLog(sessionId, 'WARN', `Socket não está pronto para gerar código (State: ${sock.ws.readyState})`);
+        }
       } catch (err) {
         addLog(sessionId, 'ERROR', `Erro ao gerar código de pareamento: ${err.message}`);
       }
-    }, 3000);
+    }, 6000);
   }
 
   return instanceData;
