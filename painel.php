@@ -593,13 +593,21 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
             qrAttempts = 0;
             document.getElementById('qr-warning').style.display = 'none';
+            document.getElementById('qr-img-box').innerHTML = '<i class="fas fa-spinner fa-spin fa-2x" style="color: #666"></i>';
+            stopQR();
 
             try {
+                // 1. Pegar (ou criar) sessão no backend
                 const res = await fetch(API_URL + '?action=setup_instance');
                 const d = await res.json();
                 if (d.success) {
                     sessId = d.session_id;
-                    startQR();
+
+                    // 2. Resetar no bot para forçar novo QR
+                    await fetch(`${BOT_URL}/instance/reset/${sessId}`, { method: 'POST' }).catch(() => { });
+
+                    // 3. Esperar o bot criar a nova instância e gerar o QR
+                    setTimeout(() => { startQR(); }, 3000);
                 } else {
                     Swal.fire('Erro', d.message, 'error');
                 }

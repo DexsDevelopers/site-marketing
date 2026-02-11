@@ -315,6 +315,31 @@ app.post('/instance/pairing-code', async (req, res) => {
   }, 1000);
 });
 
+app.post('/instance/reset/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+
+  // Fechar conexão antiga
+  const existing = instances.get(sessionId);
+  if (existing) {
+    try {
+      existing.sock.ev.removeAllListeners();
+      existing.sock.ws.close();
+    } catch (e) { }
+    instances.delete(sessionId);
+  }
+
+  // Limpar arquivos de sessão
+  const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
+  if (fs.existsSync(sessionPath)) {
+    fs.rmSync(sessionPath, { recursive: true, force: true });
+  }
+
+  // Criar nova instância limpa
+  const inst = await createInstance(sessionId);
+  addLog(sessionId, 'INFO', 'Sessão resetada. Novo QR Code será gerado.');
+  res.json({ success: true, message: 'Sessão resetada' });
+});
+
 app.post('/instance/create', async (req, res) => {
   const { sessionId } = req.body;
   if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
