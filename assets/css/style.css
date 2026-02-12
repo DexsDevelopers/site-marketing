@@ -896,15 +896,16 @@ input:checked+.slider:before {
         font-size: 0.85rem;
     }
 
-    /* ===== REFATORAÇÃO GLOBAL MOBILE (MÁXIMA PRIORIDADE) ===== */
+    /* ===== REFATORAÇÃO GLOBAL MOBILE V2 (ESTABILIDADE TOTAL) ===== */
 
-    /* Layout Base */
+    /* Layout Base - Container Principal */
     .dashboard-container {
         display: block !important;
+        /* Stack vertical */
         width: 100% !important;
+        max-width: 100vw !important;
         overflow-x: hidden !important;
-        padding-top: 60px;
-        /* Espaço para header fixo se houver, ou apenas topo */
+        padding-top: 0px;
     }
 
     .main-content {
@@ -912,113 +913,142 @@ input:checked+.slider:before {
         width: 100% !important;
         max-width: 100vw !important;
         padding: 1rem !important;
+        /* Padding seguro */
+        padding-top: 5rem !important;
+        /* Espaço para menu mobile */
         box-sizing: border-box !important;
-        overflow-x: hidden !important;
     }
 
-    /* Cards e Grids */
+    /* Grids: FORÇAR 1 COLUNA */
     .stats-grid,
     .admin-grid,
-    .grid {
+    .grid,
+    .features-grid,
+    .settings-grid {
         display: grid !important;
         grid-template-columns: 1fr !important;
-        /* Sempre 1 coluna no mobile */
         gap: 1rem !important;
         width: 100% !important;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
     }
 
+    /* Cards e Painéis */
     .stat-card,
     .card,
-    .panel {
+    .panel,
+    .funnel-step,
+    .feature-card {
         width: 100% !important;
+        max-width: 100% !important;
         margin: 0 0 1rem 0 !important;
         padding: 1.25rem !important;
         box-sizing: border-box !important;
     }
 
-    /* Tabelas com Scroll Horizontal Obrigatório */
-    .table-container,
+    /* Tabelas: SCROLL HORIZONTAL OBRIGATÓRIO */
     .table-responsive,
-    .panel:has(table) {
+    .table-container,
+    .panel:has(table),
+    .funnel-sequence,
+    #funnel-container {
         display: block !important;
         width: 100% !important;
         max-width: 100vw !important;
+        /* Limite crítico */
         overflow-x: auto !important;
+        /* Permitir scroll no eixo X */
         -webkit-overflow-scrolling: touch;
         padding-bottom: 0.5rem;
-        /* Espaço para scrollbar */
     }
 
     table {
         width: 100% !important;
-        min-width: 700px;
-        /* Força largura mínima para ativar scroll */
+        min-width: 600px;
+        /* Forçar largura mínima */
         table-layout: auto !important;
     }
 
+    /* Ajuste de Células de Tabela */
     th,
     td {
-        white-space: nowrap;
-        /* Evita quebra de linha feia em células pequenas */
         padding: 0.75rem !important;
+        white-space: nowrap !important;
+        /* Linha única para manter alinhamento */
+        font-size: 0.9rem;
     }
 
+    /* Textos longos em tabelas (ex: mensagens) */
+    .msg-content-preview,
     td {
         max-width: 250px;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    /* Funil */
-    .funnel-step,
-    .funnel-sequence {
+    /* Header Mobile */
+    .header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .header>div {
+        width: 100%;
+    }
+
+    .header h1 {
+        font-size: 1.8rem !important;
+        line-height: 1.2;
+        word-wrap: break-word;
+    }
+
+    /* Botões Mobile - Full width e empilhados */
+    .header button,
+    .header .btn-modern,
+    .header a.btn-modern,
+    .panel>.btn-modern,
+    .panel>div>.btn-modern {
         width: 100% !important;
-        max-width: 100%;
-        box-sizing: border-box;
+        justify-content: center !important;
+        margin-top: 0.5rem;
+        display: flex !important;
+        box-sizing: border-box !important;
+    }
+
+    .header>div[style*="flex"] {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Funil - Ajustes Específicos */
+    .step-header-row {
+        flex-wrap: wrap !important;
+        gap: 0.5rem !important;
     }
 
     .step-content textarea {
         width: 100% !important;
         min-height: 100px;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    /* Header Mobile */
-    .header {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 0.5rem !important;
-        margin-bottom: 1.5rem !important;
-    }
-
-    .header h1 {
-        font-size: 1.75rem !important;
-        line-height: 1.2;
-    }
-
-    .header p {
-        font-size: 0.95rem;
-    }
-
-    /* Botões */
-    .header button,
-    .header a.btn-modern {
+    /* Leads - Importação */
+    #import-textarea {
         width: 100% !important;
-        justify-content: center !important;
-        margin-top: 0.5rem;
+        box-sizing: border-box !important;
     }
 
     /* Configurações */
-    .settings-grid {
-        grid-template-columns: 1fr !important;
-    }
-
     .interval-inputs {
-        flex-wrap: wrap !important;
+        flex-direction: column !important;
+        /* Empilha inputs de intervalo */
     }
 
     .interval-inputs .form-control {
-        flex: 1;
+        width: 100% !important;
         text-align: center;
     }
 }
