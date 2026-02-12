@@ -16,83 +16,13 @@ requireLogin();
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#ecf0f1">
+    <meta name="theme-color" content="#0a0a0c">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/124/124034.png">
 
-    <title>Monitor de Envios - Marketing Hub</title>
+    <title>Monitor de Envios | Marketing Hub</title>
+    <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            overflow-x: hidden;
-            width: 100%;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-            padding-bottom: 20px;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
-            margin-bottom: 10px;
-            word-wrap: break-word;
-        }
-
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-        }
-
         .stat-value.success {
             color: #10b981;
         }
@@ -105,240 +35,114 @@ requireLogin();
             color: #ef4444;
         }
 
-        .table-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            min-width: 800px;
-            /* Garante scroll se necessário */
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #667eea;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 14px;
-        }
-
-        tr:hover {
-            background: #f9fafb;
-        }
-
         .status-badge {
-            display: inline-block;
             padding: 4px 12px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
         }
 
         .status-novo {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
         }
 
         .status-em_progresso {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
         }
 
         .status-concluido {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
         }
 
         .status-bloqueado {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .phone {
-            font-family: 'Courier New', monospace;
-            color: #4b5563;
-        }
-
-        .time {
-            color: #6b7280;
-            font-size: 12px;
-        }
-
-        .refresh-info {
-            text-align: center;
-            margin-top: 15px;
-            color: #6b7280;
-            font-size: 13px;
-        }
-
-        .refresh-info i {
-            color: #667eea;
-            animation: spin 2s linear infinite;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .btn-back {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 20px;
-            transition: all 0.3s;
-        }
-
-        .btn-back:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .step-info {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .header {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 20px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-card {
-                padding: 15px;
-            }
-
-            .stat-value {
-                font-size: 24px;
-            }
-
-            .table-container {
-                padding: 15px;
-            }
-
-            th,
-            td {
-                padding: 10px;
-                font-size: 12px;
-                white-space: nowrap;
-            }
-
-            .status-badge {
-                padding: 2px 8px;
-                font-size: 10px;
-            }
-
-            .btn-back {
-                width: 100%;
-                text-align: center;
-                margin-bottom: 15px;
-                box-sizing: border-box;
-            }
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <a href="index.php" class="btn-back"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+    <div class="dashboard-container">
+        <?php include 'includes/sidebar.php'; ?>
 
-        <div class="header">
-            <h1><i class="fas fa-chart-line"></i> Monitor de Envios em Tempo Real</h1>
-            <p>Acompanhe o status de todos os leads e envios de mensagens</p>
-        </div>
+        <main class="main-content">
+            <header class="header animate-fade-in">
+                <div>
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Monitor em Tempo Real</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Acompanhe o status de todos os leads e
+                        envios.</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 0.9rem;">
+                    <i class="fas fa-sync-alt fa-spin" style="color: var(--primary);"></i> Atualizando...
+                </div>
+            </header>
 
-        <div class="stats-grid" id="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total de Leads</div>
-                <div class="stat-value" id="total-leads">-</div>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users" style="color: #60a5fa;"></i>
+                    <div class="stat-info">
+                        <div class="stat-value" id="total-leads">-</div>
+                        <div class="stat-label">Total de Leads</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-user-plus" style="color: #a78bfa;"></i>
+                    <div class="stat-info">
+                        <div class="stat-value" id="novos">-</div>
+                        <div class="stat-label">Novos (Fila)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-spinner" style="color: #fbbf24;"></i>
+                    <div class="stat-info">
+                        <div class="stat-value warning" id="em-progresso">-</div>
+                        <div class="stat-label">Em Progresso</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-check-circle" style="color: #34d399;"></i>
+                    <div class="stat-info">
+                        <div class="stat-value success" id="concluidos">-</div>
+                        <div class="stat-label">Concluídos</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock" style="color: var(--primary);"></i>
+                    <div class="stat-info">
+                        <div class="stat-value" id="proximo-envio" style="font-size: 1.2rem;">-</div>
+                        <div class="stat-label">Próximo Envio</div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Novos</div>
-                <div class="stat-value" id="novos">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Em Progresso</div>
-                <div class="stat-value warning" id="em-progresso">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Concluídos</div>
-                <div class="stat-value success" id="concluidos">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Bloqueados</div>
-                <div class="stat-value danger" id="bloqueados">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Próximo Envio</div>
-                <div class="stat-value" id="proximo-envio" style="font-size: 18px;">-</div>
-            </div>
-        </div>
 
-        <div class="table-container">
-            <h2 style="margin-bottom: 20px; color: #667eea;"><i class="fas fa-list"></i> Leads Ativos (Em Progresso)
-            </h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Telefone</th>
-                        <th>Status</th>
-                        <th>Passo Atual</th>
-                        <th>Próximo Envio</th>
-                        <th>Grupo Origem</th>
-                    </tr>
-                </thead>
-                <tbody id="leads-table">
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px;">Carregando...</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="refresh-info">
-                <i class="fas fa-sync-alt"></i> Atualizando automaticamente a cada 5 segundos
+            <div class="panel animate-fade-in" style="margin-top: 2rem;">
+                <div class="panel-title"><i class="fas fa-list"></i> Leads Ativos (Em Progresso)</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Telefone</th>
+                                <th>Status</th>
+                                <th>Passo</th>
+                                <th>Próx. Envio</th>
+                                <th>Origem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-table">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                                    Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
@@ -348,14 +152,11 @@ requireLogin();
                 const statsRes = await fetch('api_marketing_ajax.php?action=get_marketing_stats');
                 const stats = await statsRes.json();
 
-                console.log('Stats response:', stats);
-
                 if (stats.success && stats.stats) {
                     document.getElementById('total-leads').textContent = stats.stats.total_leads || 0;
                     document.getElementById('novos').textContent = stats.stats.fila_espera || 0;
                     document.getElementById('em-progresso').textContent = stats.stats.hoje_andamento || 0;
                     document.getElementById('concluidos').textContent = stats.stats.hoje_concluidos || 0;
-                    document.getElementById('bloqueados').textContent = 0;
 
                     const proximoEnvio = stats.stats.proximo_envio || 'Nenhum';
                     if (proximoEnvio !== 'Nenhum' && proximoEnvio !== 'Nenhum agendado') {
@@ -373,35 +174,32 @@ requireLogin();
                     } else {
                         document.getElementById('proximo-envio').textContent = proximoEnvio;
                     }
-                } else {
-                    console.error('Stats API error:', stats);
                 }
 
                 // Carregar leads em progresso
                 const leadsRes = await fetch('api_monitor.php?action=get_active_leads');
                 const leadsData = await leadsRes.json();
 
-                console.log('Leads response:', leadsData);
-
                 if (leadsData.success && leadsData.leads) {
                     const tbody = document.getElementById('leads-table');
 
                     if (leadsData.leads.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">Nenhum lead em progresso no momento</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">Nenhum lead em progresso no momento</td></tr>';
                     } else {
                         tbody.innerHTML = leadsData.leads.map(lead => {
                             const statusClass = `status-${lead.status.replace(' ', '_')}`;
-                            const proximoEnvio = lead.data_proximo_envio ? new Date(lead.data_proximo_envio).toLocaleString('pt-BR') : '-';
+                            const proximoEnvio = lead.data_proximo_envio ? new Date(lead.data_proximo_envio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-';
                             const telefone = lead.telefone.length > 15 ? lead.telefone.substring(0, 15) + '...' : lead.telefone;
+                            const origem = lead.grupo_origem_jid ? lead.grupo_origem_jid.split('@')[0].substring(0, 15) + '...' : '-';
 
                             return `
                                 <tr>
-                                    <td>${lead.id}</td>
-                                    <td class="phone">${telefone}</td>
+                                    <td>#${lead.id}</td>
+                                    <td style="font-family:monospace; color:var(--text-main);">${telefone}</td>
                                     <td><span class="status-badge ${statusClass}">${lead.status}</span></td>
-                                    <td class="step-info">Passo ${lead.ultimo_passo_id + 1}</td>
-                                    <td class="time">${proximoEnvio}</td>
-                                    <td style="font-size: 11px; color: #9ca3af;">${lead.grupo_origem_jid ? lead.grupo_origem_jid.substring(0, 20) + '...' : '-'}</td>
+                                    <td>Passo ${lead.ultimo_passo_id + 1}</td>
+                                    <td>${proximoEnvio}</td>
+                                    <td style="font-size: 0.8rem; color: var(--text-dim);">${origem}</td>
                                 </tr>
                             `;
                         }).join('');
@@ -412,10 +210,7 @@ requireLogin();
             }
         }
 
-        // Carregar dados inicialmente
         loadData();
-
-        // Atualizar a cada 5 segundos
         setInterval(loadData, 5000);
     </script>
 </body>

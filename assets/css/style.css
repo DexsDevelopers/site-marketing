@@ -896,26 +896,130 @@ input:checked+.slider:before {
         font-size: 0.85rem;
     }
 
-    /* Forçar containers a respeitar largura da tela */
-    .panel,
-    .admin-grid,
-    section,
-    aside {
+    /* ===== REFATORAÇÃO GLOBAL MOBILE (MÁXIMA PRIORIDADE) ===== */
+
+    /* Layout Base */
+    .dashboard-container {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+        padding-top: 60px;
+        /* Espaço para header fixo se houver, ou apenas topo */
+    }
+
+    .main-content {
+        margin-left: 0 !important;
         width: 100% !important;
         max-width: 100vw !important;
+        padding: 1rem !important;
         box-sizing: border-box !important;
         overflow-x: hidden !important;
     }
 
-    /* Ajuste para tabela do funnel no dashboard não estourar */
-    #funnel-container table {
-        table-layout: fixed;
-        width: 100%;
+    /* Cards e Grids */
+    .stats-grid,
+    .admin-grid,
+    .grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        /* Sempre 1 coluna no mobile */
+        gap: 1rem !important;
+        width: 100% !important;
+        margin-bottom: 1.5rem;
     }
 
-    /* Reduzir tamanho dos ícones do dashboard se necessário */
-    .stat-card i {
-        font-size: 1.2rem;
+    .stat-card,
+    .card,
+    .panel {
+        width: 100% !important;
+        margin: 0 0 1rem 0 !important;
+        padding: 1.25rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Tabelas com Scroll Horizontal Obrigatório */
+    .table-container,
+    .table-responsive,
+    .panel:has(table) {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.5rem;
+        /* Espaço para scrollbar */
+    }
+
+    table {
+        width: 100% !important;
+        min-width: 700px;
+        /* Força largura mínima para ativar scroll */
+        table-layout: auto !important;
+    }
+
+    th,
+    td {
+        white-space: nowrap;
+        /* Evita quebra de linha feia em células pequenas */
+        padding: 0.75rem !important;
+    }
+
+    td {
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Funil */
+    .funnel-step,
+    .funnel-sequence {
+        width: 100% !important;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .step-content textarea {
+        width: 100% !important;
+        min-height: 100px;
+    }
+
+    /* Header Mobile */
+    .header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .header h1 {
+        font-size: 1.75rem !important;
+        line-height: 1.2;
+    }
+
+    .header p {
+        font-size: 0.95rem;
+    }
+
+    /* Botões */
+    .header button,
+    .header a.btn-modern {
+        width: 100% !important;
+        justify-content: center !important;
+        margin-top: 0.5rem;
+    }
+
+    /* Configurações */
+    .settings-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .interval-inputs {
+        flex-wrap: wrap !important;
+    }
+
+    .interval-inputs .form-control {
+        flex: 1;
+        text-align: center;
     }
 }
 
