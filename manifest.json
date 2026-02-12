@@ -1,7 +1,7 @@
 {
     "name": "Marketing Hub",
     "short_name": "Mkt Hub",
-    "start_url": "./painel.php",
+    "start_url": "./admin_dashboard.php",
     "display": "standalone",
     "background_color": "#0a0a0c",
     "theme_color": "#ff3b3b",
