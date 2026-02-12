@@ -22,117 +22,119 @@ requireLogin();
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .filter-bar {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            /* Garante que botões pulem linha */
-            align-items: center;
-        }
-
+        /* Logs Specific Styles */
         .log-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
             font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-            font-size: 0.85rem;
+            background: #0f0f10;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
             max-height: 70vh;
             overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
         }
 
         .log-entry {
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             display: flex;
-            gap: 1rem;
+            gap: 0.8rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             align-items: flex-start;
         }
 
-        .log-entry:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
         .log-time {
-            color: #6b7280;
-            white-space: nowrap;
+            color: #666;
             font-size: 0.75rem;
+            white-space: nowrap;
+            min-width: 60px;
         }
 
         .log-level {
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
             font-size: 0.7rem;
-            font-weight: 600;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
             text-transform: uppercase;
-            min-width: 60px;
+            min-width: 50px;
             text-align: center;
         }
 
         .log-level.INFO {
-            background: rgba(59, 130, 246, 0.2);
             color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
         }
 
         .log-level.SUCCESS {
-            background: rgba(34, 197, 94, 0.2);
             color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
         }
 
         .log-level.WARN {
-            background: rgba(251, 191, 36, 0.2);
             color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
         }
 
         .log-level.ERROR {
-            background: rgba(239, 68, 68, 0.2);
             color: #f87171;
-        }
-
-        .log-level.HEARTBEAT {
-            background: rgba(168, 85, 247, 0.2);
-            color: #c084fc;
+            background: rgba(248, 113, 113, 0.1);
         }
 
         .log-message {
-            color: #e5e7eb;
-            word-break: break-word;
-            flex: 1;
+            color: #d1d5db;
+            word-break: break-all;
         }
 
+        /* Filter layout for mobile */
         .filter-bar {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
             flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
             align-items: center;
         }
 
         .filter-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
-            color: #9ca3af;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 0.85rem;
         }
 
-        .filter-btn:hover,
-        .filter-btn.active {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
-            color: #60a5fa;
+        .filter-btn.active,
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(255, 59, 59, 0.1);
         }
 
-        .auto-refresh-toggle {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #9ca3af;
-            font-size: 0.85rem;
+        @media (max-width: 768px) {
+            .filter-bar {
+                flex-direction: row;
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+
+            .filter-btn {
+                flex: 0 0 auto;
+                /* Don't shrink */
+            }
+
+            .log-entry {
+                flex-direction: column;
+                gap: 0.2rem;
+            }
+
+            .log-header-mobile {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                width: 100%;
+            }
         }
 
         .status-indicator {
@@ -159,17 +161,6 @@ requireLogin();
                 opacity: 0.5;
             }
         }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-
-        .log-count {
-            color: #6b7280;
-            font-size: 0.85rem;
-        }
     </style>
 </head>
 
@@ -179,44 +170,25 @@ requireLogin();
         <main class="main-content">
             <header class="header animate-fade-in">
                 <div>
-                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">
-                        <i class="fas fa-terminal" style="color: #60a5fa;"></i> Logs do Bot
-                    </h1>
-                    <p style="color: var(--text-dim); margin-top: 0.5rem;">
-                        Acompanhe em tempo real o que o bot está fazendo.
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Logs do Sistema</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Monitoramento de atividades e erros do robô.
                     </p>
                 </div>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <div class="auto-refresh-toggle">
-                        <span class="status-indicator" id="refresh-indicator"></span>
-                        <label>
-                            <input type="checkbox" id="auto-refresh" checked style="margin-right: 0.3rem;">
-                            Auto-refresh
-                        </label>
-                    </div>
-                    <button class="btn-modern" onclick="fetchLogs()" id="btn-refresh">
-                        <i class="fas fa-sync-alt"></i> Atualizar
-                    </button>
+                <div class="auto-refresh-toggle">
+                    <span class="status-indicator active" id="live-indicator"></span>
+                    <span style="font-size: 0.9rem;">Ao vivo</span>
                 </div>
             </header>
 
             <div class="panel animate-fade-in">
                 <div class="filter-bar">
-                    <button class="filter-btn active" data-level="">Todos</button>
-                    <button class="filter-btn" data-level="INFO">Info</button>
-                    <button class="filter-btn" data-level="SUCCESS">Success</button>
-                    <button class="filter-btn" data-level="WARN">Warn</button>
-                    <button class="filter-btn" data-level="ERROR">Error</button>
-                    <span class="log-count" id="log-count"></span>
-                </div>
-
-                <div class="log-container" id="log-container">
-                    <div class="empty-state">
-                        <i class="fas fa-spinner fa-spin fa-2x"></i>
-                        <p>Carregando logs...</p>
+                    <div class="log-container" id="log-container">
+                        <div class="empty-state">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p>Carregando logs...</p>
+                        </div>
                     </div>
                 </div>
-            </div>
         </main>
     </div>
 
@@ -308,8 +280,4 @@ requireLogin();
 
         // Initial load
         fetchLogs();
-        startAutoRefresh();
-    </script>
-</body>
-
-</html>
+    

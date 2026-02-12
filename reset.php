@@ -124,39 +124,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_bot'])) {
     <div class="dashboard-container">
         <?php include 'includes/sidebar.php'; ?>
         <main class="main-content">
-            <header class="header">
+            <header class="header animate-fade-in">
                 <div>
-                    <h1>Resetar Conexão</h1>
-                    <p style="color: var(--text-dim);">Área de gerenciamento de sessão do WhatsApp.</p>
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Resetar Conexão</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Gerenciamento de sessão do WhatsApp.</p>
                 </div>
             </header>
 
-            <div class="panel">
+            <div class="panel animate-fade-in" style="max-width: 800px; margin: 0 auto;">
                 <div class="panel-title"><i class="fas fa-exclamation-triangle" style="color: #ff3b3b;"></i> Zona de
                     Perigo</div>
 
                 <?php if ($message): ?>
-                <div class="alert <?= $messageType?>">
+                <div class="alert <?= $messageType?>"
+                    style="padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-weight: 500; <?= $messageType == 'alert-success' ? 'background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid #4ade80;' : 'background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid #f87171;'?>">
                     <?= $message?>
                 </div>
                 <?php
 endif; ?>
 
-                <div class="danger-zone">
+                <div class="danger-zone"
+                    style="border: 1px solid rgba(255, 59, 59, 0.3); background: rgba(255, 59, 59, 0.05); padding: 2rem; border-radius: 12px; text-align: center;">
                     <h3 style="margin-bottom: 1rem; color: #ff3b3b;">Desconectar e Resetar Bot</h3>
                     <p
-                        style="color: var(--text-dim); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
-                        Esta ação irá derrubar a conexão atual com o WhatsApp, apagar os dados de sessão (pasta
-                        <code>auth_info_baileys</code>) e reiniciar o bot forçadamente.
+                        style="color: var(--text-dim); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                        Esta ação irá <strong>derrubar a conexão atual</strong> com o WhatsApp, apagar os dados de
+                        sessão e reiniciar o bot forçadamente.
                         <br><br>
-                        <strong>Use isso apenas se precisar escanear um novo QR Code ou se o bot estiver
-                            travado.</strong>
+                        Use isso apenas se precisar escanear um novo QR Code ou se o bot estiver travado.
                     </p>
 
                     <form method="POST"
                         onsubmit="return confirm('Tem certeza absoluta? Isso irá desconectar o bot do WhatsApp!');">
-                        <button type="submit" name="reset_bot" class="btn-danger">
-                            <i class="fas fa-trash-alt"></i> APAGAR SESSÃO E REINICIAR
+                        <button type="submit" name="reset_bot" class="btn-danger"
+                            style="background: #ff3b3b; color: white; border: none; padding: 1rem 2rem; font-size: 1rem; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; max-width: 300px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <i class="fas fa-trash-alt"></i> APAGAR SESSÃO
                         </button>
                     </form>
                 </div>
