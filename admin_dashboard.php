@@ -244,7 +244,7 @@ requireLogin();
                         rows += `
                             <tr>
                                 <td>${step.ordem}</td>
-                                <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(contentPreview)}</td>
+                                <td class="msg-content-preview">${escapeHtml(contentPreview)}</td>
                                 <td>${delay}</td>
                                 <td><a href="funnel.php" style="color: var(--primary);"><i class="fas fa-edit"></i></a></td>
                             </tr>
