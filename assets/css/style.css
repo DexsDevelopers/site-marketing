@@ -523,118 +523,170 @@ input:checked+.slider:before {
 }
 
 /* ========== MOBILE RESPONSIVENESS ========== */
+/* Mobile Toggle Button & Overlay */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 2000;
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--primary-glow);
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 1001;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.sidebar-header-mobile {
+    display: none;
+}
+
+/* ========== MOBILE RESPONSIVENESS ========== */
 @media (max-width: 900px) {
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .sidebar-overlay {
+        display: block;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     .dashboard-container {
         grid-template-columns: 1fr;
     }
 
-    /* Stack Sidebar as Header */
+    /* Fixed Sidebar Off-Canvas */
     .sidebar {
-        flex-direction: row;
-        width: 100%;
-        padding: 1rem;
-        gap: 1rem;
-        border-right: none;
-        border-bottom: 1px solid var(--glass-border);
-        justify-content: space-between;
-        align-items: center;
-        overflow-x: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 1002;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-right: 1px solid var(--glass-border);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 0;
+        background: #0a0a0c;
+        /* Ensure solid background */
     }
 
-    .sidebar .logo {
-        margin-bottom: 0;
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .sidebar-header-mobile {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .close-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-dim);
         font-size: 1.2rem;
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    .logo-desktop {
+        display: none !important;
+    }
+
+    .logo {
+        margin-bottom: 0;
     }
 
     .nav-links {
-        flex-direction: row;
-        overflow-x: auto;
-        padding-bottom: 0.2rem;
-        -webkit-overflow-scrolling: touch;
-        gap: 0.2rem;
+        flex-direction: column;
+        padding: 1.5rem;
+        overflow-y: auto;
+        gap: 0.5rem;
         flex: 1;
-        justify-content: flex-end;
     }
 
-    /* Hide text labels on mobile sidebar to save space, show only icons? 
-       Or make it scrollable. */
     .nav-item {
-        padding: 0.6rem;
-        border-radius: 8px;
-        white-space: nowrap;
-    }
-    
-    .nav-item span {
-        display: none; /* Hide text on mobile */
+        padding: 1rem;
+        white-space: normal;
     }
 
-    .nav-item i {
-        font-size: 1.2rem;
-        margin: 0;
+    .nav-item span {
+        display: inline !important;
+        /* Show text again */
     }
 
     /* Main Content */
     .main-content {
         padding: 1.5rem;
+        padding-top: 5rem;
+        /* Space for the toggle button */
     }
 
     .header {
         flex-direction: column;
         gap: 1.5rem;
     }
-    
-    .header > div {
-        width: 100%;
-        text-align: center;
-    }
 
-    .header h1 {
-        font-size: 1.8rem !important;
-    }
-
-    /* Fix buttons area in header */
-    .header > div:last-child {
-        flex-direction: column;
+    .header>div {
         width: 100%;
     }
-    
-    .header .btn-modern, .header .panel {
-        width: 100%;
-        justify-content: center;
-    }
 
-    /* Stats Grid */
     .stats-grid {
         grid-template-columns: 1fr;
     }
 
-    /* Admin Grid Layout */
     .admin-grid {
         grid-template-columns: 1fr;
     }
 
-    /* QR Code Container Mobile */
     #qr-container {
         width: 100% !important;
         height: auto !important;
         aspect-ratio: 1;
     }
-    
-    /* Tables Responsive */
+
     .table-modern {
         display: block;
         width: 100%;
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
-    /* Funnel Steps */
     .funnel-step {
         grid-template-columns: 1fr;
         gap: 1rem;
-    }
-    
-    .step-number {
-        margin-bottom: 0.5rem;
     }
 }

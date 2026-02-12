@@ -1,14 +1,35 @@
-<aside class="sidebar">
-    <div class="logo">
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Overlay -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-header-mobile">
+        <div class="logo">
+            <i class="fab fa-whatsapp"></i>
+            MARKETING HUB
+        </div>
+        <button class="close-btn" onclick="toggleSidebar()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Logo Desktop -->
+    <div class="logo logo-desktop">
         <i class="fab fa-whatsapp"></i>
         MARKETING HUB
     </div>
+
     <nav>
         <ul class="nav-links">
-            <a href="admin_dashboard.php"
-                class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'admin_dashboard.php' ? 'active' : ''?>">
-                <i class="fas fa-chart-line"></i> <span>Dashboard</span>
-            </a>
+            <li>
+                <a href="admin_dashboard.php"
+                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'admin_dashboard.php' ? 'active' : ''?>">
+                    <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+                </a>
             </li>
             <li>
                 <a href="funnel.php"
@@ -61,3 +82,10 @@
             <span>Sair</span></a>
     </div>
 </aside>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('admin-sidebar').classList.toggle('active');
+        document.getElementById('sidebar-overlay').classList.toggle('active');
+    }
+</script>
