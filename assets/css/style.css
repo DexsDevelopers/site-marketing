@@ -606,9 +606,55 @@ input:checked+.slider:before {
         -webkit-overflow-scrolling: touch;
     }
 
+    /* Ajuste para que tabelas não "estourem" */
     table {
-        min-width: 600px;
-        /* Força largura mínima para ativar scroll */
+        min-width: 100%;
+        /* Ocupa 100%, mas permite scroll se conteúdo for maior */
+        display: table;
+        /* Força display table para manter integridade das colunas */
+    }
+
+    /* Wrap de texto em células para evitar tabelas muito largas */
+    td,
+    th {
+        white-space: normal;
+        word-wrap: break-word;
+        max-width: 200px;
+        /* Limite para forçar quebra de linha */
+    }
+
+    /* Exceção para colunas de ação ou IDs pequenos */
+    td:first-child,
+    th:first-child,
+    td:last-child,
+    th:last-child {
+        white-space: nowrap;
+        width: auto;
+        max-width: none;
+    }
+
+    /* Ajuste de botões dentro de panels no mobile */
+    .panel .btn-modern {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        justify-content: center;
+        /* Centraliza texto/ícone */
+        display: flex;
+        white-space: nowrap;
+        /* Evita quebra feia dentro do botão */
+    }
+
+    /* Container de botões flexível */
+    .panel>div[style*="display: flex"] {
+        flex-direction: column;
+        /* Empilha botões em mobile */
+        gap: 0.8rem !important;
+    }
+
+    .panel>div[style*="display: flex"]>a,
+    .panel>div[style*="display: flex"]>button {
+        width: 100% !important;
+        flex: none !important;
     }
 
     /* Ajuste de Grids para não estourar */
@@ -737,8 +783,56 @@ input:checked+.slider:before {
         overflow-x: auto;
     }
 
-    .funnel-step {
-        grid-template-columns: 1fr;
+    /* Ajuste específico para o funil */
+    .step-header-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.8rem;
+    }
+
+    .step-header-row>div {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .delay-badge {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Settings Page Mobile */
+    .settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+
+    .interval-inputs {
+        flex-direction: row;
+        /* Manter lado a lado mesmo no mobile se couber, ou ajustes */
+        gap: 0.5rem !important;
+    }
+
+    .interval-inputs .form-control {
+        width: 100%;
+        /* Divide espaço igualmente */
+        padding: 0.8rem;
+        /* Padding confortável */
+        text-align: center;
+    }
+
+    .settings-header-status {
+        flex-direction: column;
+        align-items: flex-start !important;
         gap: 1rem;
+    }
+
+    .settings-header-status label {
+        align-self: flex-end;
+        /* Switch no canto direito */
+        margin-top: -3rem;
+        /* Truque para alinhar com título se desejar, ou apenas deixar fluir */
     }
 }

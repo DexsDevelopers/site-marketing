@@ -8,11 +8,29 @@ requireLogin();
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/124/124034.png">
+
     <title>Marketing Hub | Logs do Bot</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            /* Garante que botões pulem linha */
+            align-items: center;
+        }
+
         .log-container {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 12px;
@@ -52,11 +70,30 @@ requireLogin();
             text-align: center;
         }
 
-        .log-level.INFO { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-        .log-level.SUCCESS { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .log-level.WARN { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-        .log-level.ERROR { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-        .log-level.HEARTBEAT { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .log-level.INFO {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .log-level.SUCCESS {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .log-level.WARN {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .log-level.ERROR {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .log-level.HEARTBEAT {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+        }
 
         .log-message {
             color: #e5e7eb;
@@ -83,7 +120,8 @@ requireLogin();
             font-size: 0.85rem;
         }
 
-        .filter-btn:hover, .filter-btn.active {
+        .filter-btn:hover,
+        .filter-btn.active {
             background: rgba(59, 130, 246, 0.2);
             border-color: #3b82f6;
             color: #60a5fa;
@@ -111,8 +149,15 @@ requireLogin();
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         .empty-state {
@@ -164,7 +209,7 @@ requireLogin();
                     <button class="filter-btn" data-level="ERROR">Error</button>
                     <span class="log-count" id="log-count"></span>
                 </div>
-                
+
                 <div class="log-container" id="log-container">
                     <div class="empty-state">
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -182,7 +227,7 @@ requireLogin();
         async function fetchLogs() {
             const container = document.getElementById('log-container');
             const countEl = document.getElementById('log-count');
-            
+
             try {
                 const url = `api_marketing_ajax.php?action=get_bot_logs&level=${currentFilter}&limit=200`;
                 const response = await fetch(url);
@@ -266,4 +311,5 @@ requireLogin();
         startAutoRefresh();
     </script>
 </body>
+
 </html>

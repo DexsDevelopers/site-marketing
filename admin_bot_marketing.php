@@ -566,8 +566,8 @@ foreach ($msgEtapas as $k => $v) {
     <meta name="theme-color" content="#FF3333">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/images/whatsapp-1.jpg">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/124/124034.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1342,7 +1342,7 @@ endif; ?>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" name="ativo" <?=($mktCampanha['ativo'] ?? 0) ? 'checked' : ''
-                                        ?>>
+    ?>>
                                     <span class="toggle-slider"></span>
                                 </label>
                             </div>
@@ -1721,8 +1721,8 @@ endif; ?>
 
     <script>
         // ===== VARIÁVEIS GLOBAIS =====
-        let automations = <?= json_encode($automations) ?>;
-        let settings = <?= json_encode($settingsObj) ?>;
+        let automations = <?= json_encode($automations)?>;
+        let settings = <?= json_encode($settingsObj)?>;
         let grupos = [];
         const API_TOKEN = '<?= whatsappApiConfig()['token'] ?? ''?>';
 

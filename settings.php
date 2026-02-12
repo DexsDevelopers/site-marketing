@@ -17,7 +17,16 @@ if (!$campanha) {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/124/124034.png">
+
     <title>Marketing Hub | Configurações</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -48,7 +57,7 @@ if (!$campanha) {
                 <div class="panel-title"><i class="fas fa-robot"></i> Automação de Marketing</div>
 
                 <form id="settingsForm" onsubmit="saveSettings(event)">
-                    <div class="form-group"
+                    <div class="form-group settings-header-status"
                         style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--glass-border);">
                         <div>
                             <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.3rem;">Status da Automação
@@ -62,7 +71,8 @@ if (!$campanha) {
                         </label>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    <div class="settings-grid"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
                         <div class="form-group">
                             <label><i class="fas fa-users"></i> Limite de Novos Membros/Dia</label>
                             <input type="number" name="membros_por_dia" class="form-control"
@@ -73,7 +83,7 @@ if (!$campanha) {
 
                         <div class="form-group">
                             <label><i class="fas fa-shield-alt"></i> Intervalo entre Mensagens (Segurança)</label>
-                            <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="interval-inputs" style="display: flex; align-items: center; gap: 1rem;">
                                 <input type="number" name="min_interval" class="form-control"
                                     value="<?= $campanha['intervalo_min_minutos']?>" placeholder="Min" min="1">
                                 <span style="color: var(--text-dim);">até</span>
