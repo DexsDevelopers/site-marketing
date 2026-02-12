@@ -38,7 +38,16 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/124/124034.png">
+
     <title>Marketing Hub | Leads</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -156,12 +165,12 @@ $leads = fetchData($pdo, "SELECT * FROM marketing_membros $where ORDER BY create
                             <select name="status" class="form-control" style="width: 150px; padding: 0.5rem 1rem;"
                                 onchange="this.form.submit()">
                                 <option value="">Todos Status</option>
-                                <option value="novo" <?=$status=='novo' ? 'selected' : ''?>>Novo</option>
-                                <option value="em_progresso" <?=$status=='em_progresso' ? 'selected' : ''?>>Em
+                                <option value="novo" <?= $status == 'novo' ? 'selected' : '' ?>>Novo</option>
+                                <option value="em_progresso" <?= $status == 'em_progresso' ? 'selected' : '' ?>>Em
                                     Progresso</option>
-                                <option value="concluido" <?=$status=='concluido' ? 'selected' : ''?>>Concluído
+                                <option value="concluido" <?= $status == 'concluido' ? 'selected' : '' ?>>Concluído
                                 </option>
-                                <option value="bloqueado" <?=$status=='bloqueado' ? 'selected' : ''?>>Bloqueado
+                                <option value="bloqueado" <?= $status == 'bloqueado' ? 'selected' : '' ?>>Bloqueado
                                 </option>
                             </select>
                             <button type="submit" class="btn-modern" style="padding: 0.5rem 1rem;"><i
