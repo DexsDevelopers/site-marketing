@@ -42,6 +42,25 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    white-space: nowrap;
+    /* Evita quebra de linha no nome */
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.sidebar-header .close-btn {
+    display: none;
+    /* Oculto no desktop */
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
 }
 
 .nav-links {
@@ -522,25 +541,25 @@ input:checked+.slider:before {
     gap: 2.5rem;
 }
 
-/* ========== MOBILE RESPONSIVENESS ========== */
 /* Mobile Toggle Button & Overlay */
 .mobile-menu-btn {
     display: none;
+    /* Oculto no desktop */
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 15px;
+    left: 15px;
     z-index: 2000;
     background: var(--primary);
     color: white;
     border: none;
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
     cursor: pointer;
     box-shadow: 0 4px 15px var(--primary-glow);
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .sidebar-overlay {
@@ -558,11 +577,6 @@ input:checked+.slider:before {
     transition: opacity 0.3s;
 }
 
-.sidebar-header-mobile {
-    display: none;
-}
-
-/* ========== MOBILE RESPONSIVENESS ========== */
 @media (max-width: 900px) {
     .mobile-menu-btn {
         display: flex;
@@ -578,111 +592,10 @@ input:checked+.slider:before {
     }
 
     .dashboard-container {
-        grid-template-columns: 1fr;
-        width: 100%;
-        /* Garante que não exceda viewport */
-        overflow-x: hidden;
-        /* Previne scroll horizontal na página */
-    }
-
-    /* Main Content */
-    .main-content {
-        padding: 1rem;
-        /* Reduz padding em mobile */
-        padding-top: 5rem;
-        width: 100%;
-        max-width: 100vw;
-        overflow-x: hidden;
-        /* Garante que conteúdo interno não vase */
-    }
-
-    /* Containers de Tabela Responsivos */
-    .table-responsive,
-    .table-container,
-    .panel {
-        width: 100%;
-        overflow-x: auto;
-        /* Permite scroll apenas no elemento */
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Ajuste para que tabelas não "estourem" */
-    table {
-        min-width: 100%;
-        /* Ocupa 100%, mas permite scroll se conteúdo for maior */
-        display: table;
-        /* Força display table para manter integridade das colunas */
-    }
-
-    /* Wrap de texto em células para evitar tabelas muito largas */
-    td,
-    th {
-        white-space: normal;
-        word-wrap: break-word;
-        max-width: 200px;
-        /* Limite para forçar quebra de linha */
-    }
-
-    /* Exceção para colunas de ação ou IDs pequenos */
-    td:first-child,
-    th:first-child,
-    td:last-child,
-    th:last-child {
-        white-space: nowrap;
-        width: auto;
-        max-width: none;
-    }
-
-    /* Ajuste de botões dentro de panels no mobile */
-    .panel .btn-modern {
-        width: 100%;
-        margin-bottom: 0.5rem;
-        justify-content: center;
-        /* Centraliza texto/ícone */
-        display: flex;
-        white-space: nowrap;
-        /* Evita quebra feia dentro do botão */
-    }
-
-    /* Container de botões flexível */
-    .panel>div[style*="display: flex"] {
-        flex-direction: column;
-        /* Empilha botões em mobile */
-        gap: 0.8rem !important;
-    }
-
-    .panel>div[style*="display: flex"]>a,
-    .panel>div[style*="display: flex"]>button {
+        display: block !important;
         width: 100% !important;
-        flex: none !important;
-    }
-
-    /* Ajuste de Grids para não estourar */
-    .stats-grid,
-    .admin-grid,
-    .grid {
-        grid-template-columns: 1fr !important;
-        width: 100%;
-        gap: 1rem;
-    }
-
-    .stat-card,
-    .card,
-    .panel {
-        width: 100%;
-        box-sizing: border-box;
-        /* Garante que padding não aumente largura */
-    }
-
-    /* Header ajustes */
-    .header h1 {
-        font-size: 1.5rem !important;
-        word-wrap: break-word;
-        /* Quebra palavras longas */
-    }
-
-    .header p {
-        font-size: 0.9rem;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
     }
 
     .sidebar {
@@ -694,52 +607,36 @@ input:checked+.slider:before {
         z-index: 1002;
         transform: translateX(-100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #0a0a0c;
+        padding: 0;
         border-right: 1px solid var(--glass-border);
         box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: stretch;
-        padding: 0;
-        background: #0a0a0c;
-        /* Ensure solid background */
     }
 
     .sidebar.active {
         transform: translateX(0);
     }
 
-    .sidebar-header-mobile {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .sidebar-header {
         padding: 1.5rem;
         border-bottom: 1px solid var(--glass-border);
-    }
-
-    .close-btn {
-        background: transparent;
-        border: none;
-        color: var(--text-dim);
-        font-size: 1.2rem;
-        cursor: pointer;
-        padding: 5px;
-    }
-
-    .logo-desktop {
-        display: none !important;
-    }
-
-    .logo {
         margin-bottom: 0;
     }
 
+    .sidebar-header .close-btn {
+        display: block;
+    }
+
     .nav-links {
-        flex-direction: column;
         padding: 1.5rem;
-        overflow-y: auto;
-        gap: 0.5rem;
         flex: 1;
+        overflow-y: auto;
+        flex-direction: column;
+        gap: 0.5rem;
     }
 
     .nav-item {
@@ -749,177 +646,19 @@ input:checked+.slider:before {
 
     .nav-item span {
         display: inline !important;
-        /* Show text again */
-    }
-
-
-
-    .header {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .header>div {
-        width: 100%;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
-
-    #qr-container {
-        width: 100% !important;
-        height: auto !important;
-        aspect-ratio: 1;
-    }
-
-    .table-modern {
-        display: block;
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    /* Ajuste específico para o funil */
-    .step-header-row {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 0.8rem;
-    }
-
-    .step-header-row>div {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .delay-badge {
-        width: 100%;
-        justify-content: center;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Settings Page Mobile */
-    .settings-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1.5rem !important;
-    }
-
-    .interval-inputs {
-        flex-direction: row;
-        /* Manter lado a lado mesmo no mobile se couber, ou ajustes */
-        gap: 0.5rem !important;
-    }
-
-    .interval-inputs .form-control {
-        width: 100%;
-        /* Divide espaço igualmente */
-        padding: 0.8rem;
-        /* Padding confortável */
-        text-align: center;
-    }
-
-    .settings-header-status {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 1rem;
-    }
-
-    .settings-header-status label {
-        align-self: flex-end;
-        margin-top: -3rem;
-    }
-
-    /* FIX FUNNEL MOBILE OVERFLOW */
-    .funnel-step {
-        width: 100% !important;
-        grid-template-columns: 1fr;
-        padding: 1rem;
-        box-sizing: border-box;
-    }
-
-    .step-content {
-        width: 100%;
-        overflow-x: hidden;
-    }
-
-    .step-header-row {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    /* FIX LEADS MOBILE OVERFLOW */
-    .table-responsive,
-    .panel,
-    .table-container {
-        width: 100%;
-        max-width: 100vw;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Ensure tables don't squeeze */
-    table {
-        min-width: 100%;
-        /* Permite crescer se necessário para scroll */
-    }
-
-    #leads-table td {
-        white-space: nowrap;
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .step-content textarea {
-        width: 100% !important;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .step-actions {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-    }
-
-    .msg-content-preview {
-        max-width: 150px;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        font-size: 0.85rem;
-    }
-
-    /* ===== REFATORAÇÃO GLOBAL MOBILE V2 (ESTABILIDADE TOTAL) ===== */
-
-    /* Layout Base - Container Principal */
-    .dashboard-container {
-        display: block !important;
-        /* Stack vertical */
-        width: 100% !important;
-        max-width: 100vw !important;
-        overflow-x: hidden !important;
-        padding-top: 0px;
     }
 
     .main-content {
         margin-left: 0 !important;
+        padding: 1rem !important;
+        padding-top: 5rem !important;
         width: 100% !important;
         max-width: 100vw !important;
-        padding: 1rem !important;
-        /* Padding seguro */
-        padding-top: 5rem !important;
-        /* Espaço para menu mobile */
+        overflow-x: hidden !important;
         box-sizing: border-box !important;
     }
 
-    /* Grids: FORÇAR 1 COLUNA */
+    /* Grids e Elementos */
     .stats-grid,
     .admin-grid,
     .grid,
@@ -932,7 +671,6 @@ input:checked+.slider:before {
         margin-bottom: 2rem;
     }
 
-    /* Cards e Painéis */
     .stat-card,
     .card,
     .panel,
@@ -945,7 +683,7 @@ input:checked+.slider:before {
         box-sizing: border-box !important;
     }
 
-    /* Tabelas: SCROLL HORIZONTAL OBRIGATÓRIO */
+    /* Tabelas Responsivas */
     .table-responsive,
     .table-container,
     .panel:has(table),
@@ -954,9 +692,7 @@ input:checked+.slider:before {
         display: block !important;
         width: 100% !important;
         max-width: 100vw !important;
-        /* Limite crítico */
         overflow-x: auto !important;
-        /* Permitir scroll no eixo X */
         -webkit-overflow-scrolling: touch;
         padding-bottom: 0.5rem;
     }
@@ -964,20 +700,16 @@ input:checked+.slider:before {
     table {
         width: 100% !important;
         min-width: 600px;
-        /* Forçar largura mínima */
         table-layout: auto !important;
     }
 
-    /* Ajuste de Células de Tabela */
     th,
     td {
         padding: 0.75rem !important;
         white-space: nowrap !important;
-        /* Linha única para manter alinhamento */
         font-size: 0.9rem;
     }
 
-    /* Textos longos em tabelas (ex: mensagens) */
     .msg-content-preview,
     td {
         max-width: 250px;
@@ -985,7 +717,6 @@ input:checked+.slider:before {
         text-overflow: ellipsis;
     }
 
-    /* Header Mobile */
     .header {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -1003,7 +734,7 @@ input:checked+.slider:before {
         word-wrap: break-word;
     }
 
-    /* Botões Mobile - Full width e empilhados */
+    /* Botões Mobile */
     .header button,
     .header .btn-modern,
     .header a.btn-modern,
@@ -1026,6 +757,21 @@ input:checked+.slider:before {
     .step-header-row {
         flex-wrap: wrap !important;
         gap: 0.5rem !important;
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .step-header-row>div {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .delay-badge {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.5rem;
     }
 
     .step-content textarea {
@@ -1033,6 +779,13 @@ input:checked+.slider:before {
         min-height: 100px;
         max-width: 100% !important;
         box-sizing: border-box !important;
+    }
+
+    .step-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
     }
 
     /* Leads - Importação */
@@ -1044,22 +797,39 @@ input:checked+.slider:before {
     /* Configurações */
     .interval-inputs {
         flex-direction: column !important;
-        /* Empilha inputs de intervalo */
+        gap: 0.5rem !important;
     }
 
     .interval-inputs .form-control {
         width: 100% !important;
         text-align: center;
+        padding: 0.8rem;
+    }
+
+    .settings-header-status {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+
+    .settings-header-status label {
+        align-self: flex-end;
+        margin-top: -3rem;
+    }
+
+    #qr-container {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 1;
     }
 }
 
 /* GLOBAL DESKTOP FIXES */
 @media (min-width: 901px) {
-    .sidebar-header-mobile {
-        display: none !important;
-    }
 
-    .logo-desktop {
-        display: flex !important;
+    .mobile-menu-btn,
+    .close-btn,
+    .sidebar-overlay {
+        display: none !important;
     }
 }

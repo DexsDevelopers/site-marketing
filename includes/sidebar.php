@@ -7,7 +7,7 @@
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="admin-sidebar">
-    <div class="sidebar-header-mobile">
+    <div class="sidebar-header">
         <div class="logo">
             <i class="fab fa-whatsapp"></i>
             MARKETING HUB
@@ -15,12 +15,6 @@
         <button class="close-btn" onclick="toggleSidebar()">
             <i class="fas fa-times"></i>
         </button>
-    </div>
-
-    <!-- Logo Desktop -->
-    <div class="logo logo-desktop">
-        <i class="fab fa-whatsapp"></i>
-        MARKETING HUB
     </div>
 
     <nav>
