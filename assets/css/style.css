@@ -192,6 +192,10 @@ body {
     cursor: pointer;
     transition: all 0.3s;
     box-shadow: 0 4px 15px var(--primary-glow);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .btn-modern:hover {
@@ -509,4 +513,128 @@ input:checked+.slider:before {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
+}
+
+/* Grid Layout Class for Admin Dashboard */
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2.5rem;
+}
+
+/* ========== MOBILE RESPONSIVENESS ========== */
+@media (max-width: 900px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stack Sidebar as Header */
+    .sidebar {
+        flex-direction: row;
+        width: 100%;
+        padding: 1rem;
+        gap: 1rem;
+        border-right: none;
+        border-bottom: 1px solid var(--glass-border);
+        justify-content: space-between;
+        align-items: center;
+        overflow-x: hidden;
+    }
+
+    .sidebar .logo {
+        margin-bottom: 0;
+        font-size: 1.2rem;
+    }
+
+    .nav-links {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 0.2rem;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.2rem;
+        flex: 1;
+        justify-content: flex-end;
+    }
+
+    /* Hide text labels on mobile sidebar to save space, show only icons? 
+       Or make it scrollable. */
+    .nav-item {
+        padding: 0.6rem;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+    
+    .nav-item span {
+        display: none; /* Hide text on mobile */
+    }
+
+    .nav-item i {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    /* Main Content */
+    .main-content {
+        padding: 1.5rem;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .header > div {
+        width: 100%;
+        text-align: center;
+    }
+
+    .header h1 {
+        font-size: 1.8rem !important;
+    }
+
+    /* Fix buttons area in header */
+    .header > div:last-child {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .header .btn-modern, .header .panel {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Admin Grid Layout */
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* QR Code Container Mobile */
+    #qr-container {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 1;
+    }
+    
+    /* Tables Responsive */
+    .table-modern {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Funnel Steps */
+    .funnel-step {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .step-number {
+        margin-bottom: 0.5rem;
+    }
 }

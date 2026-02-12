@@ -571,7 +571,6 @@ foreach ($msgEtapas as $k => $v) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/admin-mobile.css">
     <style>
         :root {
             --primary: #FF3333;
@@ -1343,7 +1342,7 @@ endif; ?>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" name="ativo" <?=($mktCampanha['ativo'] ?? 0) ? 'checked' : ''
-    ?>>
+                                        ?>>
                                     <span class="toggle-slider"></span>
                                 </label>
                             </div>
@@ -1722,8 +1721,8 @@ endif; ?>
 
     <script>
         // ===== VARIÁVEIS GLOBAIS =====
-        let automations = <?= json_encode($automations)?>;
-        let settings = <?= json_encode($settingsObj)?>;
+        let automations = <?= json_encode($automations) ?>;
+        let settings = <?= json_encode($settingsObj) ?>;
         let grupos = [];
         const API_TOKEN = '<?= whatsappApiConfig()['token'] ?? ''?>';
 

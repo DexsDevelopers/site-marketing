@@ -42,159 +42,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #10b981;
-            --bg: #050505;
-            --surface: #0f0f12;
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #ffffff;
-            --text-dim: #94a3b8;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        surface: '#0f0f12',
+                        'bg-dark': '#050505',
+                        'text-dim': '#94a3b8',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-bg-dark text-white font-sans min-h-screen flex items-center justify-center p-6;
+            }
         }
-
-        body {
-            background: var(--bg);
-            color: #fff;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 1.5rem;
-        }
-
-        .card {
-            background: var(--surface);
-            padding: 3rem;
-            border-radius: 32px;
-            border: 1px solid var(--border);
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 450px;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin-bottom: 2rem;
-        }
-
-        .logo span {
-            color: var(--primary);
-        }
-
-        .input-group {
-            text-align: left;
-            margin-bottom: 1.5rem;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-dim);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            padding: 1.2rem;
-            border-radius: 16px;
-            color: #fff;
-            transition: 0.3s;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary);
-            outline: none;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1.2rem;
-            background: var(--primary);
-            border: none;
-            border-radius: 16px;
-            color: #000;
-            font-weight: 800;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 1rem;
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
-        }
-
-        .msg {
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .success {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
         }
     </style>
 </head>
 
 <body>
-    <div class="card">
-        <div class="logo">WA <span>MONEY</span></div>
-        <h2 style="margin-bottom: 0.5rem; font-family: 'Outfit';">Crie sua conta</h2>
-        <p style="color: var(--text-dim); margin-bottom: 2.5rem;">Garanta sua vaga na rede de monitoramento.</p>
+    <div class="mesh-bg"></div>
+
+    <div
+        class="w-full max-w-[480px] bg-surface p-10 lg:p-12 rounded-[40px] border border-white/5 shadow-2xl relative z-10 text-center my-8">
+        <div class="font-outfit text-3xl font-extrabold mb-8 flex justify-center items-center gap-2">
+            <i class="fab fa-whatsapp text-primary"></i>
+            WA <span class="text-primary">MONEY</span>
+        </div>
+
+        <h2 class="font-outfit text-2xl font-bold mb-2">Crie sua conta</h2>
+        <p class="text-text-dim text-sm mb-10">Garanta sua vaga na maior rede de monitoramento do Brasil.</p>
 
         <?php if ($error): ?>
-        <div class="msg error">
+        <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm font-bold mb-8">
+            <i class="fas fa-exclamation-circle mr-2"></i>
             <?= $error?>
         </div>
         <?php
 endif; ?>
+
         <?php if ($success): ?>
-        <div class="msg success">
+        <div class="bg-primary/10 border border-primary/20 text-primary p-4 rounded-xl text-sm font-bold mb-8">
+            <i class="fas fa-check-circle mr-2"></i>
             <?= $success?>
         </div>
         <?php
 endif; ?>
 
-        <form method="POST">
-            <div class="input-group">
-                <label>Como quer ser chamado?</label>
-                <input type="text" name="username" class="form-control" placeholder="Seu nome de usuário" required>
+        <form method="POST" class="space-y-6">
+            <div class="text-left">
+                <label class="block text-xs font-bold uppercase tracking-widest text-text-dim mb-2 ml-1">Como quer ser
+                    chamado?</label>
+                <input type="text" name="username"
+                    class="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all placeholder:text-white/20"
+                    placeholder="Seu nome de usuário" required>
             </div>
-            <div class="input-group">
-                <label>Crie uma senha segura</label>
-                <input type="password" name="password" class="form-control" placeholder="Sua senha" required>
+
+            <div class="text-left">
+                <label class="block text-xs font-bold uppercase tracking-widest text-text-dim mb-2 ml-1">Crie uma senha
+                    segura</label>
+                <input type="password" name="password"
+                    class="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all placeholder:text-white/20"
+                    placeholder="Sua senha" required>
             </div>
-            <button type="submit" class="btn">ATIVAR MINHA CONTA</button>
+
+            <div class="bg-primary/5 border border-primary/10 p-5 rounded-2xl text-left space-y-3 mb-4">
+                <div class="flex items-center gap-3 text-xs text-primary font-bold">
+                    <i class="fas fa-shield-alt"></i> SEGURANÇA GARANTIDA
+                </div>
+                <p class="text-[11px] text-text-dim leading-relaxed">
+                    Seus dados são criptografados e nossa tecnologia Sandbox protege 100% da sua privacidade pessoal.
+                </p>
+            </div>
+
+            <button type="submit"
+                class="w-full bg-primary text-black font-extrabold py-5 rounded-2xl transition-all duration-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-1 active:scale-95 shadow-xl">
+                ATIVAR MINHA CONTA AGORA
+            </button>
         </form>
 
-        <p style="margin-top: 2rem; color: var(--text-dim); font-size: 0.9rem;">
-            Já participa? <a href="entrar.php"
-                style="color: var(--primary); text-decoration: none; font-weight: 700;">Fazer Login</a>
+        <p class="mt-8 text-sm text-text-dim">
+            Já participa?
+            <a href="entrar.php" class="text-primary font-bold hover:underline transition-all">Fazer Login</a>
         </p>
     </div>
 </body>

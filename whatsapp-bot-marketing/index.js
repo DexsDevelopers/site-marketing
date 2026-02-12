@@ -210,6 +210,13 @@ async function processGlobalMarketing() {
       try {
         const res = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`);
         if (res.data?.success && res.data.tasks?.length > 0) {
+          // Warmup check: 5 minutos
+          const WARMUP_MS = 5 * 60 * 1000;
+          if (Date.now() - inst.uptimeStart < WARMUP_MS) {
+            addLog(inst.sessionId, 'WARN', `Aguardando aquecimento (faltam ${Math.ceil((WARMUP_MS - (Date.now() - inst.uptimeStart)) / 1000)}s)...`);
+            continue;
+          }
+
           addLog(inst.sessionId, 'INFO', `Processando ${res.data.tasks.length} tarefas nesta instância.`);
           for (const task of res.data.tasks) {
             const result = await sendWithInstance(inst, task);
@@ -219,7 +226,7 @@ async function processGlobalMarketing() {
               success: result.success,
               reason: result.reason
             });
-            await new Promise(r => setTimeout(r, 10000)); // Delay entre disparos
+            await new Promise(r => setTimeout(r, 800)); // Delay menor para atingir 50 logs/min (aprox 1.2s total por msg)
           }
         }
       } catch (err) {
@@ -244,7 +251,7 @@ async function sendWithInstance(inst, task) {
 
     // Simular digitação
     await inst.sock.sendPresenceUpdate('composing', jid);
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 200));
     const sent = await inst.sock.sendMessage(jid, msgContent);
 
     if (sent) {

@@ -496,17 +496,24 @@ try {
                 break;
             }
 
-            executeQuery($pdo, "DELETE FROM marketing_mensagens WHERE id = ?", [$id]);
+            // Pegar campanha_id para reordenar apenas o funil afetado
+            $msgToDelete = fetchOne($pdo, "SELECT campanha_id FROM marketing_mensagens WHERE id = ?", [$id]);
+            if ($msgToDelete) {
+                $campanhaId = $msgToDelete['campanha_id'];
+                executeQuery($pdo, "DELETE FROM marketing_mensagens WHERE id = ?", [$id]);
 
-            // Reordenar após exclusão
-            $msgs = fetchData($pdo, "SELECT id FROM marketing_mensagens ORDER BY ordem ASC");
-            $i = 1;
-            foreach ($msgs as $msg) {
-                executeQuery($pdo, "UPDATE marketing_mensagens SET ordem = ? WHERE id = ?", [$i, $msg['id']]);
-                $i++;
+                // Reordenar após exclusão (apenas desta campanha)
+                $msgs = fetchData($pdo, "SELECT id FROM marketing_mensagens WHERE campanha_id = ? ORDER BY ordem ASC, id ASC", [$campanhaId]);
+                $i = 1;
+                foreach ($msgs as $msg) {
+                    executeQuery($pdo, "UPDATE marketing_mensagens SET ordem = ? WHERE id = ?", [$i, $msg['id']]);
+                    $i++;
+                }
+                $response = ['success' => true, 'message' => 'Passo excluído e funil reordenado!'];
             }
-
-            $response = ['success' => true, 'message' => 'Passo excluído com sucesso!'];
+            else {
+                $response = ['success' => false, 'message' => 'Passo não encontrado'];
+            }
             break;
 
         case 'save_campaign_settings':

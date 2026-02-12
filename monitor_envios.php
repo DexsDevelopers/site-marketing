@@ -208,6 +208,54 @@ requireLogin();
             font-size: 12px;
             color: #6b7280;
         }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .table-container {
+                padding: 10px;
+            }
+
+            th,
+            td {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .status-badge {
+                padding: 2px 8px;
+                font-size: 10px;
+            }
+
+            .btn-back {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 

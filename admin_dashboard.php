@@ -70,8 +70,7 @@ requireLogin();
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 380px; gap: 2.5rem;" class="animate-fade-in"
-                style="animation-delay: 0.2s;">
+            <div class="admin-grid animate-fade-in" style="animation-delay: 0.2s;">
                 <!-- Main Controls -->
                 <section>
                     <div class="panel">

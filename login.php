@@ -6,7 +6,7 @@ require_once 'includes/auth_helper.php';
 
 // Se já estiver logado, redireciona
 if (isLoggedIn()) {
-    header('Location: index.php');
+    header('Location: admin_dashboard.php');
     exit;
 }
 
@@ -19,12 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Login hardcoded simples (RESTORED FOR STABILITY)
     $username_correto = 'admin';
     $senha_correta = 'Lucastav8012@';
-    
+
     if ($username === $username_correto && $password === $senha_correta) {
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['admin_username'] = $username;
         $_SESSION['login_time'] = time();
-        header('Location: index.php');
+        header('Location: admin_dashboard.php');
         exit;
     }
     else {

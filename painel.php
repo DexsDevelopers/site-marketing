@@ -95,12 +95,22 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
     <div class="mesh-bg"></div>
 
     <div class="flex min-h-screen">
+        <!-- Mobile Overlay -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()"
+            class="fixed inset-0 bg-black/80 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+
         <!-- Sidebar -->
-        <aside
-            class="w-[280px] bg-surface border-r border-white/5 p-8 flex flex-col fixed h-screen z-50 hidden lg:flex">
-            <div class="font-outfit text-2xl font-extrabold mb-12 flex items-center gap-3">
-                <i class="fab fa-whatsapp text-primary"></i>
-                <span>WA <span class="text-primary">MONEY</span></span>
+        <aside id="sidebar"
+            class="w-[280px] bg-surface border-r border-white/5 p-8 flex flex-col fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:flex">
+            <div class="font-outfit text-2xl font-extrabold mb-12 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fab fa-whatsapp text-primary"></i>
+                    <span>WA <span class="text-primary">MONEY</span></span>
+                </div>
+                <!-- Close Button Mobile -->
+                <button onclick="toggleSidebar()" class="lg:hidden text-text-dim hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
 
             <nav class="flex-1 space-y-2">
@@ -121,16 +131,25 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         </aside>
 
         <!-- Main -->
-        <main class="flex-1 lg:ml-[280px] p-6 lg:p-12">
+        <main class="flex-1 lg:ml-[280px] p-6 lg:p-12 w-full">
             <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                <div>
-                    <h1 class="text-3xl font-outfit font-extrabold">Bem-vindo, <span class="text-primary">
-                            <?= htmlspecialchars($username)?>
-                        </span></h1>
-                    <p class="text-text-dim mt-1">Sua conta está gerando lucro passivo agora.</p>
+                <!-- Mobile Header Area -->
+                <div class="flex items-center justify-between w-full md:w-auto gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-white hover:bg-white/10 rounded-lg">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-outfit font-extrabold">Bem-vindo, <span
+                                class="text-primary">
+                                <?= htmlspecialchars($username)?>
+                            </span></h1>
+                        <p class="text-text-dim mt-1 text-sm md:text-base">Sua conta está gerando lucro passivo.</p>
+                    </div>
                 </div>
 
-                <div class="bg-surface border border-white/10 px-6 py-2.5 rounded-full flex items-center gap-3">
+                <div
+                    class="bg-surface border border-white/10 px-6 py-2.5 rounded-full flex items-center gap-3 self-start md:self-center">
                     <div id="global-status-dot" class="w-2.5 h-2.5 rounded-full bg-zinc-600"></div>
                     <span id="global-status-text" class="text-sm font-bold tracking-wide">VERIFICANDO...</span>
                 </div>
@@ -196,7 +215,8 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                                     class="w-8 h-8 rounded-lg bg-primary text-black flex items-center justify-center font-bold flex-shrink-0">
                                     1</div>
                                 <p class="text-sm text-text-dim leading-relaxed">Digite seu número acima e clique em
-                                    <b>"Gerar Código"</b>.</p>
+                                    <b>"Gerar Código"</b>.
+                                </p>
                             </div>
                             <div class="flex gap-4">
                                 <div
@@ -406,6 +426,21 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 }
             } catch (e) {
                 Swal.fire('Erro', 'Falha ao solicitar saque', 'error');
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Open
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                // Close
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
             }
         }
 

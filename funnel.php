@@ -377,8 +377,7 @@ $mensagens = fetchData($pdo, "SELECT * FROM marketing_mensagens WHERE campanha_i
                 try {
                     const r = await fetch(API_URL, { method: 'POST', body: fd }).then(j => j.json());
                     if (r.success) {
-                        document.getElementById('step-' + id).remove();
-                        if (!document.querySelector('.funnel-step')) location.reload();
+                        location.reload();
                     } else Swal.fire('Erro', r.message, 'error');
                 } catch(e) { Swal.fire('Erro', 'Falha', 'error'); } 
                 finally { hideLoading(); }

@@ -26,248 +26,128 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        :root {
-            --primary: #10b981;
-            --bg: #030305;
-            --surface: #0a0a0c;
-            --card: #111115;
-            --border: rgba(255, 255, 255, 0.06);
-            --text: #ffffff;
-            --text-dim: #94a3b8;
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        surface: '#0a0a0c',
+                        card: '#111115',
+                        'bg-dark': '#030305',
+                        'text-dim': '#94a3b8',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-bg-dark text-white font-sans min-h-screen overflow-x-hidden;
+            }
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @layer components {
+            .nav-link {
+                @apply flex items-center gap-3 px-4 py-3 rounded-xl text-text-dim transition-all duration-300 font-medium hover:bg-white/5 hover:text-white;
+            }
+            .nav-link.active {
+                @apply bg-primary/10 text-primary;
+            }
+            .card-premium {
+                @apply bg-card border border-white/5 rounded-[24px] p-8 shadow-2xl;
+            }
+            .status-pill {
+                @apply px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider;
+            }
         }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            min-height: 100vh;
-        }
-
-        .dashboard {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* --- Sidebar --- */
-        .sidebar {
-            width: 280px;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
+        .mesh-bg {
             position: fixed;
-            height: 100vh;
-            z-index: 100;
-        }
-
-        .logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo span {
-            color: var(--primary);
-        }
-
-        .nav-menu {
-            list-style: none;
-            flex: 1;
-        }
-
-        .nav-item {
-            margin-bottom: 0.5rem;
-        }
-
-        .nav-link {
-            display: flex;
-            color: var(--text-dim);
-            text-decoration: none;
-            font-weight: 500;
-            align-items: center;
-            gap: 12px;
-            padding: 1rem;
-            border-radius: 12px;
-            transition: 0.3s;
-        }
-
-        .nav-link.active {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--primary);
-        }
-
-        .nav-link:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.03);
-            color: #fff;
-        }
-
-        /* --- Main --- */
-        .main {
-            flex: 1;
-            margin-left: 280px;
-            padding: 2rem 3rem;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3rem;
-        }
-
-        .card {
-            background: var(--card);
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            padding: 2rem;
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
+            top: 0;
+            left: 0;
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        th {
-            text-align: left;
-            color: var(--text-dim);
-            font-size: 0.85rem;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-        }
-
-        td {
-            padding: 1.2rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.95rem;
-        }
-
-        .status-pill {
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .status-pendente {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-        }
-
-        .status-concluido {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--primary);
-        }
-
-        .status-erro {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-        }
-
-        /* --- Mobile --- */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 80px;
-                padding: 1.5rem 0.5rem;
-                align-items: center;
-            }
-
-            .logo span,
-            .nav-link span {
-                display: none;
-            }
-
-            .main {
-                margin-left: 80px;
-                padding: 1.5rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .sidebar {
-                display: none;
-            }
-
-            .main {
-                margin-left: 0;
-            }
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
         }
     </style>
 </head>
 
 <body>
-    <div class="dashboard">
-        <aside class="sidebar">
-            <div class="logo">
-                <i class="fab fa-whatsapp"></i>
-                <span>WA <span>MONEY</span></span>
+    <div class="mesh-bg"></div>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside
+            class="w-[280px] bg-surface border-r border-white/5 p-8 flex flex-col fixed h-screen z-50 hidden lg:flex">
+            <div class="font-outfit text-2xl font-extrabold mb-12 flex items-center gap-3">
+                <i class="fab fa-whatsapp text-primary"></i>
+                <span>WA <span class="text-primary">MONEY</span></span>
             </div>
 
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="painel.php" class="nav-link">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="extrato.php" class="nav-link active">
-                        <i class="fas fa-history"></i>
-                        <span>Extrato</span>
-                    </a>
-                </li>
-            </ul>
+            <nav class="flex-1 space-y-2">
+                <a href="painel.php" class="nav-link">
+                    <i class="fas fa-th-large w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="extrato.php" class="nav-link active">
+                    <i class="fas fa-history w-5"></i>
+                    <span>Extrato</span>
+                </a>
+            </nav>
 
-            <a href="logout.php" class="nav-link" style="margin-top: auto;">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Sair</span>
+            <a href="logout.php" class="nav-link text-red-400 hover:bg-red-500/10 hover:text-red-400 mt-auto">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span>Sair da Conta</span>
             </a>
         </aside>
 
-        <main class="main">
-            <header>
-                <div>
-                    <h1>Seu Histórico</h1>
-                    <p style="color: var(--text-dim);">Acompanhe seus saques e rendimentos.</p>
-                </div>
+        <!-- Main -->
+        <main class="flex-1 lg:ml-[280px] p-6 lg:p-12">
+            <header class="mb-12">
+                <h1 class="text-3xl font-outfit font-extrabold">Seu <span class="text-primary">Histórico</span></h1>
+                <p class="text-text-dim mt-1">Acompanhe todos os seus saques e rendimentos.</p>
             </header>
 
-            <div class="card">
-                <h2 style="margin-bottom: 2rem; font-family: 'Outfit';">Extrato de Saques</h2>
+            <div class="card-premium overflow-hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="font-outfit text-xl font-bold">Extrato de Pagamentos</h2>
+                    <button onclick="loadExtrato()"
+                        class="text-primary text-sm font-bold hover:underline transition-all">
+                        <i class="fas fa-sync-alt mr-1"></i> Atualizar
+                    </button>
+                </div>
 
-                <div class="table-container">
-                    <table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Chave PIX</th>
-                                <th>Valor</th>
-                                <th>Status</th>
+                            <tr class="border-b border-white/5">
+                                <th class="pb-4 pt-2 font-bold uppercase tracking-widest text-[10px] text-text-dim">Data
+                                    & Hora</th>
+                                <th class="pb-4 pt-2 font-bold uppercase tracking-widest text-[10px] text-text-dim">
+                                    Chave PIX</th>
+                                <th class="pb-4 pt-2 font-bold uppercase tracking-widest text-[10px] text-text-dim">
+                                    Valor</th>
+                                <th class="pb-4 pt-2 font-bold uppercase tracking-widest text-[10px] text-text-dim">
+                                    Status</th>
                             </tr>
                         </thead>
-                        <tbody id="extrato-table">
+                        <tbody id="extrato-table" class="divide-y divide-white/[0.02]">
                             <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 4rem;">
-                                    <i class="fas fa-spinner fa-spin"></i> Carregando seu extrato...
+                                <td colspan="4" class="py-20 text-center text-text-dim">
+                                    <i class="fas fa-circle-notch fa-spin text-2xl text-primary mb-4 block mx-auto"></i>
+                                    Sincronizando transações...
                                 </td>
                             </tr>
                         </tbody>
@@ -285,23 +165,47 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
                 const table = document.getElementById('extrato-table');
 
                 if (d.success && d.extrato.length > 0) {
-                    table.innerHTML = d.extrato.map(item => `
-                        <tr>
-                            <td>${new Date(item.created_at).toLocaleDateString('pt-BR')} ${new Date(item.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                            <td><code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${item.pix_chave}</code></td>
-                            <td style="font-weight: 700; color: #fff;">R$ ${parseFloat(item.valor).toFixed(2).replace('.', ',')}</td>
-                            <td>
-                                <span class="status-pill status-${item.status}">
-                                    ${item.status === 'pendente' ? 'Pendente' : (item.status === 'concluido' ? 'Concluído' : 'Erro')}
-                                </span>
-                            </td>
-                        </tr>
-                    `).join('');
+                    table.innerHTML = d.extrato.map(item => {
+                        const date = new Date(item.created_at);
+                        const statusColors = {
+                            pendente: 'bg-amber-500/10 text-amber-500',
+                            concluido: 'bg-primary/10 text-primary',
+                            erro: 'bg-red-500/10 text-red-500'
+                        };
+                        const statusLabels = {
+                            pendente: 'Pendente',
+                            concluido: 'Concluido',
+                            erro: 'Falha'
+                        };
+
+                        return `
+                            <tr class="hover:bg-white/[0.01] transition-all group">
+                                <td class="py-5">
+                                    <div class="text-sm font-medium">${date.toLocaleDateString('pt-BR')}</div>
+                                    <div class="text-[10px] text-text-dim">${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                                </td>
+                                <td class="py-5">
+                                    <span class="text-xs bg-black/40 border border-white/5 px-2 py-1 rounded-md text-white/70">${item.pix_chave}</span>
+                                </td>
+                                <td class="py-5">
+                                    <span class="text-sm font-bold text-white">R$ ${parseFloat(item.valor).toFixed(2).replace('.', ',')}</span>
+                                </td>
+                                <td class="py-5">
+                                    <span class="status-pill ${statusColors[item.status] || 'bg-zinc-500/10 text-zinc-500'}">
+                                        ${statusLabels[item.status] || item.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
                 } else {
                     table.innerHTML = `
                         <tr>
-                            <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 4rem;">
-                                Nenhuma transação encontrada.
+                            <td colspan="4" class="py-20 text-center text-text-dim">
+                                <div class="bg-white/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+                                    <i class="fas fa-folder-open opacity-20"></i>
+                                </div>
+                                Nenhuma transação encontrada na sua conta.
                             </td>
                         </tr>
                     `;
@@ -309,8 +213,9 @@ $username = $_SESSION['user_username'] ?? $_SESSION['admin_username'] ?? 'Usuár
             } catch (e) {
                 document.getElementById('extrato-table').innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; color: #ef4444; padding: 4rem;">
-                            Erro ao carregar dados.
+                        <td colspan="4" class="py-20 text-center text-red-400">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-4 block mx-auto"></i>
+                            Falha ao carregar o histórico de pagamentos.
                         </td>
                     </tr>
                 `;
