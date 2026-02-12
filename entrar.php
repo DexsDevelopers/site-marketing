@@ -17,6 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_role'] = $user['role'];
         $_SESSION['login_time'] = time();
 
+        if (isset($_POST['remember'])) {
+            require_once 'includes/auth_helper.php';
+            setRememberCookie($user['id'], $user['username'], $user['role']);
+        }
+
         header('Location: painel.php');
         exit;
     }
@@ -110,6 +115,12 @@ endif; ?>
                 <input type="password" name="password"
                     class="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all placeholder:text-white/20"
                     placeholder="Sua senha" required>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <input type="checkbox" name="remember" id="remember"
+                    class="w-5 h-5 accent-primary rounded cursor-pointer">
+                <label for="remember" class="text-sm text-text-dim cursor-pointer select-none">Lembrar de mim</label>
             </div>
 
             <button type="submit"

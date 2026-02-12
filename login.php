@@ -24,6 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['admin_username'] = $username;
         $_SESSION['login_time'] = time();
+
+        // Remember Me
+        if (isset($_POST['remember'])) {
+            setRememberCookie(0, $username, 'admin');
+        }
+
         header('Location: admin_dashboard.php');
         exit;
     }
@@ -154,6 +160,11 @@ endif; ?>
             <div class="input-group">
                 <label>Senha</label>
                 <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <div class="input-group" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" name="remember" id="remember"
+                    style="width: 20px; height: 20px; accent-color: var(--primary);">
+                <label for="remember" style="margin: 0; cursor: pointer;">Lembrar de mim</label>
             </div>
             <button type="submit" class="btn-login">Entrar no Sistema</button>
         </form>

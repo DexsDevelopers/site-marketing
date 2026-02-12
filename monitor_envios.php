@@ -24,11 +24,15 @@ requireLogin();
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
+            width: 100%;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            width: 100%;
+            padding-bottom: 20px;
         }
 
         .header {
@@ -43,6 +47,7 @@ requireLogin();
             color: #667eea;
             font-size: 28px;
             margin-bottom: 10px;
+            word-wrap: break-word;
         }
 
         .header p {
@@ -96,11 +101,15 @@ requireLogin();
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
             width: 100%;
+            min-width: 800px;
+            /* Garante scroll se necessário */
             border-collapse: collapse;
         }
 
@@ -223,8 +232,7 @@ requireLogin();
             }
 
             .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
+                grid-template-columns: 1fr;
             }
 
             .stat-card {
@@ -236,13 +244,14 @@ requireLogin();
             }
 
             .table-container {
-                padding: 10px;
+                padding: 15px;
             }
 
             th,
             td {
-                padding: 8px;
+                padding: 10px;
                 font-size: 12px;
+                white-space: nowrap;
             }
 
             .status-badge {
@@ -253,7 +262,8 @@ requireLogin();
             .btn-back {
                 width: 100%;
                 text-align: center;
-                margin-bottom: 10px;
+                margin-bottom: 15px;
+                box-sizing: border-box;
             }
         }
     </style>
