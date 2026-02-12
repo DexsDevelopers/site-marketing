@@ -50,13 +50,7 @@
                     <i class="fas fa-hand-holding-usd"></i> <span>Conecte e Ganhe</span>
                 </a>
             </li>
-            <li>
-                <a href="admin_bot_marketing.php"
-                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'admin_bot_marketing.php' ? 'active' : ''?>"
-                    style="color: #FF3333;">
-                    <i class="fas fa-robot"></i> <span>Marketing Bot</span>
-                </a>
-            </li>
+
             <li>
                 <a href="settings.php"
                     class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''?>">
