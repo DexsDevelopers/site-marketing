@@ -831,9 +831,61 @@ input:checked+.slider:before {
 
     .settings-header-status label {
         align-self: flex-end;
-        /* Switch no canto direito */
         margin-top: -3rem;
-        /* Truque para alinhar com título se desejar, ou apenas deixar fluir */
+    }
+
+    /* FIX FUNNEL MOBILE OVERFLOW */
+    .funnel-step {
+        width: 100% !important;
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+
+    .step-content {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .step-header-row {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* FIX LEADS MOBILE OVERFLOW */
+    .table-responsive,
+    .panel,
+    .table-container {
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Ensure tables don't squeeze */
+    table {
+        min-width: 100%;
+        /* Permite crescer se necessário para scroll */
+    }
+
+    #leads-table td {
+        white-space: nowrap;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .step-content textarea {
+        width: 100% !important;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .step-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
     }
 
     .msg-content-preview {
