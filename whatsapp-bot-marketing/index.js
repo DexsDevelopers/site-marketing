@@ -204,7 +204,7 @@ async function processGlobalMarketing() {
     // Vamos processar em lotes para cada instância
     for (const inst of activeInstances) {
       try {
-        const res = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`);
+        const res = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`, { timeout: 15000 });
         if (res.data?.success && res.data.tasks?.length > 0) {
 
           addLog(inst.sessionId, 'INFO', `Processando ${res.data.tasks.length} tarefas nesta instância.`);

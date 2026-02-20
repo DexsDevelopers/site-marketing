@@ -146,8 +146,9 @@ try {
                 $msg = fetchOne($pdo, "
                     SELECT conteudo, tipo, ordem, midia_url, tipo_midia 
                     FROM marketing_mensagens 
-                    WHERE campanha_id = 1 AND ordem = ?
-                ", [$lead['ultimo_passo_id'] + 1]);
+                    WHERE campanha_id = 1 AND ordem > ? AND ativo = 1
+                    ORDER BY ordem ASC LIMIT 1
+                ", [$lead['ultimo_passo_id']]);
 
                 if ($msg) {
                     $randomId = substr(md5(uniqid()), 0, 6);
@@ -159,6 +160,10 @@ try {
                         'media_url' => $msg['midia_url'],
                         'step_order' => (int)$msg['ordem']
                     ];
+                }
+                else {
+                    // Sem próximos passos a enviar = fluxo finalizado para este lead
+                    executeQuery($pdo, "UPDATE marketing_membros SET status = 'concluido' WHERE id = ?", [$lead['id']]);
                 }
             }
 
@@ -241,6 +246,13 @@ try {
     elseif ($action === 'clear_all_members') {
         executeQuery($pdo, "TRUNCATE TABLE marketing_membros");
         echo json_encode(['success' => true, 'message' => 'Todos os contatos foram removidos.']);
+        exit;
+    }
+
+    // AÇÃO 7: DEBUG MENSAGENS
+    elseif ($action === 'get_debug') {
+        $msgRows = fetchData($pdo, "SELECT * FROM marketing_mensagens");
+        echo json_encode(['success' => true, 'msgs' => $msgRows]);
         exit;
     }
 
