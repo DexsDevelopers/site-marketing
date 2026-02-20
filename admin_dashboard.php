@@ -105,11 +105,24 @@ requireLogin();
                 <!-- Sidebar Content -->
                 <aside>
                     <div class="panel">
-                        <div class="panel-title"><i class="fas fa-qrcode"></i> Conexão WhatsApp</div>
-                        <div id="qr-container" class="qr-placeholder" style="width: 100%; height: 280px;">
+                        <div class="panel-title" style="margin-bottom: 1rem;"><i class="fas fa-qrcode"></i> Conexão WhatsApp</div>
+                        
+                        <!-- Pareamento por Código -->
+                        <div id="pairing-section">
+                            <label style="display: block; font-size: 0.8rem; font-weight: bold; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase;">1. Conectar com Número (Seguro)</label>
+                            <input type="text" id="pairing_phone" placeholder="Ex: 5511999998888" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.8rem; color: white; margin-bottom: 0.5rem; outline: none;">
+                            <div id="pairing-code-box" style="display: none; font-size: 2rem; font-weight: 800; letter-spacing: 5px; color: var(--primary); text-align: center; margin: 10px 0; background: rgba(16,185,129,0.1); border-radius: 8px; padding: 10px; border: 1px solid rgba(16,185,129,0.2);"></div>
+                            <button id="btn-pair" onclick="generatePairingCode()" class="btn-modern" style="width: 100%; justify-content: center; margin-bottom: 1.5rem; background: rgba(255,255,255,0.05);">
+                                <i class="fas fa-key"></i> Gerar Código
+                            </button>
+                        </div>
+
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.8rem; font-weight: bold; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase; text-align: center;">Ou por QR Code</label>
+                        
+                        <div id="qr-container" class="qr-placeholder" style="width: 100%; min-height: 200px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
                             <div style="text-align: center;">
-                                <i class="fas fa-circle-notch fa-spin fa-2x"
-                                    style="color: var(--primary); margin-bottom: 1rem;"></i>
+                                <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary); margin-bottom: 1rem;"></i>
                                 <p style="font-size: 0.85rem; color: var(--text-dim);">Sincronizando com o robô...</p>
                             </div>
                         </div>
@@ -211,6 +224,50 @@ requireLogin();
             } catch (e) {
                 console.error('Erro ao carregar QR:', e);
             }
+        }
+
+        async function generatePairingCode() {
+            const phone = document.getElementById('pairing_phone').value.replace(/\D/g, '');
+            if (!phone || phone.length < 10) return alert('Digite um número válido com DDD (Ex: 5511999998888)');
+
+            const btn = document.getElementById('btn-pair');
+            const codeBox = document.getElementById('pairing-code-box');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+            codeBox.style.display = 'none';
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('phone', phone);
+
+                const response = await fetch('api_dashboard.php?action=generate_pairing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success && result.code) {
+                    codeBox.innerText = result.code;
+                    codeBox.style.display = 'block';
+                    Swal.fire({
+                        title: 'Código Gerado!',
+                        html: '<p style="margin-bottom: 20px">Insira o código no seu WhatsApp:</p><div style="font-size: 24px; font-weight: bold; color: #10b981; background: rgba(16,185,129,0.1); padding: 15px; border-radius: 10px">' + result.code + '</div><p style="margin-top:20px; font-size: 13px">Vá em Configurações > Aparelhos Conectados > Conectar com número de telefone</p>',
+                        icon: 'success',
+                        background: '#0a0a0c',
+                        color: '#fff',
+                        confirmButtonColor: '#10b981'
+                    });
+                } else {
+                    Swal.fire('Erro', result.message || 'Erro ao gerar código', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Erro', 'Falha na comunicação com a API', 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key"></i> Gerar Código';
         }
 
         async function updateStats() {

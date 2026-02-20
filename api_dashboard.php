@@ -45,72 +45,106 @@ try {
 
         case 'get_bot_status':
             $apiConfig = whatsappApiConfig();
-            $token = $apiConfig['token'];
             $baseUrl = $apiConfig['base_url'];
 
-            $ch = curl_init($baseUrl . '/status');
+            $ch = curl_init($baseUrl . '/instance/list');
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => ['x-api-token: ' . $token, 'ngrok-skip-browser-warning: true'],
                 CURLOPT_TIMEOUT => 5,
                 CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_FOLLOWLOCATION => true
+                CURLOPT_SSL_VERIFYHOST => false
             ]);
             $result = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            $statusData = ['online' => false, 'ready' => false];
-            if ($httpCode === 200 && $result) {
+            $statusData = ['online' => false, 'ready' => false, 'uptime' => 0, 'reconnects' => 0];
+            if ($result) {
                 $decoded = json_decode($result, true);
-                $statusData = [
-                    'online' => true,
-                    'ready' => $decoded['ready'] ?? false,
-                    'uptime' => $decoded['uptimeFormatted'] ?? 'N/A',
-                    'reconnects' => $decoded['reconnectAttempts'] ?? 0
-                ];
+                if (isset($decoded['instances'])) {
+                    foreach ($decoded['instances'] as $inst) {
+                        if ($inst['sessionId'] === 'admin_session') {
+                            $statusData['online'] = true;
+                            $statusData['ready'] = $inst['isReady'];
+                            $statusData['uptime'] = $inst['uptime'];
+                            break;
+                        }
+                    }
+                }
             }
-
             $response = ['success' => true, 'data' => $statusData];
             break;
 
         case 'get_qr':
             $apiConfig = whatsappApiConfig();
-            $token = $apiConfig['token'];
             $baseUrl = $apiConfig['base_url'];
 
-            $ch = curl_init($baseUrl . '/qr?format=json');
+            $ch = curl_init($baseUrl . '/instance/qr/admin_session');
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => [
-                    'x-api-token: ' . $token,
-                    'Accept: application/json',
-                    'ngrok-skip-browser-warning: true'
-                ],
                 CURLOPT_TIMEOUT => 5,
                 CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_FOLLOWLOCATION => true
+                CURLOPT_SSL_VERIFYHOST => false
             ]);
             $result = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
             if ($result) {
                 $decoded = json_decode($result, true);
-                if ($decoded && isset($decoded['qr'])) {
-                    $response = ['success' => true, 'qr' => $decoded['qr'], 'ready' => $decoded['ready'] ?? false];
-                }
-                elseif ($decoded && isset($decoded['ready']) && $decoded['ready']) {
-                    $response = ['success' => true, 'qr' => null, 'ready' => true, 'message' => 'Bot já está conectado'];
+                if ($decoded) {
+                    if (isset($decoded['status']) && $decoded['status'] === 'connected') {
+                        $response = ['success' => true, 'qr' => null, 'ready' => true, 'message' => 'Bot já está conectado'];
+                    }
+                    elseif (isset($decoded['qr'])) {
+                        $response = ['success' => true, 'qr' => $decoded['qr'], 'ready' => false];
+                    }
+                    else {
+                        $response = ['success' => false, 'message' => 'QR não disponível ainda'];
+                    }
                 }
                 else {
-                    $response = ['success' => false, 'message' => $decoded['message'] ?? 'QR não disponível'];
+                    $response = ['success' => false, 'message' => 'Resposta inválida do bot'];
                 }
             }
             else {
                 $response = ['success' => false, 'message' => 'Bot offline ou inacessível'];
+            }
+            break;
+
+        case 'generate_pairing':
+            $apiConfig = whatsappApiConfig();
+            $baseUrl = $apiConfig['base_url'];
+            $phone = $_POST['phone'] ?? '';
+
+            if (!$phone) {
+                $response = ['success' => false, 'message' => 'Telefone não informado'];
+                break;
+            }
+
+            $payload = json_encode(['sessionId' => 'admin_session', 'phone' => $phone]);
+            $ch = curl_init($baseUrl . '/instance/pairing-code');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                CURLOPT_TIMEOUT => 25,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false
+            ]);
+            $result = curl_exec($ch);
+            curl_close($ch);
+
+            if ($result) {
+                $decoded = json_decode($result, true);
+                if ($decoded && isset($decoded['code'])) {
+                    $response = ['success' => true, 'code' => $decoded['code']];
+                }
+                else {
+                    $response = ['success' => false, 'message' => $decoded['message'] ?? 'Erro desconhecido ao gerar código'];
+                }
+            }
+            else {
+                $response = ['success' => false, 'message' => 'Falha de conexão com o bot'];
             }
             break;
 
