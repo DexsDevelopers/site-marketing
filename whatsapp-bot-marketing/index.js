@@ -148,12 +148,20 @@ async function createInstance(sessionId, phoneForPairing = null) {
         addLog(sessionId, 'INFO', `Reconectando após pareamento (Code: 515)...`);
         instances.delete(sessionId);
         setTimeout(() => createInstance(sessionId), 1500);
+      } else if (errorCode === 440) {
+        // 440 = Conflict - Outra instância tentando conectar com a mesma credencial ao mesmo tempo (comum em setups PM2/Cluster ou resets rapidos)
+        addLog(sessionId, 'WARN', `Conflito de Sessão (440). Tentando limpar socket para reconectar seguro...`);
+        try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
+        instances.delete(sessionId);
+        setTimeout(() => createInstance(sessionId), 10000); // Demora um pouco mais pra dar tempo do WhatsApp liberar o login
       } else if (shouldReconnect) {
         addLog(sessionId, 'WARN', `Conexão fechada. Code: ${errorCode}, Msg: ${errorMsg}. Reconnect: true`);
+        try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
         instances.delete(sessionId);
         setTimeout(() => createInstance(sessionId), 5000);
       } else {
         addLog(sessionId, 'ERROR', 'Logout detectado. Removendo sessão.');
+        try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
         fs.rmSync(sessionPath, { recursive: true, force: true });
         instances.delete(sessionId);
         updateRemoteStatus(sessionId, 'desconectado');
