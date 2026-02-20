@@ -227,6 +227,11 @@ try {
             $response = ['success' => true, 'message' => 'Lead resetado para o início do funil!'];
             break;
 
+        case 'reset_concluidos':
+            executeQuery($pdo, "UPDATE marketing_membros SET status = 'novo', ultimo_passo_id = 0, data_proximo_envio = NULL WHERE status = 'concluido'");
+            $response = ['success' => true, 'message' => 'Todos os leads concluídos foram resetados e voltarão para a fila!'];
+            break;
+
         case 'get_funnel_steps':
             $activeC = fetchOne($pdo, "SELECT id FROM marketing_campanhas WHERE ativo = 1 ORDER BY id DESC LIMIT 1");
             $cId = $activeC ? $activeC['id'] : 1;
