@@ -12,6 +12,7 @@ import cors from 'cors';
 import pino from 'pino';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import os from 'os';
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ app.use(express.json());
 const PORT = Number(process.env.API_PORT || 3002);
 const API_TOKEN = process.env.WHATSAPP_API_TOKEN || 'lucastav8012';
 const MARKETING_SITE_URL = 'https://khaki-gull-213146.hostingersite.com';
-const AUTH_BASE_PATH = path.resolve('./auth_sessions');
+const AUTH_BASE_PATH = path.join(os.homedir(), '.whatsapp_marketing_sessions');
 
 if (!fs.existsSync(AUTH_BASE_PATH)) fs.mkdirSync(AUTH_BASE_PATH, { recursive: true });
 
