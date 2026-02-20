@@ -236,7 +236,9 @@ async function sendWithInstance(inst, task) {
     let msgContent = { text: task.message };
 
     if (task.media_url) {
-      const mediaUrl = task.media_url.startsWith('http') ? task.media_url : `${MARKETING_SITE_URL}/${task.media_url}`;
+      const baseURL = task.media_url.startsWith('http') ? '' : `${MARKETING_SITE_URL}/`;
+      const fullPath = baseURL + task.media_url;
+      const mediaUrl = encodeURI(fullPath);
       const type = task.message_type === 'video' ? 'video' : 'image';
       msgContent = { [type]: { url: mediaUrl }, caption: task.message };
     }
