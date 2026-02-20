@@ -82,11 +82,13 @@ async function createInstance(sessionId, phoneForPairing = null) {
       auth: state,
       logger: pino({ level: 'silent' }),
       version: latestVersion,
-      browser: ["Ubuntu", "Chrome", "114.0.5735.198"],
+      browser: Browsers.macOS('Desktop'),
       connectTimeoutMs: 60000,
       keepAliveIntervalMs: 30000,
       printQRInTerminal: false,
-      generateHighQualityLinkPreview: false
+      generateHighQualityLinkPreview: false,
+      markOnlineOnConnect: false,
+      syncFullHistory: false
     });
   } catch (err) {
     addLog(sessionId, 'ERROR', `Erro ao criar socket: ${err.message}`);
@@ -226,7 +228,9 @@ async function processGlobalMarketing() {
               success: result.success,
               reason: result.reason
             });
-            await new Promise(r => setTimeout(r, 800)); // Delay menor para atingir 50 logs/min (aprox 1.2s total por msg)
+            const randomDelay = Math.floor(Math.random() * (8000 - 3000 + 1)) + 3000;
+            addLog(inst.sessionId, 'INFO', `Aguardando ${Math.round(randomDelay / 1000)}s antes do próximo envio (Anti-ban)...`);
+            await new Promise(r => setTimeout(r, randomDelay)); // Delay randômico anti-ban (3s a 8s)
           }
         }
       } catch (err) {
@@ -249,9 +253,11 @@ async function sendWithInstance(inst, task) {
       msgContent = { [type]: { url: mediaUrl }, caption: task.message };
     }
 
-    // Simular digitação
-    await inst.sock.sendPresenceUpdate('composing', jid);
-    await new Promise(r => setTimeout(r, 200));
+    // Simular digitação realista (Anti-Ban)
+    const typingDuration = Math.floor(Math.random() * (4000 - 1500 + 1)) + 1500;
+    await inst.sock.sendPresenceUpdate(task.message_type === 'video' ? 'recording' : 'composing', jid);
+    await new Promise(r => setTimeout(r, typingDuration));
+    await inst.sock.sendPresenceUpdate('paused', jid);
     const sent = await inst.sock.sendMessage(jid, msgContent);
 
     if (sent) {
