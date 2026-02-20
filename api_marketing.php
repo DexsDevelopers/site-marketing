@@ -78,12 +78,13 @@ try {
         // Versão Simplificada e Segura do CRON
 
         // Verificar campanha ativa
-        $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE id = 1 AND ativo = 1");
+        $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE ativo = 1 ORDER BY id ASC LIMIT 1");
         if (!$campanha) {
             echo json_encode(['success' => true, 'tasks' => [], 'message' => 'Campanha inativa']);
             exit;
         }
 
+        $activeCId = $campanha['id'];
         $tasks = [];
         $limiteDiario = intval($campanha['membros_por_dia_grupo'] ?? 100);
 
@@ -146,9 +147,9 @@ try {
                 $msg = fetchOne($pdo, "
                     SELECT conteudo, tipo, ordem, midia_url, tipo_midia 
                     FROM marketing_mensagens 
-                    WHERE campanha_id = 1 AND ordem > ? AND ativo = 1
+                    WHERE campanha_id = ? AND ordem > ? AND ativo = 1
                     ORDER BY ordem ASC LIMIT 1
-                ", [$lead['ultimo_passo_id']]);
+                ", [$activeCId, $lead['ultimo_passo_id']]);
 
                 if ($msg) {
                     $randomId = substr(md5(uniqid()), 0, 6);
@@ -186,7 +187,10 @@ try {
 
         if ($success) {
             // Verificar se tem próximo passo
-            $nextMsg = fetchOne($pdo, "SELECT delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = 1 AND ordem > ? ORDER BY ordem ASC LIMIT 1", [$stepOrder]);
+            $activeC = fetchOne($pdo, "SELECT id FROM marketing_campanhas WHERE ativo = 1 ORDER BY id ASC LIMIT 1");
+            $cId = $activeC ? $activeC['id'] : 1;
+
+            $nextMsg = fetchOne($pdo, "SELECT delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = ? AND ordem > ? ORDER BY ordem ASC LIMIT 1", [$cId, $stepOrder]);
 
             if ($nextMsg) {
                 $delay = (int)$nextMsg['delay_apos_anterior_minutos'];

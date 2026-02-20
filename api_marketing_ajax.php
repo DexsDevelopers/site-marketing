@@ -228,7 +228,10 @@ try {
             break;
 
         case 'get_funnel_steps':
-            $steps = fetchData($pdo, "SELECT id, ordem, tipo, conteudo, delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = 1 ORDER BY ordem ASC");
+            $activeC = fetchOne($pdo, "SELECT id FROM marketing_campanhas WHERE ativo = 1 ORDER BY id DESC LIMIT 1");
+            $cId = $activeC ? $activeC['id'] : 1;
+
+            $steps = fetchData($pdo, "SELECT id, ordem, tipo, conteudo, delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = ? ORDER BY ordem ASC", [$cId]);
             $response = ['success' => true, 'data' => $steps];
             break;
 
@@ -245,11 +248,12 @@ try {
 
         case 'get_disparos_tasks':
             // 1. Carregar Campanha e Limites
-            $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE id = 1 AND ativo = 1");
+            $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE ativo = 1 ORDER BY id ASC LIMIT 1");
             if (!$campanha) {
                 $response = ['success' => false, 'message' => 'Campanha inativa ou não encontrada'];
                 break;
             }
+            $cId = $campanha['id'];
 
             $membrosPorDiaLimit = intval($campanha['membros_por_dia_grupo']);
 
@@ -290,13 +294,13 @@ try {
             $tasksSql = "
                 SELECT m.id, m.telefone, m.ultimo_passo_id, msg.conteudo, msg.tipo, msg.ordem, msg.midia_url, msg.tipo_midia
                 FROM marketing_membros m
-                JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem
+                JOIN marketing_mensagens msg ON (m.ultimo_passo_id + 1) = msg.ordem AND msg.campanha_id = ?
                 WHERE m.status = 'em_progresso' 
                 AND m.data_proximo_envio <= NOW()
                 ORDER BY msg.ordem ASC, m.data_proximo_envio ASC
                 LIMIT 50
             ";
-            $pendingTasks = fetchData($pdo, $tasksSql);
+            $pendingTasks = fetchData($pdo, $tasksSql, [$cId]);
 
             $tasks = [];
             foreach ($pendingTasks as $t) {
@@ -348,7 +352,10 @@ try {
 
             // 3. Processar Resultado (Mesma lógica do update_task da api_marketing.php)
             if ($result['success']) {
-                $nextMsg = fetchOne($pdo, "SELECT delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = 1 AND ordem > ? ORDER BY ordem ASC LIMIT 1", [$stepOrder]);
+                $activeC = fetchOne($pdo, "SELECT id FROM marketing_campanhas WHERE ativo = 1 ORDER BY id DESC LIMIT 1");
+                $cId = $activeC ? $activeC['id'] : 1;
+
+                $nextMsg = fetchOne($pdo, "SELECT delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = ? AND ordem > ? ORDER BY ordem ASC LIMIT 1", [$cId, $stepOrder]);
                 if ($nextMsg) {
                     $delay = $nextMsg['delay_apos_anterior_minutos'];
                     $nextTime = date('Y-m-d H:i:s', strtotime("+$delay minutes"));
@@ -401,7 +408,16 @@ try {
             $delay = (int)($_POST['delay'] ?? 0);
             $tipo = $_POST['tipo'] ?? 'texto';
             $ordem = (int)($_POST['ordem'] ?? 0);
-            $campanhaId = (int)($_POST['campanha_id'] ?? 1);
+
+            // Puxar campnaha ativa padrão se nao via POST
+            if (isset($_POST['campanha_id'])) {
+                $campanhaId = (int)$_POST['campanha_id'];
+            }
+            else {
+                $ativoC = fetchOne($pdo, "SELECT id FROM marketing_campanhas WHERE ativo = 1 LIMIT 1");
+                $campanhaId = $ativoC ? $ativoC['id'] : 1;
+            }
+
             $ativo = (int)($_POST['ativo'] ?? 1);
 
             if (empty($conteudo) && empty($_FILES['midia']['name'])) {
@@ -522,7 +538,9 @@ try {
             $minInterval = (int)($_POST['min_interval'] ?? 30);
             $maxInterval = (int)($_POST['max_interval'] ?? 120);
 
-            executeQuery($pdo, "UPDATE marketing_campanhas SET ativo = ?, membros_por_dia_grupo = ?, intervalo_min_minutos = ?, intervalo_max_minutos = ? WHERE id = 1", [$ativo, $membrosDia, $minInterval, $maxInterval]);
+            // Atualiza TODAS ativas para testar qual (geralmente só tem 1 ativa, mas se existir mais de 1...):
+            executeQuery($pdo, "UPDATE marketing_campanhas SET ativo = 0");
+            executeQuery($pdo, "UPDATE marketing_campanhas SET ativo = ?, membros_por_dia_grupo = ?, intervalo_min_minutos = ?, intervalo_max_minutos = ? ORDER BY id DESC LIMIT 1", [$ativo, $membrosDia, $minInterval, $maxInterval]);
 
             $response = ['success' => true, 'message' => 'Configurações salvas!'];
             break;
@@ -530,7 +548,7 @@ try {
         case 'trigger_disparos':
             try {
                 // 1. Verificar se há campanha ativa
-                $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE id = 1 AND ativo = 1");
+                $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE ativo = 1 LIMIT 1");
                 if (!$campanha) {
                     $response = ['success' => false, 'message' => 'Nenhuma campanha ativa. Ative primeiro nas Configurações.'];
                     break;
