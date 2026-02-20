@@ -179,17 +179,11 @@ async function createInstance(sessionId, phoneForPairing = null) {
   return instanceData;
 }
 
-// API de atualização no PHP
+// Atualiza o status localmente (remover heartbeat e aluguel remoto pra economizar banda)
 async function updateRemoteStatus(sessionId, status) {
-  try {
-    await axios.post(`${MARKETING_SITE_URL}/api_marketing_aluguel.php?action=update_instance_status`, {
-      session_id: sessionId,
-      status: status
-    });
-  } catch (e) {
-    console.error(`Erro ao atualizar status remoto (${sessionId}): ${e.message}`);
-  }
+  addLog(sessionId, 'INFO', `Instância [${sessionId}] status alterado para: ${status}`);
 }
+
 
 // --- MARKETING ENGINE (MULTIPLO) ---
 let isProcessingMarketing = false;
@@ -276,14 +270,8 @@ async function sendWithInstance(inst, task) {
   }
 }
 
-// Loop Heartbeat (Uptime e Marketing)
+// Loop de processamento de fila do admin
 setInterval(async () => {
-  // Update Uptime no DB
-  for (const [sid, inst] of instances.entries()) {
-    if (inst.isReady) {
-      axios.post(`${MARKETING_SITE_URL}/api_marketing_aluguel.php?action=heartbeat`, { session_id: sid }).catch(() => { });
-    }
-  }
   // Tentar rodar marketing
   processGlobalMarketing();
 }, 60000);

@@ -1,5 +1,5 @@
 <?php
 session_start();
-header("Location: entrar.php");
+header("Location: login.php");
 exit;
 ?>
