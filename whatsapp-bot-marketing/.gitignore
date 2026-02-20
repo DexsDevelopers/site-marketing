@@ -4,3 +4,4 @@ baileys_store.json
 .env
 *.log
 auth_marketing_v3_fixed/
+auth_sessions/

@@ -8,4 +8,7 @@ auth_info_baileys/
 vendor/
 composer.lock
 package-lock.json
+auth_sessions/
+whatsapp-bot-marketing/auth_sessions/
 EOF
+
