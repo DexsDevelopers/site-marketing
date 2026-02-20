@@ -123,7 +123,6 @@ try {
                 AND m.data_proximo_envio <= NOW()
                 ORDER BY m.data_proximo_envio ASC
                 LIMIT 50
-                FOR UPDATE SKIP LOCKED
             ";
             $leadsPendentes = fetchData($pdo, $sqlLeads);
 

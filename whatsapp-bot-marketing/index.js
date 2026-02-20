@@ -278,6 +278,12 @@ setInterval(async () => {
 
 // --- ROTAS API ---
 
+app.get('/trigger', (req, res) => {
+  addLog('SYSTEM', 'INFO', 'Trigger manual acionado pelo painel administrador.');
+  processGlobalMarketing();
+  res.json({ success: true, message: 'Processamento iniciado.' });
+});
+
 app.get('/instance/qr/:sessionId', async (req, res) => {
   const { sessionId } = req.params;
   let inst = instances.get(sessionId);
