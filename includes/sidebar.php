@@ -37,13 +37,6 @@
                     <i class="fas fa-users"></i> <span>Leads</span>
                 </a>
             </li>
-            <li>
-                <a href="painel.php"
-                    class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'painel.php' ? 'active' : ''?>"
-                    style="color: #10b981;">
-                    <i class="fas fa-hand-holding-usd"></i> <span>Conecte e Ganhe</span>
-                </a>
-            </li>
 
             <li>
                 <a href="settings.php"
@@ -58,7 +51,7 @@
                 </a>
             </li>
             <li>
-                <a href="reset.php" class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'reset.php' ? 'active' : ''?>"
+                <a href="javascript:void(0)" onclick="confirmResetConnection()" class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'reset.php' ? 'active' : ''?>"
                     style="color: #ff3b3b;">
                     <i class="fas fa-power-off"></i> <span>Resetar Conexão</span>
                 </a>
@@ -72,6 +65,25 @@
 </aside>
 
 <script>
+    async function confirmResetConnection() {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Tem certeza?',
+            text: "Isso irá desconectar o chip principal (admin_session) e resetar a conexão. Você precisará escanear o QR Code novamente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff3b3b',
+            cancelButtonColor: 'rgba(255,255,255,0.1)',
+            confirmButtonText: 'Sim, resetar agora!',
+            cancelButtonText: 'Cancelar',
+            background: '#0a0a0c',
+            color: '#fff'
+        });
+
+        if (isConfirmed) {
+            window.location.href = 'reset.php';
+        }
+    }
+
     function toggleSidebar() {
         document.getElementById('admin-sidebar').classList.toggle('active');
         document.getElementById('sidebar-overlay').classList.toggle('active');

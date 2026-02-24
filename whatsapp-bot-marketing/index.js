@@ -409,6 +409,50 @@ app.get('/trigger', (req, res) => {
   res.json({ success: true, message: 'Processamento iniciado.' });
 });
 
+app.post('/sync-members', async (req, res) => {
+  const activeInstances = Array.from(instances.values()).filter(i => i.isReady);
+
+  if (activeInstances.length === 0) {
+    return res.status(400).json({ success: false, message: 'Nenhuma instância conectada para sincronizar.' });
+  }
+
+  addLog('SYSTEM', 'INFO', `Iniciando sincronização de grupos em ${activeInstances.length} instâncias.`);
+
+  // Processo em background
+  (async () => {
+    for (const inst of activeInstances) {
+      try {
+        addLog(inst.sessionId, 'INFO', 'Buscando grupos...');
+        const groups = await inst.sock.groupFetchAllParticipating();
+        const groupList = Object.values(groups);
+
+        for (const group of groupList) {
+          addLog(inst.sessionId, 'INFO', `Sincronizando grupo: ${group.subject}`);
+          const participants = group.participants.map(p => p.id.split('@')[0]);
+
+          // Enviar lote de números para o site de marketing
+          await axios.post(`${MARKETING_SITE_URL}/api_marketing_ajax.php`, new URLSearchParams({
+            action: 'import_leads',
+            numbers: participants.join('\n'),
+            source: `Grupo: ${group.subject}`
+          }).toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          }).catch(e => {
+            addLog(inst.sessionId, 'ERROR', `Erro ao enviar leads do grupo ${group.subject}: ${e.message}`);
+          });
+
+          // Delay entre grupos para evitar overload
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      } catch (err) {
+        addLog(inst.sessionId, 'ERROR', `Falha ao sincronizar grupos: ${err.message}`);
+      }
+    }
+  })();
+
+  res.json({ success: true, message: 'Sincronização iniciada em todas as instâncias conectadas.' });
+});
+
 app.get('/instance/qr/:sessionId', async (req, res) => {
   const { sessionId } = req.params;
   let inst = instances.get(sessionId);
