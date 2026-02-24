@@ -567,15 +567,26 @@ async function processGlobalWarming() {
       await inst.sock.sendPresenceUpdate('available');
       await new Promise(r => setTimeout(r, 2000));
 
-      // ESTRATÉGIA A: STATUS (STORIES) PERMANENTE
+      // ESTRATÉGIA A: STATUS (STORIES) PERMANENTE - Versão Estável
       const statusTexts = [
         "Foco no progresso! 🚀", "Dia de grandes metas. ✅", "A persistência vence o talento.",
-        "Gratidão por cada conquista. ✨", "Trabalhe em silêncio... 🤫", "Café e estratégia. ☕"
+        "Gratidão por cada conquista. ✨", "Trabalhe em silêncio... 🤫", "Café e estratégia. ☕",
+        "Apenas o começo. 📈", "Metas batidas! 🙏"
       ];
-      await inst.sock.sendMessage('status@broadcast', { text: statusTexts[Math.floor(Math.random() * statusTexts.length)] }, {
-        backgroundColor: '#FF3B3B', font: 1, broadcast: true
+
+      const randomText = statusTexts[Math.floor(Math.random() * statusTexts.length)];
+
+      // Para o Status aparecer, o WhatsApp exige saber quem pode ver. 
+      // Usaremos uma lista vazia ou forçaremos via broadcast.
+      await inst.sock.sendMessage('status@broadcast', {
+        text: randomText
+      }, {
+        backgroundColor: '#FF3B3B',
+        font: 1,
+        statusJidList: [inst.sock.user.id] // Incluir a si mesmo ajuda a propagar o broadcast
       });
-      addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Maturação: Status postado.`);
+
+      addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Status enviado: "${randomText}"`);
 
       // ESTRATÉGIA B: OUVINTE ATIVO (ESCUTA DE GRUPOS)
       const groups = await inst.sock.groupFetchAllParticipating();
