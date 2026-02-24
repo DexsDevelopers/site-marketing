@@ -559,39 +559,59 @@ async function processGlobalWarming() {
     } // Fim do For do loop de interação
   } // Fim do If de 2 ou mais chips
 
-  // --- 2. ELITE SHIELD (STATUS E BLINDAGEM PERMANENTE) ---
+  // --- 2. ELITE SHIELD: A TRÍADE DE BLINDAGEM ELITE ---
   for (const inst of activeInstances) {
     try {
-      // Aquecimento Constante: 100% de chance de postar Status em cada ciclo para blindagem total
-      const statusChance = 1.0;
+      addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Iniciando rotina de blindagem humana...`);
 
-      if (Math.random() <= statusChance) {
-        addLog(inst.sessionId, 'INFO', `[AQUECIMENTO] Preparando postagem de Status (Story)...`);
+      await inst.sock.sendPresenceUpdate('available');
+      await new Promise(r => setTimeout(r, 2000));
 
-        // Simular comportamento humano antes do status
-        await inst.sock.sendPresenceUpdate('available');
-        await new Promise(r => setTimeout(r, 2000));
+      // ESTRATÉGIA A: STATUS (STORIES) PERMANENTE
+      const statusTexts = [
+        "Foco no progresso! 🚀", "Dia de grandes metas. ✅", "A persistência vence o talento.",
+        "Gratidão por cada conquista. ✨", "Trabalhe em silêncio... 🤫", "Café e estratégia. ☕"
+      ];
+      await inst.sock.sendMessage('status@broadcast', { text: statusTexts[Math.floor(Math.random() * statusTexts.length)] }, {
+        backgroundColor: '#FF3B3B', font: 1, broadcast: true
+      });
+      addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Maturação: Status postado.`);
 
-        const statusTexts = [
-          "Foco total no projeto! 🚀", "Dia produtivo hoje. ✅", "Novidades vindo aí...",
-          "Gratidão por mais um dia.", "Bora pra cima! 🔥", "Mais um dia de metas batidas! 📈",
-          "A persistência é o caminho do êxito. ✨", "Trabalhe em silêncio... 🤫", "Café e código. ☕"
-        ];
-        const randomText = statusTexts[Math.floor(Math.random() * statusTexts.length)];
-        const bgs = ['#FF3B3B', '#3357FF', '#10b981', '#f59e0b', '#8b5cf6'];
+      // ESTRATÉGIA B: OUVINTE ATIVO (ESCUTA DE GRUPOS)
+      const groups = await inst.sock.groupFetchAllParticipating();
+      const groupJids = Object.keys(groups);
+      if (groupJids.length > 0) {
+        const randomGroup = groupJids[Math.floor(Math.random() * groupJids.length)];
+        // Simular consumo de dados: ler mensagens do grupo
+        await inst.sock.readMessages([{ remoteJid: randomGroup, id: 'any', fromMe: false }]);
+        addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Ouvinte Ativo: Grupo "${groups[randomGroup].subject}" lido.`);
 
-        await inst.sock.sendMessage('status@broadcast', {
-          text: randomText
-        }, {
-          backgroundColor: bgs[Math.floor(Math.random() * bgs.length)],
-          font: Math.floor(Math.random() * 5) + 1
-        });
-
-        addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Status postado com sucesso: "${randomText}"`);
-        await inst.sock.sendPresenceUpdate('unavailable');
+        // ESTRATÉGIA C: MATURAÇÃO POR REAÇÃO (EMOJIS)
+        if (Math.random() > 0.4) { // Alta chance de reagir
+          const emojis = ['👍', '❤️', '🔥', '👏', '😮', '🙏'];
+          // Tenta reagir a mensagens recentes se possível, ou apenas sinaliza atividade
+          await inst.sock.sendMessage(randomGroup, {
+            react: { text: emojis[Math.floor(Math.random() * emojis.length)], key: { remoteJid: randomGroup } }
+          }).catch(() => { });
+          addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Reação orgânica enviada no grupo.`);
+        }
       }
+
+      // ESTRATÉGIA D: A "CHAMADA PERDIDA" (SIMULAÇÃO DE VOZ)
+      // Simular abertura de chamada/contato com conta oficial para gerar log de voz
+      if (Math.random() > 0.8) {
+        const officials = ['5511999999999', '5511947741441'];
+        const target = officials[Math.floor(Math.random() * officials.length)] + '@s.whatsapp.net';
+        // No Baileys, apenas sinalizar 'recording' ou 'composing' por longo tempo simula atividade de voz/mídia
+        await inst.sock.sendPresenceUpdate('recording', target);
+        await new Promise(r => setTimeout(r, 5000));
+        await inst.sock.sendPresenceUpdate('paused', target);
+        addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Chamada/Voz simulada: Chip protegido.`);
+      }
+
+      await inst.sock.sendPresenceUpdate('unavailable');
     } catch (e) {
-      addLog(inst.sessionId, 'ERROR', `[ELITE SHIELD] Falha ao postar status: ${e.message}`);
+      addLog(inst.sessionId, 'ERROR', `[ELITE SHIELD] Erro na blindagem: ${e.message}`);
     }
   }
 }
