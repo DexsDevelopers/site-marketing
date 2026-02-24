@@ -559,24 +559,42 @@ async function processGlobalWarming() {
     } // Fim do For do loop de interação
   } // Fim do If de 2 ou mais chips
 
-  // --- 2. ELITE SHIELD (STATUS E BLINDAGEM SOLO) ---
+  // --- 2. ELITE SHIELD (STATUS E BLINDAGEM) ---
   for (const inst of activeInstances) {
     try {
-      const statusChance = activeInstances.length === 1 ? 1 : 0.2;
+      // Regra de Maturação: Chips no Dia 1 ou sozinhos postam Status com 100% de chance para aquecimento forte
+      const maturationDate = inst.maturationDate || new Date();
+      const isDayOne = new Date().toDateString() === maturationDate.toDateString();
+      const statusChance = (activeInstances.length === 1 || isDayOne) ? 1.0 : 0.35;
+
       if (Math.random() <= statusChance) {
+        addLog(inst.sessionId, 'INFO', `[AQUECIMENTO] Preparando postagem de Status (Story)...`);
+
+        // Simular comportamento humano antes do status
+        await inst.sock.sendPresenceUpdate('available');
+        await new Promise(r => setTimeout(r, 2000));
+
         const statusTexts = [
           "Foco total no projeto! 🚀", "Dia produtivo hoje. ✅", "Novidades vindo aí...",
-          "Gratidão por mais um dia.", "Bora pra cima! 🔥", "Mais um dia de metas batidas! 📈"
+          "Gratidão por mais um dia.", "Bora pra cima! 🔥", "Mais um dia de metas batidas! 📈",
+          "A persistência é o caminho do êxito. ✨", "Trabalhe em silêncio... 🤫", "Café e código. ☕"
         ];
+        const randomText = statusTexts[Math.floor(Math.random() * statusTexts.length)];
+        const bgs = ['#FF3B3B', '#3357FF', '#10b981', '#f59e0b', '#8b5cf6'];
+
         await inst.sock.sendMessage('status@broadcast', {
-          text: statusTexts[Math.floor(Math.random() * statusTexts.length)]
+          text: randomText
         }, {
-          backgroundColor: '#FF3B3B',
-          font: 1
+          backgroundColor: bgs[Math.floor(Math.random() * bgs.length)],
+          font: Math.floor(Math.random() * 5) + 1
         });
-        addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Atividade de status concluída.`);
+
+        addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Status postado com sucesso: "${randomText}"`);
+        await inst.sock.sendPresenceUpdate('unavailable');
       }
-    } catch (e) { }
+    } catch (e) {
+      addLog(inst.sessionId, 'ERROR', `[ELITE SHIELD] Falha ao postar status: ${e.message}`);
+    }
   }
 }
 
