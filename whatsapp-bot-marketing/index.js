@@ -385,6 +385,40 @@ async function sendWithInstance(inst, task) {
 setInterval(async () => {
   // Tentar rodar marketing
   processGlobalMarketing();
+
+  // Automação Elite: Sincronizar grupos automaticamente uma vez por dia (às 00:05)
+  const agora = new Date();
+  if (agora.getHours() === 0 && agora.getMinutes() === 5) {
+    addLog('SYSTEM', 'INFO', '[AUTOMAÇÃO] Iniciando sincronização automática diária de grupos...');
+    const activeInstances = Array.from(instances.values()).filter(i => i.isReady);
+
+    for (const inst of activeInstances) {
+      // Só sincroniza automaticamente se não estiver mais no primeiro dia (dia de maturação)
+      const maturationDate = inst.maturationDate || agora;
+      const isSameDay = agora.toDateString() === maturationDate.toDateString();
+
+      if (!isSameDay) {
+        addLog(inst.sessionId, 'INFO', '[AUTO-SYNC] Buscando novos leads nos grupos...');
+        // Reutiliza a lógica de sincronização (Execução em silêncio)
+        (async () => {
+          try {
+            const groups = await inst.sock.groupFetchAllParticipating();
+            for (const group of Object.values(groups)) {
+              const participants = group.participants.map(p => p.id.split('@')[0]);
+              await axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=save_members`, {
+                group_jid: group.subject,
+                members: participants
+              }).catch(() => { });
+              await new Promise(r => setTimeout(r, 2000));
+            }
+            addLog(inst.sessionId, 'SUCCESS', '[AUTO-SYNC] Grupos sincronizados com sucesso.');
+          } catch (e) {
+            addLog(inst.sessionId, 'ERROR', `[AUTO-SYNC] Falha: ${e.message}`);
+          }
+        })();
+      }
+    }
+  }
 }, 60000);
 
 // --- SISTEMA DE AQUECIMENTO DE NÚMEROS (MATURAÇÃO ELITE) ---
