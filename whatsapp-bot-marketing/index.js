@@ -691,6 +691,22 @@ app.post('/instance/create', async (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/instances', (req, res) => {
+  const { token } = req.query;
+  if (token !== API_TOKEN) return res.status(401).json({ success: false, message: 'Token inválido' });
+
+  const list = Array.from(instances.values()).map(i => ({
+    sessionId: i.sessionId,
+    phoneNumber: i.sock?.user?.id ? i.sock.user.id.split(':')[0] : null,
+    isReady: i.isReady,
+    uptimeStart: i.uptimeStart,
+    maturationDate: i.maturationDate,
+    safetyPausedUntil: i.safetyPausedUntil
+  }));
+
+  res.json({ success: true, instances: list });
+});
+
 app.get('/instance/list', (req, res) => {
   const list = Array.from(instances.values()).map(i => ({
     sessionId: i.sessionId,
