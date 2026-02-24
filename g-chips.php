@@ -57,13 +57,26 @@ include 'includes/header.php';
 <script>
 async function loadInstances() {
     try {
-        const response = await fetch('api_marketing_ajax.php?action=get_bot_logs&limit=1'); 
-        // Vamos usar um endpoint que já existe para pegar a URL do bot
         const botUrl = '<?php echo rtrim(getDynamicConfig("WHATSAPP_API_URL", "http://localhost:3002"), "/"); ?>';
         const token = '<?php echo getDynamicConfig("WHATSAPP_API_TOKEN", "lucastav8012"); ?>';
 
         const res = await fetch(`${botUrl}/instances?token=${token}`);
-        const data = await res.json();
+        const text = await res.text();
+        
+        // Debug: Se não for JSON, mostrar o que é
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch(e) {
+            console.error("Resposta não é JSON:", text);
+            document.getElementById('instances-list').innerHTML = `
+                <div class="col-12 text-center text-warning p-4">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <p>O Bot de WhatsApp parece estar offline ou retornou um erro inesperado.</p>
+                    <small class="text-secondary">${text.substring(0, 100)}</small>
+                </div>`;
+            return;
+        }
 
         const container = document.getElementById('instances-list');
         container.innerHTML = '';
