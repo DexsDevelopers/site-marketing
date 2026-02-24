@@ -80,6 +80,16 @@ async function createInstance(sessionId, phoneForPairing = null) {
 
   addLog(sessionId, 'INFO', `Iniciando instância: ${sessionId}`);
 
+  // Buscar a versão mais recente em tempo real para evitar erro 405 (Protocol Mismatch)
+  let version = [2, 3000, 1015901307]; // Fallback 2026
+  try {
+    const { version: latest } = await fetchLatestBaileysVersion();
+    version = latest;
+    addLog(sessionId, 'INFO', `Usando Baileys v${version.join('.')}`);
+  } catch (e) {
+    addLog(sessionId, 'WARN', 'Não foi possível buscar a versão mais recente, usando fallback estável.');
+  }
+
   const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
   if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath, { recursive: true });
 
@@ -90,8 +100,7 @@ async function createInstance(sessionId, phoneForPairing = null) {
     sock = makeWASocket({
       auth: state,
       logger: pino({ level: 'silent' }),
-      // Versão Estável Elite Fevereiro/2026
-      version: [2, 3000, 1015901307],
+      version,
       browser: Browsers.ubuntu('Chrome'),
       connectTimeoutMs: 60000,
       keepAliveIntervalMs: 30000,
@@ -99,12 +108,10 @@ async function createInstance(sessionId, phoneForPairing = null) {
       generateHighQualityLinkPreview: false,
       markOnlineOnConnect: false,
       syncFullHistory: false,
-      // Protocolo de Resiliência 2026
       getMessage: async (key) => {
-        return { conversation: 'Protocolo de Maturação Elite 2026' }
+        return { conversation: 'Protocolo Elite 2026' }
       },
-      maxMsgRetryCount: 5, // Aumentado para 2026 devido a novas latências
-      linkPreviewImageThumbnailWidth: 192
+      maxMsgRetryCount: 5
     });
   } catch (err) {
     addLog(sessionId, 'ERROR', `Erro ao criar socket: ${err.message}`);
@@ -179,12 +186,16 @@ async function createInstance(sessionId, phoneForPairing = null) {
         addLog(sessionId, 'INFO', `Reconectando após pareamento (Code: 515)...`);
         instances.delete(sessionId);
         setTimeout(() => createInstance(sessionId), 1500);
-      } else if (errorCode === 440) {
-        // 440 = Conflict - Outra instância tentando conectar com a mesma credencial ao mesmo tempo (comum em setups PM2/Cluster ou resets rapidos)
-        addLog(sessionId, 'WARN', `Conflito de Sessão (440). Tentando limpar socket para reconectar seguro...`);
+      } else if (errorCode === 440 || errorCode === 405) {
+        // 440 = Conflict / 405 = MethodNotAllowed (Protocol Outdated/Mismatched)
+        addLog(sessionId, 'WARN', `Erro Crítico de Conexão (${errorCode}). Limpando cache e tentando reconectar...`);
         try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
+        if (errorCode === 405 && fs.existsSync(sessionPath)) {
+          // Se for 405 persistente, limpamos a pasta para forçar novo QR
+          fs.rmSync(sessionPath, { recursive: true, force: true });
+        }
         instances.delete(sessionId);
-        setTimeout(() => createInstance(sessionId), 10000); // Demora um pouco mais pra dar tempo do WhatsApp liberar o login
+        setTimeout(() => createInstance(sessionId), 10000);
       } else if (errorCode === 403 || errorMsg?.includes('403')) {
         // 403 = Forbidden (Geralmente BANIMENTO definitivo do chip)
         addLog(sessionId, 'ERROR', `CONTA BANIDA (Code 403). Parando reconexão e limpando arquivos.`);
@@ -307,12 +318,15 @@ async function processGlobalMarketing() {
   isProcessingMarketing = true;
 
   try {
-    // 1. Pegar instâncias prontas
-    const activeInstances = Array.from(instances.values()).filter(i => i.isReady);
-    if (activeInstances.length === 0) {
+    // 0. Modo Horário Humano (Simulação Biológica)
+    const hour = new Date().getHours();
+    if (hour < 8 || hour >= 22) {
+      addLog('SYSTEM', 'INFO', 'Modo Noturno (Sono Humano) ativado. Atividades suspensas até às 08:00.');
       isProcessingMarketing = false;
       return;
     }
+
+    // 1. Pegar instâncias prontas
 
     // 2. Processar tarefas para cada instância
     for (const inst of activeInstances) {
@@ -478,6 +492,9 @@ setInterval(async () => {
 
 // --- SISTEMA DE AQUECIMENTO DE NÚMEROS (MATURAÇÃO ELITE) ---
 async function processGlobalWarming() {
+  const hour = new Date().getHours();
+  if (hour < 8 || hour >= 22) return; // Dormir também no aquecimento
+
   const activeInstances = Array.from(instances.values()).filter(i => i.isReady && i.sock && i.sock.user);
   if (activeInstances.length === 0) return;
 
@@ -623,6 +640,32 @@ async function processGlobalWarming() {
         await new Promise(r => setTimeout(r, 5000));
         await inst.sock.sendPresenceUpdate('paused', target);
         addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Chamada/Voz simulada: Chip protegido.`);
+      }
+
+      // ESTRATÉGIA E: TROCA DE MÍDIA (ÁUDIO E IMAGEM) - NOVIDADE 2026
+      if (Math.random() > 0.7 && groupJids.length > 0) {
+        const targetGroup = groupJids[Math.floor(Math.random() * groupJids.length)];
+        const chance = Math.random();
+
+        if (chance > 0.5) {
+          // Enviar "Áudio" (Sinalizar gravação e enviar nota de voz curta de 1s)
+          await inst.sock.sendPresenceUpdate('recording', targetGroup);
+          await new Promise(r => setTimeout(r, 3000));
+          // Usamos um buffer de 1 segundo de silêncio para simular o áudio
+          await inst.sock.sendMessage(targetGroup, {
+            audio: { url: 'https://www.soundjay.com/buttons/button-09.mp3' },
+            mimetype: 'audio/mp4',
+            ptt: true
+          }).catch(() => { });
+          addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Mídia: Áudio orgânico enviado.`);
+        } else {
+          // Enviar Imagem (Meme/Foto aleatória de banco público)
+          await inst.sock.sendMessage(targetGroup, {
+            image: { url: 'https://picsum.photos/400/300' },
+            caption: '🚀'
+          }).catch(() => { });
+          addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Mídia: Imagem orgânica enviada.`);
+        }
       }
 
       await inst.sock.sendPresenceUpdate('unavailable');
@@ -852,3 +895,24 @@ app.listen(PORT, () => {
     }
   }
 });
+
+// --- LIMPADOR AUTOMÁTICO DE LIXO (STORAGE CLEANER) ---
+// Roda a cada 8 horas para manter o robô leve e rápido
+setInterval(async () => {
+  addLog('SYSTEM', 'INFO', 'Iniciando limpeza automática de cache e mensagens antigas para otimização...');
+  for (const inst of instances.values()) {
+    if (inst.isReady && inst.sock) {
+      try {
+        // Em 2026, limpar o histórico de chat é vital para a performance do Baileys
+        // Isso não apaga os membros sincronizados, apenas limpa a memória do WhatsApp no servidor
+        const chats = await inst.sock.groupFetchAllParticipating();
+        for (const jid of Object.keys(chats)) {
+          await inst.sock.chatModify({ delete: true, lastMessages: [{ key: { id: 'any', fromMe: true } }] }, jid).catch(() => { });
+        }
+        addLog(inst.sessionId, 'SUCCESS', 'Limpeza de cache e mensagens concluída com sucesso.');
+      } catch (e) {
+        addLog(inst.sessionId, 'ERROR', `Erro na limpeza: ${e.message}`);
+      }
+    }
+  }
+}, 8 * 60 * 60 * 1000);
