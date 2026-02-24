@@ -317,7 +317,15 @@ async function processGlobalMarketing() {
 
       if (isSameDay) {
         if (!inst.hasLoggedMaturation) {
-          addLog(inst.sessionId, 'SUCCESS', `Chip em MATURAÇÃO ATIVA (Primeiro dia). Enviando apenas conversas de aquecimento. Marketing libera às 00:01 de amanhã.`);
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          tomorrow.setHours(0, 1, 0, 0);
+
+          const diffMs = tomorrow - now;
+          const hours = Math.floor(diffMs / (1000 * 60 * 60));
+          const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+          addLog(inst.sessionId, 'SUCCESS', `Chip em MATURAÇÃO ATIVA. Marketing libera em ${hours}h e ${minutes}min (às 00:01 de amanhã).`);
           inst.hasLoggedMaturation = true;
         }
         continue;
