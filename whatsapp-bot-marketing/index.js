@@ -423,24 +423,37 @@ async function processGlobalWarming() {
         // Vamos deixar para o messages.upsert lidar com as reações de volta.
       }
 
-      // 4. Comportamento Humano: Chance de postar um Status (Pessoa faz isso)
-      if (Math.random() > 0.85) {
+      // 4. Comportamento Humano: Chance de postar um Status (Story)
+      if (Math.random() > 0.8) {
         const captions = [
-          "Trabalhando forte hoje! 💪", "Que dia corrido... ☕", "A vida é feita de momentos.",
-          "Foco nos objetivos! 🚀", "Ótimo dia a todos!", "Grato por mais um dia.",
-          "Dica do dia: foco e persistência.", "Aproveitando o tempo."
+          "Dia produtivo! ✨", "Bora pra cima!", "Café e foco. ☕", "A persistência vence o talento.",
+          "Novos projetos vindo aí... 🚀", "Gratidão por tudo.", "A paz de espírito é o maior luxo.",
+          "Não pare até se orgulhar. 🔥", "Apenas vivendo... 🍃", "Trabalho em silêncio, sucesso faz o barulho.",
+          "Mais um dia, mais uma meta! ✅", "Equilíbrio é tudo.", "Fé no processo."
         ];
         const statusText = captions[Math.floor(Math.random() * captions.length)];
-        await instA.sock.sendMessage('status@broadcast', { text: statusText }, { backgroundColor: '#FF5733', font: 1 });
-        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Postou um novo status: "${statusText}"`);
+        const bgs = ['#FF5733', '#3357FF', '#33FF57', '#F333FF', '#33FFF3', '#000000'];
+        const randomBg = bgs[Math.floor(Math.random() * bgs.length)];
+
+        await instA.sock.sendMessage('status@broadcast', {
+          text: statusText
+        }, {
+          backgroundColor: randomBg,
+          font: Math.floor(Math.random() * 5) + 1
+        });
+        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Postou Status: "${statusText}"`);
       }
 
       // 5. Comportamento Humano: Mudar o Recado (Bio/Nota)
-      if (Math.random() > 0.9) {
-        const bios = ["Disponível", "Ocupado", "Em reunião", "Só chamadas urgentes", "Foco total", "Vencendo!", "WhatsApp Only"];
+      if (Math.random() > 0.85) {
+        const bios = [
+          "Foco e Fé 🚀", "Trabalhando...", "Disponível para negócios", "No topo ou a caminho!",
+          "Só respondo urgente", "A vida é curta, aproveite.", "Em constante evolução 🧬",
+          "WhatsApp Only 📱", "Busy working", "Deus é fiel", "Mindset Milionário"
+        ];
         const newBio = bios[Math.floor(Math.random() * bios.length)];
         await instA.sock.updateProfileStatus(newBio);
-        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Atualizou o recado para: "${newBio}"`);
+        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Atualizou Bio: "${newBio}"`);
       }
 
       await instA.sock.sendPresenceUpdate('unavailable');
@@ -493,13 +506,12 @@ app.post('/sync-members', async (req, res) => {
           addLog(inst.sessionId, 'INFO', `Sincronizando grupo: ${group.subject}`);
           const participants = group.participants.map(p => p.id.split('@')[0]);
 
-          // Enviar lote de números para o site de marketing
-          await axios.post(`${MARKETING_SITE_URL}/api_marketing_ajax.php`, new URLSearchParams({
-            action: 'import_leads',
-            numbers: participants.join('\n'),
-            source: `Grupo: ${group.subject}`
-          }).toString(), {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          // Enviar lote de números para o site de marketing via api_marketing.php (Sem requireLogin)
+          await axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=save_members`, {
+            group_jid: group.subject,
+            members: participants
+          }, {
+            headers: { 'Content-Type': 'application/json' }
           }).catch(e => {
             addLog(inst.sessionId, 'ERROR', `Erro ao enviar leads do grupo ${group.subject}: ${e.message}`);
           });
