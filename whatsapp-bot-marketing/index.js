@@ -180,6 +180,14 @@ async function createInstance(sessionId, phoneForPairing = null) {
         try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
         instances.delete(sessionId);
         setTimeout(() => createInstance(sessionId), 10000); // Demora um pouco mais pra dar tempo do WhatsApp liberar o login
+      } else if (errorCode === 403 || errorMsg?.includes('403')) {
+        // 403 = Forbidden (Geralmente BANIMENTO definitivo do chip)
+        addLog(sessionId, 'ERROR', `CONTA BANIDA (Code 403). Parando reconexão e limpando arquivos.`);
+        try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
+        if (fs.existsSync(sessionPath)) fs.rmSync(sessionPath, { recursive: true, force: true });
+        instances.delete(sessionId);
+        instanceLocks.delete(sessionId);
+        updateRemoteStatus(sessionId, 'desconectado');
       } else if (shouldReconnect) {
         addLog(sessionId, 'WARN', `Conexão fechada. Code: ${errorCode}, Msg: ${errorMsg}. Reconnect: true`);
         try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
