@@ -9,23 +9,25 @@ $pageTitle = "Gerenciar Chips";
 include 'includes/header.php';
 ?>
 
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-dark text-white border-secondary shadow">
-                <div class="card-body">
-                    <h2 class="h4 mb-2"><i class="fas fa-microchip me-2 text-primary"></i>Controle Individual de Chips</h2>
-                    <p class="text-secondary small">Gerencie cada conexão de forma independente. Ideal para limpar chips bloqueados sem afetar os saudáveis.</p>
+<div class="main-content">
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-dark text-white border-secondary shadow">
+                    <div class="card-body">
+                        <h2 class="h4 mb-2"><i class="fas fa-microchip me-2 text-primary"></i>Controle Individual de Chips</h2>
+                        <p class="text-secondary small">Gerencie cada conexão de forma independente. Ideal para limpar chips bloqueados sem afetar os saudáveis.</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="instances-list" class="row">
-        <!-- Carregado via JS -->
-        <div class="col-12 text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-secondary">Buscando instâncias ativas...</p>
+        <div id="instances-list" class="row">
+            <!-- Carregado via JS -->
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-secondary">Buscando instâncias ativas...</p>
+            </div>
         </div>
     </div>
 </div>
