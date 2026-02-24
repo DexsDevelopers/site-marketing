@@ -115,7 +115,8 @@ async function createInstance(sessionId, phoneForPairing = null) {
     _pendingPairing: null,
     uptimeStart: null,
     hasLoggedMaturation: false,
-    maturationDate: null
+    maturationDate: null,
+    safetyPausedUntil: null
   };
 
   instances.set(sessionId, instanceData);
@@ -300,9 +301,14 @@ async function processGlobalMarketing() {
       return;
     }
 
-    // 2. Buscar tarefas para processar
-    // Vamos processar em lotes para cada instância
+    // 2. Processar tarefas para cada instância
     for (const inst of activeInstances) {
+      // Monitor de Saúde: Verificar se o chip está em Pausa de Segurança
+      if (inst.safetyPausedUntil && inst.safetyPausedUntil > Date.now()) {
+        const remainingMinutes = Math.round((inst.safetyPausedUntil - Date.now()) / 60000);
+        addLog(inst.sessionId, 'WARN', `Chip em PAUSA DE SEGURANÇA. Marketing suspenso por mais ${remainingMinutes} min (Risco de Ban detectado).`);
+        continue;
+      }
       // Regra Anti-Ban Elite: 1 Dia de Maturação Ativa
       // Só dispara se a data atual for diferente da data de criação da sessão (Dia Seguinte 00:01)
       const now = new Date();
@@ -348,21 +354,41 @@ async function processGlobalMarketing() {
 async function sendWithInstance(inst, task) {
   try {
     const jid = formatJid(task.phone);
-    let msgContent = { text: task.message };
+
+    // --- IA DE POLIMORFISMO (MENSAGENS ÚNICAS) ---
+    let finalMessage = task.message;
+
+    // 1. Injetar Caractere Invisível Aleatório (Zero-Width Space) para tornar o hash da msg único
+    const invisibleChars = ['\u200B', '\u200C', '\u200D', '\uFEFF'];
+    const randomChar = invisibleChars[Math.floor(Math.random() * invisibleChars.length)];
+    finalMessage += randomChar;
+
+    // 2. Variabilidade de Saudação Dinâmica (Se começar com Oi/Olá)
+    if (finalMessage.toLowerCase().startsWith('oi') || finalMessage.toLowerCase().startsWith('ola')) {
+      const saudacoes = ['Opa', 'Oi', 'Olá', 'E aí', 'Tudo bem?', 'Fala!'];
+      const randomSaudacao = saudacoes[Math.floor(Math.random() * saudacoes.length)];
+      finalMessage = finalMessage.replace(/^(oi|ola|olá)[^a-zA-Z]*/i, randomSaudacao + ' ');
+    }
+
+    let msgContent = { text: finalMessage };
 
     if (task.media_url) {
       const baseURL = task.media_url.startsWith('http') ? '' : `${MARKETING_SITE_URL}/`;
       const fullPath = baseURL + task.media_url;
       const mediaUrl = encodeURI(fullPath);
       const type = task.message_type === 'video' ? 'video' : 'image';
-      msgContent = { [type]: { url: mediaUrl }, caption: task.message };
+      msgContent = { [type]: { url: mediaUrl }, caption: finalMessage };
     }
 
-    // Simular digitação realista (Anti-Ban)
-    const typingDuration = Math.floor(Math.random() * (4000 - 1500 + 1)) + 1500;
+    // --- SIMULAÇÃO HUMANA AVANÇADA ---
+    // Cálculo de digitação: 50ms por caractere + delay base humano
+    const baseDelay = Math.floor(Math.random() * 2000) + 1000;
+    const typingDuration = Math.min((finalMessage.length * 50) + baseDelay, 10000); // Max 10s
+
     await inst.sock.sendPresenceUpdate(task.message_type === 'video' ? 'recording' : 'composing', jid);
     await new Promise(r => setTimeout(r, typingDuration));
     await inst.sock.sendPresenceUpdate('paused', jid);
+
     const sent = await inst.sock.sendMessage(jid, msgContent);
 
     if (sent) {
@@ -375,8 +401,16 @@ async function sendWithInstance(inst, task) {
       }).catch(e => { });
       return { success: true };
     }
-    return { success: false, reason: 'error_sending' };
   } catch (e) {
+    const errorCode = e?.output?.statusCode || e?.data?.statusCode;
+
+    // Detecção de Risco de Ban (403 = Forbidden, 401 = Unauthorized)
+    if (errorCode === 403 || errorCode === 401 || e.message.includes('403') || e.message.includes('401')) {
+      addLog(inst.sessionId, 'ERROR', `RISCO DE BAN DETECTADO (Erro ${errorCode}). Ativando Pausa de Segurança de 2 horas.`);
+      inst.safetyPausedUntil = Date.now() + (120 * 60 * 1000); // 120 minutos de pausa
+      return { success: false, reason: 'safety_pause_triggered' };
+    }
+
     return { success: false, reason: e.message };
   }
 }
