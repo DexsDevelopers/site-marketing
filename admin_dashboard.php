@@ -43,9 +43,9 @@ requireLogin();
                     </button>
 
                     <div class="panel" style="margin-bottom: 0; padding: 0.8rem 1.5rem; border-radius: 16px;">
-                        <div id="bot-status-container" class="status-indicator">
-                            <div class="dot" id="status-dot"></div>
-                            <span id="status-text" style="font-weight: 600; font-size: 0.9rem;">Conectando...</span>
+                        <div id="sys-status-container" class="status-indicator">
+                            <div class="dot online" id="status-dot"></div>
+                            <span id="status-text" style="font-weight: 600; font-size: 0.9rem;">Sistema Online</span>
                         </div>
                     </div>
                 </div>
@@ -102,33 +102,26 @@ requireLogin();
                     </div>
                 </section>
 
-                <!-- Sidebar Content -->
+                <!-- Sidebar Content (Gerenciador de Chips) -->
                 <aside>
-                    <div class="panel">
-                        <div class="panel-title" style="margin-bottom: 1rem;"><i class="fas fa-qrcode"></i> Conexão WhatsApp</div>
-                        
-                        <!-- Pareamento por Código -->
-                        <div id="pairing-section">
-                            <label style="display: block; font-size: 0.8rem; font-weight: bold; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase;">1. Conectar com Número (Seguro)</label>
-                            <input type="text" id="pairing_phone" placeholder="Ex: 5511999998888" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.8rem; color: white; margin-bottom: 0.5rem; outline: none;">
-                            <div id="pairing-code-box" style="display: none; font-size: 2rem; font-weight: 800; letter-spacing: 5px; color: var(--primary); text-align: center; margin: 10px 0; background: rgba(16,185,129,0.1); border-radius: 8px; padding: 10px; border: 1px solid rgba(16,185,129,0.2);"></div>
-                            <button id="btn-pair" onclick="generatePairingCode()" class="btn-modern" style="width: 100%; justify-content: center; margin-bottom: 1.5rem; background: rgba(255,255,255,0.05);">
-                                <i class="fas fa-key"></i> Gerar Código
-                            </button>
+                    <div class="panel" style="padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <div class="panel-title" style="margin: 0;"><i class="fas fa-mobile-alt"></i> Gerenciador de Chips</div>
+                            <span id="chip-count-badge" style="background: rgba(16,185,129,0.2); color: #10b981; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">0 Conectados</span>
                         </div>
-
-                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
-                        <label style="display: block; font-size: 0.8rem; font-weight: bold; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase; text-align: center;">Ou por QR Code</label>
                         
-                        <div id="qr-container" class="qr-placeholder" style="width: 100%; min-height: 200px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                            <div style="text-align: center;">
-                                <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary); margin-bottom: 1rem;"></i>
-                                <p style="font-size: 0.85rem; color: var(--text-dim);">Sincronizando com o robô...</p>
+                        <!-- Lista Dinâmica de instâncias -->
+                        <div id="instances-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 480px; overflow-y: auto; padding-right: 5px;">
+                            <div style="text-align: center; color: var(--text-dim); padding: 2rem;">
+                                <i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Carregando chips...
                             </div>
                         </div>
-                        <div id="bot-info"
-                            style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);">
-                            <!-- Info do Bot via JS -->
+
+                        <!-- Adicionar Novo Chip Btn -->
+                        <div style="margin-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 1.5rem;">
+             <button onclick="openNewNodeModal()" class="btn-modern accent" style="width: 100%; justify-content: center; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);">
+                                <i class="fas fa-plus"></i> Conectar Novo Número
+                            </button>
                         </div>
                     </div>
 
@@ -152,122 +145,227 @@ requireLogin();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Função para atualizar o status do Bot
+        // Store interval references per session to avoid infinite overlapping loops if QR code is polling
+        window.qrPollIntervals = {};
+
         async function updateBotStatus() {
             try {
                 const response = await fetch('api_dashboard.php?action=get_bot_status');
                 const result = await response.json();
-
-                const dot = document.getElementById('status-dot');
-                const text = document.getElementById('status-text');
-                const qrContainer = document.getElementById('qr-container');
-                const botInfo = document.getElementById('bot-info');
+                
+                const listContainer = document.getElementById('instances-list');
+                const badge = document.getElementById('chip-count-badge');
 
                 if (result.success && result.data.online) {
-                    dot.classList.add('online');
-                    text.innerText = result.data.ready ? 'Bot Online & Pronto' : 'Bot Conectado (Aguardando QR)';
-
-                    botInfo.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                            <span>Uptime:</span>
-                            <span style="color:white;">${result.data.uptime}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span>Reconexões:</span>
-                            <span style="color:white;">${result.data.reconnects}</span>
-                        </div>
-                    `;
-
-                    if (!result.data.ready) {
-                        loadQR();
-                    } else {
-                        qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-check-circle" style="font-size:3rem; color:#00ff88;"></i><p style="margin-top:1rem;">Autenticado</p></div>';
+                    const instances = result.data.instances || [];
+                    
+                    let readyCount = instances.filter(i => i.isReady).length;
+                    badge.innerText = `${readyCount} Conectados`;
+                    
+                    if (instances.length === 0) {
+                        listContainer.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">Nenhum chip conectado ainda. Clique abaixo para começar.</div>';
+                        return;
                     }
+
+                    // Rebuild the list HTML if instances exist
+                    let htmlString = '';
+                    instances.forEach(inst => {
+                        htmlString += buildInstanceCard(inst);
+                    });
+                    
+                    // Only update innerHTML if it has meaningfully changed to avoid interrupting inputs or toggles, 
+                    // but since this is just a display list usually, re-render is fine. For better UX we could update individual cards.
+                    // For simplicity, we overwrite right now.
+                    listContainer.innerHTML = htmlString;
+                    
+                    // Trigger QR loader on instances that are NOT ready
+                    instances.forEach(inst => {
+                        if (!inst.isReady) {
+                            loadQR(inst.sessionId);
+                        } else {
+                           // If it became ready, clear any polling
+                           if(window.qrPollIntervals[inst.sessionId]) {
+                               clearInterval(window.qrPollIntervals[inst.sessionId]);
+                               delete window.qrPollIntervals[inst.sessionId];
+                           }
+                        }
+                    });
+
                 } else {
-                    dot.classList.remove('online');
-                    text.innerText = 'Bot Desconectado';
-                    qrContainer.innerHTML = '<span style="color:var(--primary);">Verifique o Painel PM2</span>';
+                    listContainer.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 2rem;"><i class="fas fa-exclamation-triangle fa-2x" style="margin-bottom:1rem;"></i><br>Servidor Node.js Desconectado. Verifique o PM2.</div>';
                 }
             } catch (e) {
                 console.error('Erro ao buscar status:', e);
             }
         }
 
-        let qrPollInterval = null;
-
-        async function loadQR() {
-            try {
-                const response = await fetch('api_dashboard.php?action=get_qr');
-                const result = await response.json();
-                const qrContainer = document.getElementById('qr-container');
-
-                if (result.success && result.qr) {
-                    // QR disponível — mostrar imagem
-                    qrContainer.innerHTML = `<img src="${result.qr}" class="qr-image" style="max-width:100%; border-radius:12px;">`;
-                    // Continuar polling para detectar quando o QR for escaneado
-                    if (!qrPollInterval) {
-                        qrPollInterval = setInterval(loadQR, 5000);
-                    }
-                } else if (result.success && result.ready) {
-                    // Bot já conectado — mostrar ícone de sucesso
-                    qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-check-circle" style="font-size:3rem; color:#00ff88;"></i><p style="margin-top:1rem;">Autenticado</p></div>';
-                    // Parar polling
-                    if (qrPollInterval) { clearInterval(qrPollInterval); qrPollInterval = null; }
-                } else {
-                    // QR não disponível e bot não conectado — aguardando inicialização
-                    qrContainer.innerHTML = '<div style="text-align:center;"><i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary); margin-bottom: 1rem;"></i><p style="font-size: 0.85rem; color: ar(--text-dim);">Aguardando QR Code do bot...</p></div>';
-                    // Fazer polling para pegar o QR quando ficar disponível
-                    if (!qrPollInterval) {
-                        qrPollInterval = setInterval(loadQR, 5000);
-                    }
-                }
-            } catch (e) {
-                console.error('Erro ao carregar QR:', e);
-            }
+        function formatUptime(seconds) {
+            if(!seconds) return "0s";
+             const d = Math.floor(seconds / (3600*24));
+             const h = Math.floor(seconds % (3600*24) / 3600);
+             const m = Math.floor(seconds % 3600 / 60);
+             if(d > 0) return `${d}d ${h}h`;
+             if(h > 0) return `${h}h ${m}m`;
+             return `${m}m`;
         }
 
-        async function generatePairingCode() {
-            const phone = document.getElementById('pairing_phone').value.replace(/\D/g, '');
-            if (!phone || phone.length < 10) return alert('Digite um número válido com DDD (Ex: 5511999998888)');
+        function buildInstanceCard(inst) {
+            const sid = inst.sessionId;
+            const isReady = inst.isReady;
+            const uptimeStr = isReady ? formatUptime(inst.uptime) : '-';
+            
+            // Clean ID for display name (if valid phone)
+            let dName = sid;
+            if(sid.length > 9) dName = sid.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
+            
+            let statusBadge = isReady 
+               ? `<span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;"><i class="fas fa-circle" style="font-size:0.5rem; vertical-align:middle; margin-right:4px;"></i>Ativo</span>`
+               : `<span style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;"><i class="fas fa-circle-notch fa-spin" style="font-size:0.6rem; vertical-align:middle; margin-right:4px;"></i>Sincronizando</span>`;
 
-            const btn = document.getElementById('btn-pair');
-            const codeBox = document.getElementById('pairing-code-box');
+            return `
+                <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1rem; position: relative;" id="card-${sid}">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h4 style="margin: 0 0 0.3rem 0; font-size: 0.95rem;">${dName}</h4>
+                            ${statusBadge}
+                        </div>
+                        <button onclick="removeInstance('${sid}')" title="Desconectar / Excluir" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 5px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
-            codeBox.style.display = 'none';
+                    ${isReady ? `
+                    <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim); display: flex; justify-content: space-between;">
+                         <span><i class="fas fa-clock"></i> Tempo Oline: <strong style="color:white;">${uptimeStr}</strong></span>
+                    </div>
+                    ` : `
+                    <div id="qr-box-${sid}" style="min-height: 120px; display: flex; align-items: center; justify-content: center; margin-top: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                          <i class="fas fa-circle-notch fa-spin" style="color: var(--primary);"></i>
+                    </div>
+                    <div style="margin-top:0.8rem;">
+                         <input type="text" id="phone-${sid}" placeholder="Digite seu N° com DDD" style="width: 100%; border:1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); border-radius:6px; padding: 8px; color:white; font-size:0.8rem; margin-bottom:5px;">
+                         <button onclick="requestPairing('${sid}')" style="width: 100%; background: var(--primary); color: #0a0a0c; border:none; border-radius:6px; padding: 8px; font-weight:600; cursor:pointer; font-size:0.8rem;">Gerar Código (Safeway)</button>
+                    </div>
+                    `}
+                </div>
+            `;
+        }
 
+        async function loadQR(sessionId) {
             try {
-                const formData = new URLSearchParams();
-                formData.append('phone', phone);
+                const response = await fetch('api_dashboard.php?action=get_qr&session_id=' + encodeURIComponent(sessionId));
+                const result = await response.json();
+                const container = document.getElementById('qr-box-' + sessionId);
+                if(!container) return; // card might be re-rendered
 
-                const response = await fetch('api_dashboard.php?action=generate_pairing', {
+                if (result.success && result.qr) {
+                    container.innerHTML = `<img src="${result.qr}" style="width: 120px; height: 120px; border-radius: 8px;">`;
+                    if (!window.qrPollIntervals[sessionId]) {
+                        window.qrPollIntervals[sessionId] = setInterval(() => loadQR(sessionId), 5000);
+                    }
+                } else if (result.success && result.ready) {
+                     container.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981; font-size: 2rem;"></i>';
+                     if(window.qrPollIntervals[sessionId]) { clearInterval(window.qrPollIntervals[sessionId]); delete window.qrPollIntervals[sessionId]; }
+                     setTimeout(updateBotStatus, 1000); // refresh list silently
+                } else {
+                     container.innerHTML = `<p style="font-size:0.75rem; color:var(--text-dim); text-align:center;">Preparando Código...</p>`;
+                     if (!window.qrPollIntervals[sessionId]) {
+                        window.qrPollIntervals[sessionId] = setInterval(() => loadQR(sessionId), 5000);
+                    }
+                }
+            } catch(e) {}
+        }
+        
+        async function openNewNodeModal() {
+            const { value: phoneNumber } = await Swal.fire({
+              title: 'Adicionar Chip',
+              input: 'text',
+              inputLabel: 'Qual o telefone do chip? (DDD + Número)',
+              inputPlaceholder: 'Ex: 5511999998888',
+              background: '#0a0a0c',
+              color: '#fff',
+              confirmButtonColor: '#10b981',
+              showCancelButton: true,
+              cancelButtonText: 'Cancelar'
+            });
+
+            if (phoneNumber) {
+                const cleanPhone = phoneNumber.replace(/\D/g, '');
+                if(cleanPhone.length < 10) return alert('Número inválido');
+                
+                // Creates a new random/phone based session ID
+                const newSid = "bot_" + cleanPhone;
+                
+                // Call api_dashboard generation logic directly which initializes an instance
+                const formData = new URLSearchParams();
+                formData.append('phone', cleanPhone);
+                formData.append('session_id', newSid);
+                
+                Swal.fire({ title: 'Preparando...', text: 'Registrando nova instância no servidor.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                fetch('api_dashboard.php?action=generate_pairing', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: formData
+                }).then(r => r.json()).then(res => {
+                    Swal.close();
+                    if(res.success && res.code) {
+                         Swal.fire({
+                            title: 'Código Gerado!',
+                            html: `<p>Insira no WhatsApp:</p><div style="font-size: 28px; font-weight: bold; color: #10b981; margin: 15px 0; letter-spacing: 5px;">${res.code}</div><p style="font-size:12px;">Se a tela do admin atualizar sozinha, o código sumirá, anote!</p>`,
+                            icon: 'info',
+                            background: '#0a0a0c', color: '#fff', confirmButtonColor: '#10b981'
+                         });
+                         updateBotStatus();
+                    } else {
+                         Swal.fire('Aviso', 'Instância iniciada. Aguarde na tela de gerenciador o código ou QR aparecer.', 'info');
+                         updateBotStatus();
+                    }
                 });
-                const result = await response.json();
+            }
+        }
 
-                if (result.success && result.code) {
-                    codeBox.innerText = result.code;
-                    codeBox.style.display = 'block';
+        async function requestPairing(sid) {
+            const phoneInput = document.getElementById('phone-' + sid);
+            const cleanPhone = phoneInput.value.replace(/\D/g, '');
+            if(cleanPhone.length < 10) return alert('Insira seu número com DDD antes de gerar o código.');
+            
+            const formData = new URLSearchParams();
+            formData.append('phone', cleanPhone);
+            formData.append('session_id', sid);
+            
+            Swal.fire({ title: 'Aguarde', text: 'Solicitando código do WhatsApp...', allowOutsideClick: false, didOpen:()=>Swal.showLoading() });
+            
+            fetch('api_dashboard.php?action=generate_pairing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+            }).then(r => r.json()).then(result => {
+                 if (result.success && result.code) {
                     Swal.fire({
                         title: 'Código Gerado!',
-                        html: '<p style="margin-bottom: 20px">Insira o código no seu WhatsApp:</p><div style="font-size: 24px; font-weight: bold; color: #10b981; background: rgba(16,185,129,0.1); padding: 15px; border-radius: 10px">' + result.code + '</div><p style="margin-top:20px; font-size: 13px">Vá em Configurações > Aparelhos Conectados > Conectar com número de telefone</p>',
+                        html: '<p style="margin-bottom: 20px">Insira no seu WhatsApp:</p><div style="font-size: 32px; font-weight: bold; letter-spacing:5px; color: #10b981; background: rgba(16,185,129,0.1); padding: 15px; border-radius: 10px">' + result.code + '</div>',
                         icon: 'success',
                         background: '#0a0a0c',
                         color: '#fff',
                         confirmButtonColor: '#10b981'
                     });
                 } else {
-                    Swal.fire('Erro', result.message || 'Erro ao gerar código', 'error');
+                    Swal.fire('Erro', result.message || 'Erro ao gerar código.', 'error');
                 }
-            } catch (e) {
-                Swal.fire('Erro', 'Falha na comunicação com a API', 'error');
+            });
+        }
+        
+        async function removeInstance(sid) {
+            if(confirm("Tem certeza que deseja deletar esse chip do sistema?")) {
+                const fd = new URLSearchParams();
+                fd.append('session_id', sid);
+                fetch('api_dashboard.php?action=remove_instance', { method: 'POST', body: fd }).then(()=>{
+                    if(window.qrPollIntervals[sid]) { clearInterval(window.qrPollIntervals[sid]); delete window.qrPollIntervals[sid]; }
+                    updateBotStatus();
+                });
             }
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-key"></i> Gerar Código';
         }
 
         async function updateStats() {

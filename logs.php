@@ -204,14 +204,14 @@ requireLogin();
     <div class="dashboard-container">
         <?php include 'includes/sidebar.php'; ?>
         <main class="main-content">
-            <header class="header animate-fade-in">
-                <div>
-                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Logs do Sistema</h1>
-                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Monitoramento em tempo real do robô de marketing.</p>
+            <header class="header animate-fade-in" style="flex-wrap: wrap; gap: 1rem; align-items: center;">
+                <div style="flex: 1;">
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Logs do Sistema VIP</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Monitoramento avançado em tempo real dos chips e disparos.</p>
                 </div>
-                <div class="auto-refresh-toggle">
+                <div class="auto-refresh-toggle" style="background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px;">
                     <span class="status-indicator active" id="refresh-indicator"></span>
-                    <span style="font-size: 0.9rem; font-weight: 600; margin-left: 0.5rem;">Ao vivo</span>
+                    <span style="font-size: 0.9rem; font-weight: 600; margin-left: 0.5rem; color: #fff;">Sincronizado</span>
                 </div>
             </header>
 

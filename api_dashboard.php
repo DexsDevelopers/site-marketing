@@ -57,18 +57,12 @@ try {
             $result = curl_exec($ch);
             curl_close($ch);
 
-            $statusData = ['online' => false, 'ready' => false, 'uptime' => 0, 'reconnects' => 0];
+            $statusData = ['online' => false, 'instances' => []];
             if ($result) {
                 $decoded = json_decode($result, true);
                 if (isset($decoded['instances'])) {
-                    foreach ($decoded['instances'] as $inst) {
-                        if ($inst['sessionId'] === 'admin_session') {
-                            $statusData['online'] = true;
-                            $statusData['ready'] = $inst['isReady'];
-                            $statusData['uptime'] = $inst['uptime'];
-                            break;
-                        }
-                    }
+                    $statusData['online'] = true;
+                    $statusData['instances'] = $decoded['instances'];
                 }
             }
             $response = ['success' => true, 'data' => $statusData];
@@ -77,8 +71,9 @@ try {
         case 'get_qr':
             $apiConfig = whatsappApiConfig();
             $baseUrl = $apiConfig['base_url'];
+            $sessionId = $_GET['session_id'] ?? 'admin_session'; // Default fallback but dynamic now
 
-            $ch = curl_init($baseUrl . '/instance/qr/admin_session');
+            $ch = curl_init($baseUrl . '/instance/qr/' . urlencode($sessionId));
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_TIMEOUT => 5,
@@ -114,13 +109,14 @@ try {
             $apiConfig = whatsappApiConfig();
             $baseUrl = $apiConfig['base_url'];
             $phone = $_POST['phone'] ?? '';
+            $sessionId = $_POST['session_id'] ?? 'admin_session';
 
             if (!$phone) {
                 $response = ['success' => false, 'message' => 'Telefone não informado'];
                 break;
             }
 
-            $payload = json_encode(['sessionId' => 'admin_session', 'phone' => $phone]);
+            $payload = json_encode(['sessionId' => $sessionId, 'phone' => $phone]);
             $ch = curl_init($baseUrl . '/instance/pairing-code');
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
@@ -146,6 +142,30 @@ try {
             else {
                 $response = ['success' => false, 'message' => 'Falha de conexão com o bot'];
             }
+            break;
+
+        case 'remove_instance':
+            $apiConfig = whatsappApiConfig();
+            $baseUrl = $apiConfig['base_url'];
+            $sessionId = $_POST['session_id'] ?? '';
+
+            if (!$sessionId) {
+                $response = ['success' => false, 'message' => 'Session ID não carregada'];
+                break;
+            }
+
+            $ch = curl_init($baseUrl . '/instance/reset/' . urlencode($sessionId));
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_TIMEOUT => 20,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false
+            ]);
+            $result = curl_exec($ch);
+            curl_close($ch);
+
+            $response = ['success' => true, 'message' => 'Chip desconectado com sucesso'];
             break;
 
         case 'get_recent_activity':

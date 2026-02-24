@@ -13,6 +13,7 @@ import pino from 'pino';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import os from 'os';
+import { nlpEngine } from './nlp_ai.js';
 
 dotenv.config();
 
@@ -185,6 +186,60 @@ async function createInstance(sessionId, phoneForPairing = null) {
     addLog(sessionId, 'INFO', `Pareamento pendente para ${pairingNumber}. Aguardando socket ficar pronto...`);
   }
 
+  // Lidar com recebimento de mensagens para simulação humana (Maturação do Chip/Aquecimento)
+  sock.ev.on('messages.upsert', async m => {
+    if (m.type === 'notify') {
+      for (const msg of m.messages) {
+        if (!msg.key.fromMe && msg.message) {
+          const remoteJid = msg.key.remoteJid;
+          // Ignorar mensagens de grupos ou status no auto-read de aquecimento
+          if (remoteJid && !remoteJid.includes('@g.us') && !remoteJid.includes('status')) {
+            try {
+              // 1. Aguardar um delay aleatório para ler a mensagem e simular humano (3s a 8s)
+              setTimeout(async () => {
+                await sock.readMessages([msg.key]);
+              }, Math.floor(Math.random() * (8000 - 3000 + 1)) + 3000);
+
+              // 2. IA de Conversação (Aquecimento Ativo Safeway)
+              // Verifica se a mensagem veio de outra instância interna nossa para evitar responder clientes finais acidentalmente
+              let fromAnotherBot = false;
+              for (const inst of instances.values()) {
+                if (inst.isReady && inst.sock && inst.sock.user) {
+                  const jid = inst.sock.user.id.split(':')[0] + '@s.whatsapp.net';
+                  if (jid === remoteJid) fromAnotherBot = true;
+                }
+              }
+
+              const textContent = msg.message?.conversation || msg.message?.extendedTextMessage?.text;
+
+              if (fromAnotherBot && textContent) {
+                // Tem 70% de chance de responder para gerar um diálogo orgânico e quebrar loops infinitos rápidos
+                if (Math.random() < 0.70) {
+                  setTimeout(async () => {
+                    if (!instances.has(sessionId)) return; // Sessão pode ter caido
+
+                    const aiResponse = nlpEngine.analyze(textContent, remoteJid);
+
+                    // Simula tempo de digitação inteligente baseado no tamanho da resposta da IA
+                    const typingTime = Math.min((aiResponse.length * 80) + 1500, 8000);
+                    await sock.sendPresenceUpdate('composing', remoteJid);
+                    await new Promise(r => setTimeout(r, typingTime));
+                    await sock.sendPresenceUpdate('paused', remoteJid);
+
+                    await sock.sendMessage(remoteJid, { text: aiResponse });
+                    addLog(sessionId, 'INFO', `[IA RESP] A inteligência gerou resposta para ${remoteJid}`);
+
+                  }, Math.floor(Math.random() * (12000 - 4000 + 1)) + 4000); // Demora de 4 a 12s para "pensar" em responder
+                }
+              }
+
+            } catch (e) { }
+          }
+        }
+      }
+    }
+  });
+
   return instanceData;
 }
 
@@ -280,6 +335,53 @@ setInterval(async () => {
   // Tentar rodar marketing
   processGlobalMarketing();
 }, 60000);
+
+// --- SISTEMA DE AQUECIMENTO DE NÚMEROS (MATURAÇÃO) ---
+async function processGlobalWarming() {
+  const activeInstances = Array.from(instances.values()).filter(i => i.isReady && i.sock && i.sock.user);
+  if (activeInstances.length < 2) return; // Precisa de 2 números para interagir
+
+  addLog('SYSTEM', 'INFO', '[AQUECIMENTO] Iniciando ciclo de maturação entre chips conectados...');
+  // Embaralhar as instâncias para criar pares aleatórios
+  const shuffled = activeInstances.sort(() => 0.5 - Math.random());
+
+  for (let i = 0; i < Math.floor(shuffled.length / 2) * 2; i += 2) {
+    const instA = shuffled[i];
+    const instB = shuffled[i + 1];
+
+    if (!instA.sock.user || !instB.sock.user) continue;
+
+    try {
+      const jidB = instB.sock.user.id.split(':')[0] + '@s.whatsapp.net';
+      const randomMsg = nlpEngine.generateOpener();
+
+      const typingDuration = Math.floor(Math.random() * (6000 - 2000 + 1)) + 2000;
+      await instA.sock.sendPresenceUpdate('composing', jidB);
+      await new Promise(r => setTimeout(r, typingDuration));
+      await instA.sock.sendPresenceUpdate('paused', jidB);
+
+      await instA.sock.sendMessage(jidB, { text: randomMsg });
+      addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Enviando interação para ${jidB}`);
+
+    } catch (e) {
+      addLog(instA.sessionId, 'ERROR', `[AQUECIMENTO] Erro na interação: ${e.message}`);
+    }
+
+    // Pequeno delay entre interações
+    await new Promise(r => setTimeout(r, Math.floor(Math.random() * 5000) + 2000));
+  }
+}
+
+function scheduleNextWarming() {
+  // Executa o próximo loop de aquecimento aleatoriamente entre 10 e 25 minutos
+  const delayMinutes = Math.floor(Math.random() * (25 - 10 + 1) + 10);
+  setTimeout(() => {
+    processGlobalWarming();
+    scheduleNextWarming();
+  }, delayMinutes * 60 * 1000);
+}
+// Iniciar rotina de aquecimento global
+scheduleNextWarming();
 
 // --- ROTAS API ---
 

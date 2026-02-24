@@ -70,14 +70,13 @@ requireLogin();
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="header animate-fade-in">
-                <div>
-                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Monitor em Tempo Real</h1>
-                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Acompanhe o status de todos os leads e
-                        envios.</p>
+            <header class="header animate-fade-in" style="flex-wrap: wrap; gap: 1rem; align-items: center;">
+                <div style="flex: 1;">
+                    <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: -1.5px;">Monitor VIP de Envios</h1>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem;">Acompanhamento global das operações automáticas.</p>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 0.9rem;">
-                    <i class="fas fa-sync-alt fa-spin" style="color: var(--primary);"></i> Atualizando...
+                <div style="display: flex; align-items: center; gap: 10px; color: var(--primary); font-size: 0.95rem; font-weight: 600; background: rgba(255,59,59,0.1); padding: 8px 16px; border-radius: 20px;">
+                    <i class="fas fa-sync-alt fa-spin"></i> Sincronizando Ao Vivo...
                 </div>
             </header>
 
