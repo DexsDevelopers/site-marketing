@@ -56,7 +56,14 @@ function formatJid(phone) {
   return digits.length >= 15 ? digits + '@lid' : digits + '@s.whatsapp.net';
 }
 
+const instanceLocks = new Set(); // Trava para evitar criação dupla simultânea
+
 async function createInstance(sessionId, phoneForPairing = null) {
+  if (instanceLocks.has(sessionId)) {
+    addLog(sessionId, 'WARN', 'Instância já está em processo de inicialização. Ignorando pedido duplicado.');
+    return null;
+  }
+
   if (instances.has(sessionId)) {
     const inst = instances.get(sessionId);
     if (inst.isReady) return inst;
@@ -68,6 +75,8 @@ async function createInstance(sessionId, phoneForPairing = null) {
       return inst;
     }
   }
+
+  instanceLocks.add(sessionId);
 
   addLog(sessionId, 'INFO', `Iniciando instância: ${sessionId}`);
   const { version: latestVersion, isLatest } = await fetchLatestBaileysVersion();
@@ -108,6 +117,7 @@ async function createInstance(sessionId, phoneForPairing = null) {
   };
 
   instances.set(sessionId, instanceData);
+  instanceLocks.delete(sessionId);
 
   sock.ev.on('creds.update', saveCreds);
 
@@ -161,10 +171,11 @@ async function createInstance(sessionId, phoneForPairing = null) {
         instances.delete(sessionId);
         setTimeout(() => createInstance(sessionId), 5000);
       } else {
-        addLog(sessionId, 'ERROR', 'Logout detectado. Removendo sessão.');
+        addLog(sessionId, 'ERROR', 'A conta foi desconectada (Logout/Ban). Removendo arquivos de sessão.');
         try { sock.ev.removeAllListeners(); sock.ws.close(); } catch (e) { }
-        fs.rmSync(sessionPath, { recursive: true, force: true });
+        if (fs.existsSync(sessionPath)) fs.rmSync(sessionPath, { recursive: true, force: true });
         instances.delete(sessionId);
+        instanceLocks.delete(sessionId);
         updateRemoteStatus(sessionId, 'desconectado');
       }
     } else if (connection === 'open') {
