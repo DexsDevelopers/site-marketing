@@ -474,97 +474,108 @@ setInterval(async () => {
 // --- SISTEMA DE AQUECIMENTO DE NÚMEROS (MATURAÇÃO ELITE) ---
 async function processGlobalWarming() {
   const activeInstances = Array.from(instances.values()).filter(i => i.isReady && i.sock && i.sock.user);
-  if (activeInstances.length < 2) return;
+  if (activeInstances.length === 0) return;
 
-  addLog('SYSTEM', 'INFO', '[AQUECIMENTO] Iniciando ciclo de interações humanas entre os chips...');
-  const shuffled = activeInstances.sort(() => 0.5 - Math.random());
+  // 1. Interação entre Chips (Se houver 2 ou mais)
+  if (activeInstances.length >= 2) {
+    addLog('SYSTEM', 'INFO', '[AQUECIMENTO] Iniciando ciclo de interações humanas entre os chips...');
+    const shuffled = [...activeInstances].sort(() => 0.5 - Math.random());
 
-  for (let i = 0; i < Math.floor(shuffled.length / 2) * 2; i += 2) {
-    const instA = shuffled[i];
-    const instB = shuffled[i + 1];
+    for (let i = 0; i < Math.floor(shuffled.length / 2) * 2; i += 2) {
+      const instA = shuffled[i];
+      const instB = shuffled[i + 1];
 
-    if (!instA.sock.user || !instB.sock.user) continue;
+      if (!instA.sock.user || !instB.sock.user) continue;
 
-    try {
-      const jidB = instB.sock.user.id.split(':')[0] + '@s.whatsapp.net';
-      const randomMsg = nlpEngine.generateOpener();
+      try {
+        const jidB = instB.sock.user.id.split(':')[0] + '@s.whatsapp.net';
+        const randomMsg = nlpEngine.generateOpener();
 
-      // 1. Simular Presença Humana (Online + Digitante)
-      await instA.sock.sendPresenceUpdate('available');
-      const typingDuration = Math.floor(Math.random() * (7000 - 3000 + 1)) + 3000;
-      await instA.sock.sendPresenceUpdate('composing', jidB);
-      await new Promise(r => setTimeout(r, typingDuration));
+        // 1. Simular Presença Humana (Online + Digitante)
+        await instA.sock.sendPresenceUpdate('available');
+        const typingDuration = Math.floor(Math.random() * (7000 - 3000 + 1)) + 3000;
+        await instA.sock.sendPresenceUpdate('composing', jidB);
+        await new Promise(r => setTimeout(r, typingDuration));
 
-      // 2. Enviar Mensagem
-      await instA.sock.sendMessage(jidB, { text: randomMsg });
-      addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Mensagem enviada para ${jidB}: "${randomMsg}"`);
+        // 2. Enviar Mensagem
+        await instA.sock.sendMessage(jidB, { text: randomMsg });
+        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Mensagem enviada para ${jidB}: "${randomMsg}"`);
 
-      // 3. Comportamento Extra: Chance de reagir a uma mensagem anterior (se existir)
-      if (Math.random() > 0.5) {
-        const emojis = ['👍', '❤️', '😂', '😮', '👏', '🙏', '🔥'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        // Nota: Precisaríamos do ID de uma mensagem real para reagir. 
-        // Vamos deixar para o messages.upsert lidar com as reações de volta.
+        // 3. Comportamento Extra: Chance de reagir a uma mensagem anterior (se existir)
+        if (Math.random() > 0.5) {
+          const emojis = ['👍', '❤️', '😂', '😮', '👏', '🙏', '🔥'];
+          const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+          // Nota: Precisaríamos do ID de uma mensagem real para reagir. 
+          // Vamos deixar para o messages.upsert lidar com as reações de volta.
+        }
+
+        // 4. Comportamento Humano: Chance de postar um Status (Story)
+        if (Math.random() > 0.8) {
+          const captions = [
+            "Dia produtivo! ✨", "Bora pra cima!", "Café e foco. ☕", "A persistência vence o talento.",
+            "Novos projetos vindo aí... 🚀", "Gratidão por tudo.", "A paz de espírito é o maior luxo.",
+            "Não pare até se orgulhar. 🔥", "Apenas vivendo... 🍃", "Trabalho em silêncio, sucesso faz o barulho.",
+            "Mais um dia, mais uma meta! ✅", "Equilíbrio é tudo.", "Fé no processo."
+          ];
+          const statusText = captions[Math.floor(Math.random() * captions.length)];
+          const bgs = ['#FF5733', '#3357FF', '#33FF57', '#F333FF', '#33FFF3', '#000000'];
+          const randomBg = bgs[Math.floor(Math.random() * bgs.length)];
+
+          await instA.sock.sendMessage('status@broadcast', {
+            text: statusText
+          }, {
+            backgroundColor: randomBg,
+            font: Math.floor(Math.random() * 5) + 1
+          });
+          addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Postou Status: "${statusText}"`);
+        }
+
+        // 5. Comportamento Humano: Mudar o Recado (Bio/Nota)
+        if (Math.random() > 0.85) {
+          const bios = [
+            "Foco e Fé 🚀", "Trabalhando...", "Disponível para negócios", "No topo ou a caminho!",
+            "Só respondo urgente", "A vida é curta, aproveite.", "Em constante evolução 🧬",
+            "WhatsApp Only 📱", "Busy working", "Deus é fiel", "Mindset Milionário"
+          ];
+          const newBio = bios[Math.floor(Math.random() * bios.length)];
+          await instA.sock.updateProfileStatus(newBio);
+          addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Atualizou Bio: "${newBio}"`);
+        }
+
+        // 6. ELITE SHIELD: Interação com Contas Oficiais (Blindagem)
+        // Se houver apenas 1 chip ou chance aleatória, mandar msg para um número de utilidade/oficial
+        if (Math.random() > 0.90) {
+          const officialAccounts = ['5511999999999', '5511947741441', '5511973161000']; // Números de exemplo (Grandes empresas)
+          const target = officialAccounts[Math.floor(Math.random() * officialAccounts.length)] + '@s.whatsapp.net';
+          await instA.sock.sendMessage(target, { text: "Olá! Gostaria de saber mais sobre os serviços." });
+          addLog(instA.sessionId, 'SUCCESS', `[ELITE SHIELD] Interação de blindagem enviada para conta oficial.`);
+        }
+
+        await instA.sock.sendPresenceUpdate('unavailable');
+      } catch (e) {
+        addLog(instA.sessionId, 'ERROR', `[AQUECIMENTO] Erro no comportamento humano: ${e.message}`);
       }
+      await new Promise(r => setTimeout(r, Math.floor(Math.random() * 8000) + 3000));
+    } // Fim do For do loop de interação
+  } // Fim do If de 2 ou mais chips
 
-      // 4. Comportamento Humano: Chance de postar um Status (Story)
-      if (Math.random() > 0.8) {
-        const captions = [
-          "Dia produtivo! ✨", "Bora pra cima!", "Café e foco. ☕", "A persistência vence o talento.",
-          "Novos projetos vindo aí... 🚀", "Gratidão por tudo.", "A paz de espírito é o maior luxo.",
-          "Não pare até se orgulhar. 🔥", "Apenas vivendo... 🍃", "Trabalho em silêncio, sucesso faz o barulho.",
-          "Mais um dia, mais uma meta! ✅", "Equilíbrio é tudo.", "Fé no processo."
+  // --- 2. ELITE SHIELD (STATUS E BLINDAGEM SOLO) ---
+  for (const inst of activeInstances) {
+    try {
+      const statusChance = activeInstances.length === 1 ? 1 : 0.2;
+      if (Math.random() <= statusChance) {
+        const statusTexts = [
+          "Foco total no projeto! 🚀", "Dia produtivo hoje. ✅", "Novidades vindo aí...",
+          "Gratidão por mais um dia.", "Bora pra cima! 🔥", "Mais um dia de metas batidas! 📈"
         ];
-        const statusText = captions[Math.floor(Math.random() * captions.length)];
-        const bgs = ['#FF5733', '#3357FF', '#33FF57', '#F333FF', '#33FFF3', '#000000'];
-        const randomBg = bgs[Math.floor(Math.random() * bgs.length)];
-
-        await instA.sock.sendMessage('status@broadcast', {
-          text: statusText
+        await inst.sock.sendMessage('status@broadcast', {
+          text: statusTexts[Math.floor(Math.random() * statusTexts.length)]
         }, {
-          backgroundColor: randomBg,
-          font: Math.floor(Math.random() * 5) + 1
+          backgroundColor: '#FF3B3B',
+          font: 1
         });
-        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Postou Status: "${statusText}"`);
+        addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Atividade de status concluída.`);
       }
-
-      // 5. Comportamento Humano: Mudar o Recado (Bio/Nota)
-      if (Math.random() > 0.85) {
-        const bios = [
-          "Foco e Fé 🚀", "Trabalhando...", "Disponível para negócios", "No topo ou a caminho!",
-          "Só respondo urgente", "A vida é curta, aproveite.", "Em constante evolução 🧬",
-          "WhatsApp Only 📱", "Busy working", "Deus é fiel", "Mindset Milionário"
-        ];
-        const newBio = bios[Math.floor(Math.random() * bios.length)];
-        await instA.sock.updateProfileStatus(newBio);
-        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Atualizou Bio: "${newBio}"`);
-      }
-
-      // 6. ELITE SHIELD: Interação com Contas Oficiais (Blindagem)
-      // Se houver apenas 1 chip ou chance aleatória, mandar msg para um número de utilidade/oficial
-      if (Math.random() > 0.90) {
-        const officialAccounts = ['5511999999999', '5511947741441', '5511973161000']; // Números de exemplo (Grandes empresas)
-        const target = officialAccounts[Math.floor(Math.random() * officialAccounts.length)] + '@s.whatsapp.net';
-        await instA.sock.sendMessage(target, { text: "Olá! Gostaria de saber mais sobre os serviços." });
-        addLog(instA.sessionId, 'SUCCESS', `[ELITE SHIELD] Interação de blindagem enviada para conta oficial.`);
-      }
-
-      await instA.sock.sendPresenceUpdate('unavailable');
-
-    } catch (e) {
-      addLog(instA.sessionId, 'ERROR', `[AQUECIMENTO] Erro no comportamento humano: ${e.message}`);
-    }
-
-    await new Promise(r => setTimeout(r, Math.floor(Math.random() * 8000) + 3000));
-  }
-
-  // Se houver apenas 1 chip, forçar postagem de Status para não ficar ocioso
-  if (activeInstances.length === 1) {
-    const inst = activeInstances[0];
-    try {
-      const statusTexts = ["Foco total no projeto! 🚀", "Dia produtivo hoje. ✅", "Novidades vindo aí...", "Gratidão por mais um dia.", "Bora pra cima! 🔥"];
-      await inst.sock.sendMessage('status@broadcast', { text: statusTexts[Math.floor(Math.random() * statusTexts.length)] }, { backgroundColor: '#FF3B3B', font: 1 });
-      addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Postagem de Status automática para aquecimento solo.`);
     } catch (e) { }
   }
 }
