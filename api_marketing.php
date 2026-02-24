@@ -80,7 +80,7 @@ try {
         // Verificar campanha ativa
         $campanha = fetchOne($pdo, "SELECT * FROM marketing_campanhas WHERE ativo = 1 ORDER BY id ASC LIMIT 1");
         if (!$campanha) {
-            echo json_encode(['success' => true, 'tasks' => [], 'message' => 'Campanha inativa']);
+            echo json_encode(['success' => true, 'tasks' => [], 'message' => 'Campanha inativa', 'diag' => 'Nenhuma campanha ativa encontrada no BD']);
             exit;
         }
 
@@ -113,6 +113,11 @@ try {
             }
         }
 
+        // --- DIAGNÓSTICO EXTRA ---
+        $totais = fetchData($pdo, "SELECT status, COUNT(*) as c FROM marketing_membros GROUP BY status");
+        $statusMap = [];
+        foreach($totais as $t) $statusMap[$t['status']] = (int)$t['c'];
+
         // B. Buscar Tarefas Pendentes com Lock para Multi-Bot
         $pdo->beginTransaction();
         try {
@@ -129,7 +134,16 @@ try {
 
             if (empty($leadsPendentes)) {
                 $pdo->rollBack();
-                echo json_encode(['success' => true, 'tasks' => []]);
+                echo json_encode([
+                    'success' => true, 
+                    'tasks' => [], 
+                    'diag' => [
+                        'limite_diario' => $limiteDiario,
+                        'hoje_count' => $hojeCount,
+                        'status_membros' => $statusMap,
+                        'msg' => 'Nenhum lead em_progresso com data de envio vencida.'
+                    ]
+                ]);
                 exit;
             }
 

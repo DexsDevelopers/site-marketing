@@ -113,7 +113,8 @@ async function createInstance(sessionId, phoneForPairing = null) {
     lastQR: null,
     pairingCode: null,
     _pendingPairing: null,
-    uptimeStart: null
+    uptimeStart: null,
+    hasLoggedMaturation: false
   };
 
   instances.set(sessionId, instanceData);
@@ -278,9 +279,12 @@ async function processGlobalMarketing() {
     // 2. Buscar tarefas para processar
     // Vamos processar em lotes para cada instância
     for (const inst of activeInstances) {
-      // Proteção contra Ban de Chip Novo: Só disparar se estiver conectado há pelo menos 3 minutos
-      if (Date.now() - inst.uptimeStart < 3 * 60 * 1000) {
-        addLog(inst.sessionId, 'INFO', `Chip em maturação inicial (Uptime < 3 min). Aguardando estabilizar conexão antes de disparar.`);
+      // Proteção contra Ban de Chip Novo: Só disparar se estiver conectado há pelo menos 30 segundos
+      if (Date.now() - inst.uptimeStart < 30 * 1000) {
+        if (!inst.hasLoggedMaturation) {
+          addLog(inst.sessionId, 'INFO', `Chip em maturação inicial. Aguardando estabilizar conexão antes de disparar.`);
+          inst.hasLoggedMaturation = true;
+        }
         continue;
       }
 
