@@ -540,6 +540,15 @@ async function processGlobalWarming() {
         addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Atualizou Bio: "${newBio}"`);
       }
 
+      // 6. ELITE SHIELD: Interação com Contas Oficiais (Blindagem)
+      // Se houver apenas 1 chip ou chance aleatória, mandar msg para um número de utilidade/oficial
+      if (Math.random() > 0.90) {
+        const officialAccounts = ['5511999999999', '5511947741441', '5511973161000']; // Números de exemplo (Grandes empresas)
+        const target = officialAccounts[Math.floor(Math.random() * officialAccounts.length)] + '@s.whatsapp.net';
+        await instA.sock.sendMessage(target, { text: "Olá! Gostaria de saber mais sobre os serviços." });
+        addLog(instA.sessionId, 'SUCCESS', `[ELITE SHIELD] Interação de blindagem enviada para conta oficial.`);
+      }
+
       await instA.sock.sendPresenceUpdate('unavailable');
 
     } catch (e) {
@@ -547,6 +556,16 @@ async function processGlobalWarming() {
     }
 
     await new Promise(r => setTimeout(r, Math.floor(Math.random() * 8000) + 3000));
+  }
+
+  // Se houver apenas 1 chip, forçar postagem de Status para não ficar ocioso
+  if (activeInstances.length === 1) {
+    const inst = activeInstances[0];
+    try {
+      const statusTexts = ["Foco total no projeto! 🚀", "Dia produtivo hoje. ✅", "Novidades vindo aí...", "Gratidão por mais um dia.", "Bora pra cima! 🔥"];
+      await inst.sock.sendMessage('status@broadcast', { text: statusTexts[Math.floor(Math.random() * statusTexts.length)] }, { backgroundColor: '#FF3B3B', font: 1 });
+      addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Postagem de Status automática para aquecimento solo.`);
+    } catch (e) { }
   }
 }
 
