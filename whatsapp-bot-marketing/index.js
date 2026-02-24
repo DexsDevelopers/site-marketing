@@ -542,16 +542,19 @@ async function processGlobalWarming() {
   }
 }
 
-function scheduleNextWarming() {
-  // Executa o próximo loop de aquecimento aleatoriamente entre 10 e 25 minutos
-  const delayMinutes = Math.floor(Math.random() * (25 - 10 + 1) + 10);
+function scheduleNextWarming(firstRun = false) {
+  // Se for a primeira vez, começa em 2 a 5 minutos. Depois, segue o padrão de 10 a 25 min.
+  const delayMinutes = firstRun
+    ? Math.floor(Math.random() * 3) + 2
+    : Math.floor(Math.random() * (25 - 10 + 1) + 10);
+
   setTimeout(() => {
     processGlobalWarming();
     scheduleNextWarming();
   }, delayMinutes * 60 * 1000);
 }
-// Iniciar rotina de aquecimento global
-scheduleNextWarming();
+// Iniciar rotina de aquecimento global (com delay inicial reduzido)
+scheduleNextWarming(true);
 
 // --- ROTAS API ---
 
