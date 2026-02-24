@@ -45,10 +45,14 @@
                 </a>
             </li>
             <li>
-                <a href="logs.php" class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : ''?>"
-                    style="color: #60a5fa;">
-                    <i class="fas fa-terminal"></i> <span>Logs do Bot</span>
-                </a>
+                <a href="logs.php" class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'logs.php') !== false ? 'active' : ''; ?>">
+                <i class="fas fa-terminal me-3"></i> Logs do Bot
+            </a>
+            </li>
+            <li>
+            <a href="g-chips.php" class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'g-chips.php') !== false ? 'active' : ''; ?>">
+                <i class="fas fa-microchip me-3"></i> Gerenciar Chips
+            </a>
             </li>
             <li>
                 <a href="javascript:void(0)" onclick="confirmResetConnection()" class="nav-item <?= basename($_SERVER['PHP_SELF']) == 'reset.php' ? 'active' : ''?>"

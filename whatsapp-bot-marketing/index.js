@@ -705,6 +705,36 @@ app.get('/logs', (req, res) => {
   res.json({ success: true, logs: memoryLogs });
 });
 
+app.post('/reset-instance/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  const { token } = req.query;
+
+  if (token !== API_TOKEN) {
+    return res.status(401).json({ success: false, message: 'Token inválido' });
+  }
+
+  addLog(sessionId, 'WARN', `Solicitado RESET INDIVIDUAL da instância.`);
+
+  try {
+    const inst = instances.get(sessionId);
+    if (inst && inst.sock) {
+      try { inst.sock.ev.removeAllListeners(); inst.sock.ws.close(); } catch (e) { }
+    }
+
+    const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
+    if (fs.existsSync(sessionPath)) {
+      fs.rmSync(sessionPath, { recursive: true, force: true });
+    }
+
+    instances.delete(sessionId);
+
+    addLog(sessionId, 'SUCCESS', `Instância removida com sucesso.`);
+    res.json({ success: true, message: `Sessão ${sessionId} removida.` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   addLog('SYSTEM', 'SUCCESS', `Server Multi-Bot running on port ${PORT}`);
 
