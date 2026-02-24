@@ -114,11 +114,24 @@ async function createInstance(sessionId, phoneForPairing = null) {
     pairingCode: null,
     _pendingPairing: null,
     uptimeStart: null,
-    hasLoggedMaturation: false
+    hasLoggedMaturation: false,
+    maturationDate: null
   };
 
   instances.set(sessionId, instanceData);
   instanceLocks.delete(sessionId);
+
+  // Controle de Maturação Elite (Grava a data da primeira conexão)
+  const maturationPath = path.join(sessionPath, 'maturation_info.json');
+  if (!fs.existsSync(maturationPath)) {
+    fs.writeFileSync(maturationPath, JSON.stringify({ firstSeen: Date.now() }));
+  }
+  try {
+    const matData = JSON.parse(fs.readFileSync(maturationPath));
+    instanceData.maturationDate = new Date(matData.firstSeen);
+  } catch (e) {
+    instanceData.maturationDate = new Date();
+  }
 
   sock.ev.on('creds.update', saveCreds);
 
@@ -241,6 +254,17 @@ async function createInstance(sessionId, phoneForPairing = null) {
                     await sock.sendMessage(remoteJid, { text: aiResponse });
                     addLog(sessionId, 'INFO', `[IA RESP] A inteligência gerou resposta para ${remoteJid}`);
 
+                    // 3. Reagir à mensagem recebida com um emoji (Simulação Humana Premium)
+                    if (Math.random() < 0.4) {
+                      setTimeout(async () => {
+                        const emojis = ['👍', '❤️', '😂', '😮', '👏', '🔥', '🙌'];
+                        const reactionEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        await sock.sendMessage(remoteJid, {
+                          react: { text: reactionEmoji, key: msg.key }
+                        });
+                      }, 2000);
+                    }
+
                   }, Math.floor(Math.random() * (12000 - 4000 + 1)) + 4000); // Demora de 4 a 12s para "pensar" em responder
                 }
               }
@@ -279,10 +303,15 @@ async function processGlobalMarketing() {
     // 2. Buscar tarefas para processar
     // Vamos processar em lotes para cada instância
     for (const inst of activeInstances) {
-      // Proteção contra Ban de Chip Novo: Só disparar se estiver conectado há pelo menos 30 segundos
-      if (Date.now() - inst.uptimeStart < 30 * 1000) {
+      // Regra Anti-Ban Elite: 1 Dia de Maturação Ativa
+      // Só dispara se a data atual for diferente da data de criação da sessão (Dia Seguinte 00:01)
+      const now = new Date();
+      const maturationDate = inst.maturationDate || now;
+      const isSameDay = now.toDateString() === maturationDate.toDateString();
+
+      if (isSameDay) {
         if (!inst.hasLoggedMaturation) {
-          addLog(inst.sessionId, 'INFO', `Chip em maturação inicial. Aguardando estabilizar conexão antes de disparar.`);
+          addLog(inst.sessionId, 'SUCCESS', `Chip em MATURAÇÃO ATIVA (Primeiro dia). Enviando apenas conversas de aquecimento. Marketing libera às 00:01 de amanhã.`);
           inst.hasLoggedMaturation = true;
         }
         continue;
@@ -358,13 +387,12 @@ setInterval(async () => {
   processGlobalMarketing();
 }, 60000);
 
-// --- SISTEMA DE AQUECIMENTO DE NÚMEROS (MATURAÇÃO) ---
+// --- SISTEMA DE AQUECIMENTO DE NÚMEROS (MATURAÇÃO ELITE) ---
 async function processGlobalWarming() {
   const activeInstances = Array.from(instances.values()).filter(i => i.isReady && i.sock && i.sock.user);
-  if (activeInstances.length < 2) return; // Precisa de 2 números para interagir
+  if (activeInstances.length < 2) return;
 
-  addLog('SYSTEM', 'INFO', '[AQUECIMENTO] Iniciando ciclo de maturação entre chips conectados...');
-  // Embaralhar as instâncias para criar pares aleatórios
+  addLog('SYSTEM', 'INFO', '[AQUECIMENTO] Iniciando ciclo de interações humanas entre os chips...');
   const shuffled = activeInstances.sort(() => 0.5 - Math.random());
 
   for (let i = 0; i < Math.floor(shuffled.length / 2) * 2; i += 2) {
@@ -377,20 +405,51 @@ async function processGlobalWarming() {
       const jidB = instB.sock.user.id.split(':')[0] + '@s.whatsapp.net';
       const randomMsg = nlpEngine.generateOpener();
 
-      const typingDuration = Math.floor(Math.random() * (6000 - 2000 + 1)) + 2000;
+      // 1. Simular Presença Humana (Online + Digitante)
+      await instA.sock.sendPresenceUpdate('available');
+      const typingDuration = Math.floor(Math.random() * (7000 - 3000 + 1)) + 3000;
       await instA.sock.sendPresenceUpdate('composing', jidB);
       await new Promise(r => setTimeout(r, typingDuration));
-      await instA.sock.sendPresenceUpdate('paused', jidB);
 
+      // 2. Enviar Mensagem
       await instA.sock.sendMessage(jidB, { text: randomMsg });
-      addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Enviando interação para ${jidB}`);
+      addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Mensagem enviada para ${jidB}: "${randomMsg}"`);
+
+      // 3. Comportamento Extra: Chance de reagir a uma mensagem anterior (se existir)
+      if (Math.random() > 0.5) {
+        const emojis = ['👍', '❤️', '😂', '😮', '👏', '🙏', '🔥'];
+        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+        // Nota: Precisaríamos do ID de uma mensagem real para reagir. 
+        // Vamos deixar para o messages.upsert lidar com as reações de volta.
+      }
+
+      // 4. Comportamento Humano: Chance de postar um Status (Pessoa faz isso)
+      if (Math.random() > 0.85) {
+        const captions = [
+          "Trabalhando forte hoje! 💪", "Que dia corrido... ☕", "A vida é feita de momentos.",
+          "Foco nos objetivos! 🚀", "Ótimo dia a todos!", "Grato por mais um dia.",
+          "Dica do dia: foco e persistência.", "Aproveitando o tempo."
+        ];
+        const statusText = captions[Math.floor(Math.random() * captions.length)];
+        await instA.sock.sendMessage('status@broadcast', { text: statusText }, { backgroundColor: '#FF5733', font: 1 });
+        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Postou um novo status: "${statusText}"`);
+      }
+
+      // 5. Comportamento Humano: Mudar o Recado (Bio/Nota)
+      if (Math.random() > 0.9) {
+        const bios = ["Disponível", "Ocupado", "Em reunião", "Só chamadas urgentes", "Foco total", "Vencendo!", "WhatsApp Only"];
+        const newBio = bios[Math.floor(Math.random() * bios.length)];
+        await instA.sock.updateProfileStatus(newBio);
+        addLog(instA.sessionId, 'INFO', `[AQUECIMENTO] Atualizou o recado para: "${newBio}"`);
+      }
+
+      await instA.sock.sendPresenceUpdate('unavailable');
 
     } catch (e) {
-      addLog(instA.sessionId, 'ERROR', `[AQUECIMENTO] Erro na interação: ${e.message}`);
+      addLog(instA.sessionId, 'ERROR', `[AQUECIMENTO] Erro no comportamento humano: ${e.message}`);
     }
 
-    // Pequeno delay entre interações
-    await new Promise(r => setTimeout(r, Math.floor(Math.random() * 5000) + 2000));
+    await new Promise(r => setTimeout(r, Math.floor(Math.random() * 8000) + 3000));
   }
 }
 
