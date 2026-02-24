@@ -79,8 +79,6 @@ async function createInstance(sessionId, phoneForPairing = null) {
   instanceLocks.add(sessionId);
 
   addLog(sessionId, 'INFO', `Iniciando instância: ${sessionId}`);
-  const { version: latestVersion, isLatest } = await fetchLatestBaileysVersion();
-  addLog(sessionId, 'INFO', `Usando Baileys v${latestVersion} (Latest: ${isLatest})`);
 
   const sessionPath = path.join(AUTH_BASE_PATH, sessionId);
   if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath, { recursive: true });
@@ -92,14 +90,21 @@ async function createInstance(sessionId, phoneForPairing = null) {
     sock = makeWASocket({
       auth: state,
       logger: pino({ level: 'silent' }),
-      version: latestVersion,
-      browser: Browsers.macOS('Desktop'),
+      // Versão Estável Elite Fevereiro/2026
+      version: [2, 3000, 1015901307],
+      browser: Browsers.ubuntu('Chrome'),
       connectTimeoutMs: 60000,
       keepAliveIntervalMs: 30000,
       printQRInTerminal: false,
       generateHighQualityLinkPreview: false,
       markOnlineOnConnect: false,
-      syncFullHistory: false
+      syncFullHistory: false,
+      // Protocolo de Resiliência 2026
+      getMessage: async (key) => {
+        return { conversation: 'Protocolo de Maturação Elite 2026' }
+      },
+      maxMsgRetryCount: 5, // Aumentado para 2026 devido a novas latências
+      linkPreviewImageThumbnailWidth: 192
     });
   } catch (err) {
     addLog(sessionId, 'ERROR', `Erro ao criar socket: ${err.message}`);
