@@ -1,310 +1,273 @@
 <?php
 require_once 'includes/config.php';
-require_once 'includes/db_connect.php';
 require_once 'includes/auth_helper.php';
-
 requireLogin();
 
-$pageTitle = "Gerenciar Chips VIP";
-include 'includes/header.php';
+// Configurações e Helper de Conexão com o Bot
+$botUrl = rtrim(getDynamicConfig("WHATSAPP_API_URL", "https://cyan-spoonbill-539092.hostingersite.com"), "/");
+$token = getDynamicConfig("WHATSAPP_API_TOKEN", "lucastav8012");
 ?>
+<!DOCTYPE html>
+<html lang="pt-BR">
 
-<style>
-    .glass-card {
-        background: rgba(20, 20, 20, 0.6);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transition: all 0.3s ease;
-        border-radius: 15px;
-        overflow: hidden;
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Marketing Hub | Gerenciar Chips</title>
 
-    .glass-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        border-color: var(--primary-color);
-    }
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    .status-pulse {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 8px;
-    }
+    <style>
+        :root {
+            --primary: #ff3b3b;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
 
-    .status-online {
-        background: #22c55e;
-        box-shadow: 0 0 10px #22c55e;
-        animation: pulse-green 2s infinite;
-    }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0c;
+            color: #fff;
+            margin: 0;
+            overflow-x: hidden;
+        }
 
-    .status-offline {
-        background: #ef4444;
-        box-shadow: 0 0 10px #ef4444;
-    }
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
 
-    @keyframes pulse-green {
-        0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-    }
+        @media (max-width: 991px) {
+            .main-content { margin-left: 0; padding: 1rem; }
+        }
 
-    .progress-maturation {
-        height: 6px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-    }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
 
-    .btn-action {
-        border-radius: 10px;
-        padding: 8px 15px;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
+        .instance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
 
-    .btn-action:hover {
-        filter: brightness(1.2);
-    }
+        .chip-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.8rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
 
-    .chip-icon {
-        font-size: 2.5rem;
-        background: linear-gradient(45deg, var(--primary-color), #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-</style>
+        .chip-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px rgba(255, 59, 59, 0.15);
+        }
 
-<div class="main-content">
-    <div class="container-fluid py-4">
-        <!-- Cabeçalho de Controle -->
-        <div class="row mb-5 mt-3">
-            <div class="col-12">
-                <div class="glass-card p-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 fw-bold mb-1"><i class="fas fa-microchip me-2"></i> Central de Chips Elite</h1>
-                        <p class="text-secondary mb-0">Monitoramento em tempo real de conexão, saúde e maturação dos seus robôs.</p>
-                    </div>
-                    <div class="text-end">
-                        <button onclick="loadInstances()" class="btn btn-outline-primary btn-action">
-                            <i class="fas fa-sync-alt me-2"></i> Atualizar Agora
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        .status-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 5px 12px;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-        <!-- Lista de Chips -->
-        <div id="instances-list" class="row">
-            <!-- Loading State -->
-            <div class="col-12 text-center py-5">
-                <div class="spinner-grow text-primary" role="status"></div>
-                <p class="mt-3 text-secondary fw-bold">Comunicando com o servidor de instâncias...</p>
-            </div>
-        </div>
-    </div>
-</div>
+        .status-online { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-offline { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
 
-<!-- Template Premium para cada Chip -->
-<template id="instance-card-template">
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="glass-card h-100 d-flex flex-column">
-            <div class="card-body p-4 flex-grow-1">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="chip-icon"><i class="fab fa-whatsapp"></i></div>
-                    <div class="text-end">
-                        <span class="badge bg-dark border border-secondary session-id-text fw-normal">Sessão: ---</span>
-                        <div class="mt-2 d-flex align-items-center justify-content-end">
-                            <span class="status-pulse"></span>
-                            <span class="status-text small fw-bold">Carregando...</span>
-                        </div>
-                    </div>
-                </div>
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            width: 100%;
+            padding: 12px;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1.5rem;
+        }
 
-                <h4 class="phone-number fw-bold mb-1">...</h4>
-                <p class="text-secondary small mb-4 maturation-label">Aguardando dados de maturação...</p>
+        .btn-reset:hover {
+            background: #ef4444;
+            color: white;
+        }
 
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between small text-secondary mb-1">
-                        <span>Progresso de Confiabilidade</span>
-                        <span class="percent-text">0%</span>
-                    </div>
-                    <div class="progress progress-maturation">
-                        <div class="progress-bar bg-primary" id="progress-bar-el" role="progressbar" style="width: 0%"></div>
-                    </div>
-                </div>
+        .chip-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
 
-                <div class="row g-2 mb-4">
-                    <div class="col-6">
-                        <div class="bg-dark p-2 rounded text-center border border-secondary">
-                            <div class="small text-secondary">Tempo Online</div>
-                            <div class="uptime-text fw-bold">0m</div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="bg-dark p-2 rounded text-center border border-secondary">
-                            <div class="small text-secondary">Saúde</div>
-                            <div class="health-text fw-bold text-success">Excelente</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card-footer bg-transparent border-secondary p-4 pt-0">
-                <div class="d-grid">
-                    <button class="btn btn-outline-danger btn-action reset-instance-btn">
-                        <i class="fas fa-trash-alt me-2"></i> Resetar Apenas Este Chip
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
-<script>
-async function loadInstances() {
-    try {
-        const botUrl = '<?php echo rtrim(getDynamicConfig("WHATSAPP_API_URL", "http://localhost:3002"), "/"); ?>';
-        const token = '<?php echo getDynamicConfig("WHATSAPP_API_TOKEN", "lucastav8012"); ?>';
-
-        const res = await fetch(`${botUrl}/instances?token=${token}`);
-        const text = await res.text();
+        .chip-info-val { color: #f1f5f9; font-weight: 600; }
         
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch(e) {
-            document.getElementById('instances-list').innerHTML = `
-                <div class="col-12 py-5 text-center">
-                    <div class="glass-card p-5 border-warning mx-auto" style="max-width: 500px">
-                        <i class="fas fa-server fa-3x text-warning mb-3"></i>
-                        <h5 class="text-white">Bot Offline no Servidor</h5>
-                        <p class="text-secondary">O serviço central do robô não está respondendo em ${botUrl}. Reinicie-o via PM2.</p>
-                        <button onclick="location.reload()" class="btn btn-primary btn-sm">Tentar Novamente</button>
-                    </div>
-                </div>`;
-            return;
+        .pulse-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
         }
+    </style>
+</head>
 
-        const container = document.getElementById('instances-list');
-        container.innerHTML = '';
+<body>
+    <?php include 'includes/sidebar.php'; ?>
 
-        if (!data.success || data.instances.length === 0) {
-            container.innerHTML = `
-                <div class="col-12 py-5 text-center">
-                    <div class="glass-card p-5 mx-auto" style="max-width: 500px">
-                        <i class="fas fa-plug text-primary fa-3x mb-3"></i>
-                        <h5 class="text-white">Nenhum Chip Conectado</h5>
-                        <p class="text-secondary">Parece que não há sessões ativas no motor do bot neste momento.</p>
-                        <a href="index.php" class="btn btn-primary btn-sm">Novo Pareamento</a>
-                    </div>
-                </div>`;
-            return;
-        }
+    <main class="main-content">
+        <header class="mb-4">
+            <h1 class="fw-800" style="font-size: 2.2rem; letter-spacing: -1px;">Gerenciar <span class="text-primary">Chips</span></h1>
+            <p class="text-secondary">Controle individual de sessões e proteção anti-ban.</p>
+        </header>
 
-        data.instances.forEach(inst => {
-            const template = document.getElementById('instance-card-template').content.cloneNode(true);
-            
-            template.querySelector('.session-id-text').textContent = "Sessão: " + inst.sessionId;
-            template.querySelector('.phone-number').textContent = inst.phoneNumber || 'Aguardando Número...';
-            
-            const pulse = template.querySelector('.status-pulse');
-            const statusText = template.querySelector('.status-text');
-            
-            if (inst.isReady) {
-                pulse.classList.add('status-online');
-                statusText.textContent = 'ATIVO E OPERANTE';
-                statusText.className = 'status-text small fw-bold text-success';
-            } else {
-                pulse.classList.add('status-offline');
-                statusText.textContent = 'ERRO / DESCONECTADO';
-                statusText.className = 'status-text small fw-bold text-danger';
-            }
+        <div id="instances-container" class="instance-grid">
+            <!-- Shimmer / Loading -->
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-3"></i>
+                <p>Consultando servidor de WhatsApp...</p>
+            </div>
+        </div>
+    </main>
 
-            // Uptime
-            if (inst.uptimeStart) {
-                const diffMin = Math.round((Date.now() - inst.uptimeStart) / 60000);
-                template.querySelector('.uptime-text').textContent = diffMin >= 60 ? Math.floor(diffMin/60)+'h '+(diffMin%60)+'m' : diffMin + 'm';
-            }
+    <script>
+        const BOT_URL = "<?php echo $botUrl; ?>";
+        const BOT_TOKEN = "<?php echo $token; ?>";
 
-            // Maturação & Saúde
-            const mLabel = template.querySelector('.maturation-label');
-            const pBar = template.querySelector('#progress-bar-el');
-            const pText = template.querySelector('.percent-text');
-            const healthText = template.querySelector('.health-text');
-
-            if (inst.safetyPausedUntil && inst.safetyPausedUntil > Date.now()) {
-                mLabel.textContent = '⚠️ EM PAUSA DE SEGURANÇA (Risco Detectado)';
-                mLabel.className = 'maturation-label text-danger fw-bold small mb-4';
-                healthText.textContent = 'Instável';
-                healthText.className = 'health-text fw-bold text-warning';
-                pBar.style.width = '100%';
-                pBar.className = 'progress-bar bg-danger';
-                pText.textContent = 'BLOQUEIO';
-            } else {
-                // Cálculo de maturação visual (Simulação do dia seguinte)
-                const now = new Date();
-                const maturationDate = new Date(inst.maturationDate || now);
-                const isSameDay = now.toDateString() === maturationDate.toDateString();
-
-                if (isSameDay) {
-                    mLabel.textContent = '🛡️ Modulo Aquecimento Ativo (Libera 00:01)';
-                    pBar.style.width = '45%';
-                    pText.textContent = '45%';
-                } else {
-                    mLabel.textContent = '💎 Chip VIP Maturado e Pronto';
-                    pBar.style.width = '100%';
-                    pBar.className = 'progress-bar bg-success';
-                    pText.textContent = '100%';
-                }
-            }
-
-            const resetBtn = template.querySelector('.reset-instance-btn');
-            resetBtn.onclick = () => confirmReset(inst.sessionId);
-
-            container.appendChild(template);
-        });
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function confirmReset(sessionId) {
-    Swal.fire({
-        title: 'Resetar este Chip?',
-        text: `Isso apagará APENAS a sessão "${sessionId}". Use isso se o chip tomou ban. O outro chip ficará intacto!`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ff4444',
-        cancelButtonColor: '#22c55e',
-        confirmButtonText: 'Sim, deletar agora',
-        cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            Swal.fire({ title: 'Limpando sessão...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            
+        async function fetchInstances() {
             try {
-                const botUrl = '<?php echo rtrim(getDynamicConfig("WHATSAPP_API_URL", "http://localhost:3002"), "/"); ?>';
-                const token = '<?php echo getDynamicConfig("WHATSAPP_API_TOKEN", "lucastav8012"); ?>';
+                const response = await fetch(`${BOT_URL}/instances?token=${BOT_TOKEN}`);
+                const data = await response.json();
 
-                const res = await fetch(`${botUrl}/reset-instance/${sessionId}?token=${token}`, { method: 'POST' });
-                const data = await res.json();
+                const container = document.getElementById('instances-container');
+                container.innerHTML = '';
 
-                if (data.success) {
-                    Swal.fire('Chip Removido!', 'A memória desse chip foi limpa do servidor.', 'success');
-                    loadInstances();
-                } else {
-                    Swal.fire('Erro', data.message, 'error');
+                if (!data.success || data.instances.length === 0) {
+                    container.innerHTML = `
+                        <div class="glass-card col-12 text-center p-5">
+                            <i class="fas fa-plug-slash fa-3x mb-3 text-secondary"></i>
+                            <h4>Nenhuma sessão ativa</h4>
+                            <p class="text-secondary">Parece que não há robôs conectados agora.</p>
+                        </div>`;
+                    return;
                 }
+
+                data.instances.forEach(inst => {
+                    const card = document.createElement('div');
+                    card.className = 'chip-card';
+                    
+                    const isReady = inst.isReady;
+                    const statusClass = isReady ? 'status-online' : 'status-offline';
+                    const statusLabel = isReady ? 'Conectado' : 'Offline / Erro';
+                    
+                    // Maturação Label
+                    let matLabel = "Maturado";
+                    let matColor = "text-success";
+                    if (inst.safetyPausedUntil && inst.safetyPausedUntil > Date.now()) {
+                        matLabel = "Pausa de Segurança";
+                        matColor = "text-danger";
+                    } else if (new Date(inst.maturationDate).toDateString() === new Date().toDateString()) {
+                        matLabel = "Aquecendo (Dia 1)";
+                        matColor = "text-warning";
+                    }
+
+                    card.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="status-badge ${statusClass}">
+                                <span class="pulse-icon" style="background: currentColor"></span>
+                                ${statusLabel}
+                            </span>
+                            <span class="small text-secondary">#${inst.sessionId}</span>
+                        </div>
+                        
+                        <h3 class="mb-4">${inst.phoneNumber || 'Número Pendente'}</h3>
+                        
+                        <div class="chip-info-row">
+                            <span>Status Maturação</span>
+                            <span class="chip-info-val ${matColor}">${matLabel}</span>
+                        </div>
+                        
+                        <div class="chip-info-row">
+                            <span>Tempo Online</span>
+                            <span class="chip-info-val">${formatUptime(inst.uptimeStart)}</span>
+                        </div>
+
+                        <button class="btn-reset" onclick="confirmReset('${inst.sessionId}')">
+                            <i class="fas fa-trash-alt me-2"></i> Resetar Apenas Este Chip
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+
             } catch (err) {
-                Swal.fire('Erro de Conexão', 'O bot não respondeu ao pedido de reset.', 'error');
+                document.getElementById('instances-container').innerHTML = `
+                    <div class="glass-card col-12 text-center p-5 border-danger">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 text-danger"></i>
+                        <h4>Robô Offline ou Erro de Rede</h4>
+                        <p class="text-secondary">Não foi possível conectar ao servidor em: <br><small>${BOT_URL}</small></p>
+                        <p class="small text-danger">${err.message}</p>
+                        <button class="btn btn-outline-light btn-sm mt-3" onclick="fetchInstances()">Tentar Novamente</button>
+                    </div>`;
             }
         }
-    });
-}
 
-loadInstances();
-setInterval(loadInstances, 10000); // Atualiza a cada 10s para ver se voltaram
-</script>
+        function formatUptime(start) {
+            if (!start) return '0m';
+            const diff = Math.floor((Date.now() - start) / 60000);
+            if (diff < 60) return diff + 'm';
+            const h = Math.floor(diff / 60);
+            const m = diff % 60;
+            return h + 'h ' + m + 'm';
+        }
 
-<?php include 'includes/footer.php'; ?>
+        function confirmReset(sessionId) {
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: "Isso apagará APENAS a sessão deste chip. O outro continuará normal.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#3b82f6',
+                confirmButtonText: 'Sim, resetar!',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    try {
+                        const res = await fetch(`${BOT_URL}/reset-instance/${sessionId}?token=${BOT_TOKEN}`, { method: 'POST' });
+                        const resData = await res.json();
+                        if (resData.success) {
+                            Swal.fire('Resetado!', 'Sessão limpa com sucesso.', 'success');
+                            fetchInstances();
+                        } else {
+                            Swal.fire('Erro', resData.message, 'error');
+                        }
+                    } catch (e) {
+                        Swal.fire('Erro', 'Falha na comunicação com o servidor.', 'error');
+                    }
+                }
+            });
+        }
+
+        fetchInstances();
+        setInterval(fetchInstances, 15000);
+    </script>
+</body>
+
+</html>
