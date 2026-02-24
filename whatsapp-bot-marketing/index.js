@@ -559,13 +559,11 @@ async function processGlobalWarming() {
     } // Fim do For do loop de interação
   } // Fim do If de 2 ou mais chips
 
-  // --- 2. ELITE SHIELD (STATUS E BLINDAGEM) ---
+  // --- 2. ELITE SHIELD (STATUS E BLINDAGEM PERMANENTE) ---
   for (const inst of activeInstances) {
     try {
-      // Regra de Maturação: Chips no Dia 1 ou sozinhos postam Status com 100% de chance para aquecimento forte
-      const maturationDate = inst.maturationDate || new Date();
-      const isDayOne = new Date().toDateString() === maturationDate.toDateString();
-      const statusChance = (activeInstances.length === 1 || isDayOne) ? 1.0 : 0.35;
+      // Aquecimento Constante: 100% de chance de postar Status em cada ciclo para blindagem total
+      const statusChance = 1.0;
 
       if (Math.random() <= statusChance) {
         addLog(inst.sessionId, 'INFO', `[AQUECIMENTO] Preparando postagem de Status (Story)...`);
