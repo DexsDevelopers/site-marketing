@@ -318,8 +318,9 @@ async function processGlobalMarketing() {
   isProcessingMarketing = true;
 
   try {
-    // 0. Modo Horário Humano (Simulação Biológica)
-    const hour = new Date().getHours();
+    // 0. Modo Horário Humano (Simulação Biológica) - Fuso de Brasília
+    const agoraSp = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const hour = agoraSp.getHours();
     if (hour < 8 || hour >= 22) {
       addLog('SYSTEM', 'INFO', `[MODO SONO] Horário atual (${hour}h) fora da janela comercial. Atividades suspensas.`);
       isProcessingMarketing = false;
@@ -467,8 +468,8 @@ setInterval(async () => {
   // Tentar rodar marketing
   processGlobalMarketing();
 
-  // Automação Elite: Sincronizar grupos automaticamente uma vez por dia (às 00:05)
-  const agora = new Date();
+  // Automação Elite: Sincronizar grupos automaticamente uma vez por dia (às 00:05) - Fuso de Brasília
+  const agora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
   if (agora.getHours() === 0 && agora.getMinutes() === 5) {
     addLog('SYSTEM', 'INFO', '[AUTOMAÇÃO] Iniciando sincronização automática diária de grupos...');
     const activeInstances = Array.from(instances.values()).filter(i => i.isReady);
@@ -504,7 +505,8 @@ setInterval(async () => {
 
 // --- SISTEMA DE AQUECIMENTO DE NÚMEROS (MATURAÇÃO ELITE) ---
 async function processGlobalWarming() {
-  const hour = new Date().getHours();
+  const agoraSp = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  const hour = agoraSp.getHours();
   if (hour < 8 || hour >= 22) return; // Dormir também no aquecimento
 
   const activeInstances = Array.from(instances.values()).filter(i => i.isReady && i.sock && i.sock.user);
