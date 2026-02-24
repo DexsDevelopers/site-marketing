@@ -321,9 +321,14 @@ async function processGlobalMarketing() {
     // 0. Modo Horário Humano (Simulação Biológica)
     const hour = new Date().getHours();
     if (hour < 8 || hour >= 22) {
-      addLog('SYSTEM', 'INFO', 'Modo Noturno (Sono Humano) ativado. Atividades suspensas até às 08:00.');
+      addLog('SYSTEM', 'INFO', `[MODO SONO] Horário atual (${hour}h) fora da janela comercial. Atividades suspensas.`);
       isProcessingMarketing = false;
       return;
+    }
+
+    const activeCount = Array.from(instances.values()).filter(i => i.isReady).length;
+    if (activeCount > 0) {
+      addLog('SYSTEM', 'INFO', `[MARKETING] Iniciando verificação de fila para ${activeCount} instâncias prontas.`);
     }
 
     // 1. Pegar instâncias prontas
@@ -360,10 +365,11 @@ async function processGlobalMarketing() {
       }
 
       try {
+        addLog(inst.sessionId, 'INFO', `[MARKETING] Consultando novas tarefas no servidor...`);
         const res = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`, { timeout: 15000 });
         if (res.data?.success && res.data.tasks?.length > 0) {
 
-          addLog(inst.sessionId, 'INFO', `Processando ${res.data.tasks.length} tarefas nesta instância.`);
+          addLog(inst.sessionId, 'SUCCESS', `[MARKETING] Fila encontrada: ${res.data.tasks.length} mensagens para disparar.`);
           for (const task of res.data.tasks) {
             const result = await sendWithInstance(inst, task);
             await axios.post(`${MARKETING_SITE_URL}/api_marketing.php?action=update_task`, {
@@ -455,6 +461,9 @@ async function sendWithInstance(inst, task) {
 
 // Loop de processamento de fila do admin
 setInterval(async () => {
+  const readyInstances = Array.from(instances.values()).filter(i => i.isReady).length;
+  addLog('SYSTEM', 'INFO', `[MONITOR] Pulso de Vida: ${instances.size} sessões carregadas (${readyInstances} conectadas).`);
+
   // Tentar rodar marketing
   processGlobalMarketing();
 
@@ -499,11 +508,14 @@ async function processGlobalWarming() {
   if (hour < 8 || hour >= 22) return; // Dormir também no aquecimento
 
   const activeInstances = Array.from(instances.values()).filter(i => i.isReady && i.sock && i.sock.user);
-  if (activeInstances.length === 0) return;
+  if (activeInstances.length === 0) {
+    addLog('SYSTEM', 'INFO', '[AQUECIMENTO] Ciclo ignorado: Nenhuma instância pronta para interação.');
+    return;
+  }
 
   // 1. Interação entre Chips (Se houver 2 ou mais)
   if (activeInstances.length >= 2) {
-    addLog('SYSTEM', 'INFO', '[AQUECIMENTO] Iniciando ciclo de interações humanas entre os chips...');
+    addLog('SYSTEM', 'SUCCESS', `[AQUECIMENTO] Iniciando Ciclo de Diálogo Orgânico entre ${activeInstances.length} chips.`);
     const shuffled = [...activeInstances].sort(() => 0.5 - Math.random());
 
     for (let i = 0; i < Math.floor(shuffled.length / 2) * 2; i += 2) {
@@ -611,9 +623,10 @@ async function processGlobalWarming() {
         statusJidList: [inst.sock.user.id] // Incluir a si mesmo ajuda a propagar o broadcast
       });
 
-      addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Status enviado: "${randomText}"`);
+      addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Blindagem A: Status/Stories publicado ("${randomText}").`);
 
       // ESTRATÉGIA B: OUVINTE ATIVO (ESCUTA DE GRUPOS)
+      addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Blindagem B: Analisando atividade em grupos para gerar tráfego lícito.`);
       const groups = await inst.sock.groupFetchAllParticipating();
       const groupJids = Object.keys(groups);
       if (groupJids.length > 0) {
@@ -629,7 +642,7 @@ async function processGlobalWarming() {
           await inst.sock.sendMessage(randomGroup, {
             react: { text: emojis[Math.floor(Math.random() * emojis.length)], key: { remoteJid: randomGroup } }
           }).catch(() => { });
-          addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Reação orgânica enviada no grupo.`);
+          addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Blindagem C: Reação orgânica enviada em "${groups[randomGroup].subject}".`);
         }
       }
 
@@ -642,7 +655,7 @@ async function processGlobalWarming() {
         await inst.sock.sendPresenceUpdate('recording', target);
         await new Promise(r => setTimeout(r, 5000));
         await inst.sock.sendPresenceUpdate('paused', target);
-        addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Chamada/Voz simulada: Chip protegido.`);
+        addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Blindagem D: Simulação de chamada de voz concluída.`);
       }
 
       // ESTRATÉGIA E: TROCA DE MÍDIA (ÁUDIO E IMAGEM) - NOVIDADE 2026
@@ -667,7 +680,7 @@ async function processGlobalWarming() {
             image: { url: 'https://picsum.photos/400/300' },
             caption: '🚀'
           }).catch(() => { });
-          addLog(inst.sessionId, 'INFO', `[ELITE SHIELD] Mídia: Imagem orgânica enviada.`);
+          addLog(inst.sessionId, 'SUCCESS', `[ELITE SHIELD] Blindagem E: Troca de mídia (Imagem) realizada com sucesso.`);
         }
       }
 
