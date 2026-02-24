@@ -261,6 +261,26 @@ try {
             $cId = $campanha['id'];
 
             $membrosPorDiaLimit = intval($campanha['membros_por_dia_grupo']);
+            
+            // --- ANTI-BAN: Checagem de Horário ---
+            if (!isWithinWorkingHours($campanha['horario_inicio'] ?? '08:00:00', $campanha['horario_fim'] ?? '20:00:00')) {
+                $response = ['success' => false, 'message' => 'Fora do horário de funcionamento permitido (' . $campanha['horario_inicio'] . ' às ' . $campanha['horario_fim'] . ')'];
+                break;
+            }
+            
+            // --- AQUECIMENTO: Calcular Limite Dinâmico ---
+            // Por enquanto, usamos um limite fixo de aquecimento se a campanha tiver aquecimento_gradual = 1
+            // Um chip novo começa enviando menos. Vamos buscar estatísticas da sessão.
+            // Para simplicidade, pegamos a sessão 'admin_session' ou a padrão do sistema
+            $sessionId = 'admin_session'; 
+            $sessionStats = fetchOne($pdo, "SELECT COUNT(DISTINCT data) as dias_ativos FROM marketing_session_history WHERE session_id = ?", [$sessionId]);
+            $diasAtivos = ($sessionStats['dias_ativos'] ?? 0) + 1;
+            
+            if ($campanha['aquecimento_gradual'] == 1) {
+                // Matemática de aquecimento: 50 * 2^(dia-1)
+                $warmingLimit = 50 * pow(2, min($diasAtivos - 1, 5)); // Cap no dia 6 (1600 msgs)
+                $membrosPorDiaLimit = min($membrosPorDiaLimit, $warmingLimit);
+            }
 
             // 2. Verificar Cotas de Hoje (Quantos JÁ foram processados)
             $hojeCount = fetchOne($pdo, "SELECT COUNT(*) as c FROM marketing_membros WHERE (status = 'em_progresso' OR status = 'concluido') AND DATE(data_entrada_fluxo) = CURDATE()")['c'] ?? 0;
@@ -309,20 +329,16 @@ try {
 
             $tasks = [];
             foreach ($pendingTasks as $t) {
-                // Anti-ban id
-                $chars = '0123456789abcdef';
-                $randomId = substr(str_shuffle($chars), 0, 5);
-
-                // Normalizar apenas se NÃO for um JID/LID/Grupo
-                $phone = $t['telefone'];
-                if (strpos($phone, '@') === false) {
-                    $phone = preg_replace('/\D/', '', $phone);
+                // Anti-Ban: Variabilização do Conteúdo
+                $finalMessage = processSpinTax($t['conteudo']);
+                if ($campanha['usar_anti_ban'] == 1) {
+                    $finalMessage = applyAntiBanSalt($finalMessage);
                 }
 
                 $tasks[] = [
                     'member_id' => $t['id'],
                     'phone' => $phone,
-                    'message' => $t['conteudo'] . "\n\n_" . $randomId . "_",
+                    'message' => $finalMessage,
                     'step_order' => $t['ordem'],
                     'message_type' => $t['tipo_midia'] ?? 'texto',
                     'media_url' => $t['midia_url'] ?? null
@@ -356,8 +372,14 @@ try {
             $result = sendWhatsappMessage($phone, $message);
 
             // 3. Processar Resultado (Mesma lógica do update_task da api_marketing.php)
-            if ($result['success']) {
-                $activeC = fetchOne($pdo, "SELECT id FROM marketing_campanhas WHERE ativo = 1 ORDER BY id DESC LIMIT 1");
+                if ($result['success']) {
+                    // --- AQUECIMENTO: Registrar Sucesso no Histórico da Sessão ---
+                    $sessionId = 'admin_session'; 
+                    executeQuery($pdo, "INSERT INTO marketing_session_history (session_id, data, envios_sucesso) 
+                                      VALUES (?, CURDATE(), 1) 
+                                      ON DUPLICATE KEY UPDATE envios_sucesso = envios_sucesso + 1", [$sessionId]);
+
+                    $activeC = fetchOne($pdo, "SELECT id FROM marketing_campanhas WHERE ativo = 1 ORDER BY id DESC LIMIT 1");
                 $cId = $activeC ? $activeC['id'] : 1;
 
                 $nextMsg = fetchOne($pdo, "SELECT delay_apos_anterior_minutos FROM marketing_mensagens WHERE campanha_id = ? AND ordem > ? ORDER BY ordem ASC LIMIT 1", [$cId, $stepOrder]);
@@ -548,6 +570,21 @@ try {
             executeQuery($pdo, "UPDATE marketing_campanhas SET ativo = ?, membros_por_dia_grupo = ?, intervalo_min_minutos = ?, intervalo_max_minutos = ? ORDER BY id DESC LIMIT 1", [$ativo, $membrosDia, $minInterval, $maxInterval]);
 
             $response = ['success' => true, 'message' => 'Configurações salvas!'];
+            break;
+
+        case 'save_security_settings':
+            $warming = (int)($_POST['aquecimento_gradual'] ?? 1);
+            $antiban = (int)($_POST['usar_anti_ban'] ?? 1);
+            $start = $_POST['horario_inicio'] ?? '08:00:00';
+            $end = $_POST['horario_fim'] ?? '20:00:00';
+
+            // Garante formato HH:MM:SS
+            if (strlen($start) == 5) $start .= ':00';
+            if (strlen($end) == 5) $end .= ':00';
+
+            executeQuery($pdo, "UPDATE marketing_campanhas SET aquecimento_gradual = ?, usar_anti_ban = ?, horario_inicio = ?, horario_fim = ? WHERE ativo = 1 ORDER BY id DESC LIMIT 1", [$warming, $antiban, $start, $end]);
+
+            $response = ['success' => true, 'message' => 'Configurações de segurança salvas!'];
             break;
 
         case 'trigger_disparos':

@@ -20,6 +20,44 @@ if (!function_exists('str_starts_with')) {
     }
 }
 
+/**
+ * Função Anti-Ban: Processa SpinTax {Olá|Oi|Bom dia}
+ */
+function processSpinTax(string $text): string {
+    return preg_replace_callback('/{([^{}]+)}/', function($matches) {
+        $options = explode('|', $matches[1]);
+        return $options[array_rand($options)];
+    }, $text);
+}
+
+/**
+ * Função Anti-Ban: Adiciona um "sal" (caracteres invisíveis ou random ID) no final da mensagem
+ * Isso garante que cada mensagem seja tecnicamente ÚNICA para os filtros do WhatsApp.
+ */
+function applyAntiBanSalt(string $message): string {
+    $chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    $salt = substr(str_shuffle($chars), 0, 4);
+    
+    // Adiciona caracteres Unicode que são invisíveis ou pouco perceptíveis para variar o hash da mensagem
+    $invisibleSalts = ["\u{200B}", "\u{200C}", "\u{200D}", "\u{FEFF}"];
+    $randomInvisible = $invisibleSalts[array_rand($invisibleSalts)];
+    
+    return $message . "\n\n" . $randomInvisible . "_" . $salt . "_";
+}
+
+/**
+ * Verifica se estamos dentro do horário de funcionamento permitido
+ */
+function isWithinWorkingHours(string $start, string $end): bool {
+    $now = new DateTime();
+    $startTime = DateTime::createFromFormat('H:i:s', $start);
+    $endTime = DateTime::createFromFormat('H:i:s', $end);
+    
+    if (!$startTime || !$endTime) return true; // Falha segura
+    
+    return ($now >= $startTime && $now <= $endTime);
+}
+
 function normalizePhoneToDigits(?string $input): ?string
 {
     if ($input === null) {
