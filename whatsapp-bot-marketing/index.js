@@ -267,6 +267,12 @@ async function processGlobalMarketing() {
     // 2. Buscar tarefas para processar
     // Vamos processar em lotes para cada instância
     for (const inst of activeInstances) {
+      // Proteção contra Ban de Chip Novo: Só disparar se estiver conectado há pelo menos 3 minutos
+      if (Date.now() - inst.uptimeStart < 3 * 60 * 1000) {
+        addLog(inst.sessionId, 'INFO', `Chip em maturação inicial (Uptime < 3 min). Aguardando estabilizar conexão antes de disparar.`);
+        continue;
+      }
+
       try {
         const res = await axios.get(`${MARKETING_SITE_URL}/api_marketing.php?action=cron_process`, { timeout: 15000 });
         if (res.data?.success && res.data.tasks?.length > 0) {
@@ -280,9 +286,10 @@ async function processGlobalMarketing() {
               success: result.success,
               reason: result.reason
             });
-            const randomDelay = Math.floor(Math.random() * (8000 - 3000 + 1)) + 3000;
+            // Delay anti-ban MUITO MAIS SEGURO (20s a 45s entre cada mensagem)
+            const randomDelay = Math.floor(Math.random() * (45000 - 20000 + 1)) + 20000;
             addLog(inst.sessionId, 'INFO', `Aguardando ${Math.round(randomDelay / 1000)}s antes do próximo envio (Anti-ban)...`);
-            await new Promise(r => setTimeout(r, randomDelay)); // Delay randômico anti-ban (3s a 8s)
+            await new Promise(r => setTimeout(r, randomDelay));
           }
         }
       } catch (err) {
