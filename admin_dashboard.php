@@ -551,11 +551,18 @@ requireLogin();
                 if(!container) return; 
 
                 if (result.success && result.qr) {
+                    // Modernize the QR container: Remove hard white background if possible, 
+                    // or make it a sleek card that doesn't look like a "blank box" if loading fails.
                     container.innerHTML = `
-                        <div style="background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 0 20px rgba(255,255,255,0.1);">
-                            <img src="${result.qr}" style="width: 140px; height: 140px; display: block;">
+                        <div style="background: rgba(255,255,255,0.9); padding: 12px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: inline-block; border: 2px solid var(--glass-border);">
+                            <img src="${result.qr}" 
+                                 style="width: 160px; height: 160px; display: block; border-radius: 8px;"
+                                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/107/107072.png'; this.style.filter='invert(1)';">
                         </div>
-                        <p style="font-size: 0.7rem; color: #fff; margin-top: 10px; opacity: 0.8;"><i class="fas fa-qrcode"></i> Escaneie para conectar</p>
+                        <div style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div class="dot online pulse" style="width: 8px; height: 8px;"></div>
+                            <p style="font-size: 0.8rem; color: #fff; margin:0; font-weight: 600; opacity: 0.9;">Escaneie para conectar</p>
+                        </div>
                     `;
                     if (!window.qrPollIntervals[sessionId]) {
                         window.qrPollIntervals[sessionId] = setInterval(() => loadQR(sessionId), 5000);
