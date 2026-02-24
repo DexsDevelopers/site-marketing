@@ -327,6 +327,7 @@ async function processGlobalMarketing() {
     }
 
     // 1. Pegar instâncias prontas
+    const activeInstances = Array.from(instances.values()).filter(i => i.isReady);
 
     // 2. Processar tarefas para cada instância
     for (const inst of activeInstances) {
@@ -381,6 +382,8 @@ async function processGlobalMarketing() {
         addLog(inst.sessionId, 'ERROR', `Erro no loop marketing: ${err.message}`);
       }
     }
+  } catch (err) {
+    addLog('SYSTEM', 'ERROR', `Erro global no marketing: ${err.message}`);
   } finally {
     isProcessingMarketing = false;
   }
